@@ -879,9 +879,17 @@
     <button class="del" onclick="numDel()">⌫</button>
   </div>
 
+<hr>
+<h2>Save Darts Score</h2>
+<p id="authMessage">Sign in to save your scores!</p> <!-- Added an ID for dynamic message -->
+<div id="scoreInputSection" style="display:none;">
+  <input type="text" id="playerNameInput" placeholder="Player Name (optional)" />
+  <input type="number" id="scoreInput" placeholder="Score" />
+  
   <button class="btn-submit" onclick="submitScore()">SUBMIT SCORE</button>
   <button class="btn-bust" onclick="bustScore()">BUST</button>
-
+  <p id="saveStatus"></p>
+</div>
   <div class="throw-history" id="throw-history"></div>
 
   <div class="row" style="margin-top:16px">
