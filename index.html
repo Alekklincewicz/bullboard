@@ -34,40 +34,67 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 32px;
+    padding: 14px 20px;
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
     background: var(--bg);
-    z-index: 100;
+    z-index: 200;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
   .logo {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
+    font-size: 26px;
     letter-spacing: 4px;
     color: var(--accent);
+    flex-shrink: 0;
   }
-  .logo span { color: var(--muted); font-size: 14px; letter-spacing: 2px; margin-left: 12px; font-family: 'DM Mono', monospace; }
+  .logo span { color: var(--muted); font-size: 13px; letter-spacing: 2px; margin-left: 10px; font-family: 'DM Mono', monospace; }
 
-  nav { display: flex; gap: 4px; }
+  /* Hamburger */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 6px;
+    background: none;
+    border: 1px solid var(--border);
+    margin-left: auto;
+  }
+  .hamburger span { display: block; width: 22px; height: 2px; background: var(--muted); transition: all 0.2s; }
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); background: var(--accent); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); background: var(--accent); }
+
+  nav {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
   nav button {
     background: none;
     border: 1px solid var(--border);
     color: var(--muted);
-    padding: 8px 20px;
+    padding: 7px 14px;
     font-family: 'DM Mono', monospace;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 1px;
     cursor: pointer;
     transition: all 0.15s;
     text-transform: uppercase;
+    white-space: nowrap;
   }
   nav button.active, nav button:hover {
     border-color: var(--accent);
     color: var(--accent);
     background: rgba(232,255,58,0.05);
   }
+
+  /* Auth in header */
+  #auth-container { flex-shrink: 0; }
 
   .page { display: none; padding: 32px; max-width: 1280px; margin: 0 auto; }
   .page.active { display: block; }
@@ -467,7 +494,7 @@
   @keyframes toastOut { to { opacity:0; transform: translateY(10px); } }
 
   .session-end-btn {
-    width: 100%; background: none; border: 1px solid var(--accent3); color: var(--accent3);
+    width: 100%; background: none; border: 1px solid var(--dim); color: var(--dim);
     font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px;
     padding: 10px; cursor: pointer; text-transform: uppercase; transition: all 0.15s; margin-top: 16px;
   }
@@ -798,18 +825,211 @@
 
   .hidden { display: none !important; }
 
+  /* ── CRICKET ── */
+  .cricket-board {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    font-family: 'DM Mono', monospace;
+  }
+  .cricket-col { background: var(--surface); }
+  .cricket-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+  .cricket-header .ch-player { text-align: center; padding: 0 12px; }
+  .cricket-header .ch-player.you { color: var(--accent); }
+  .cricket-header .ch-player.bot { color: var(--accent4); }
+  .cricket-header .ch-numbers { text-align: center; color: var(--muted); font-size: 11px; padding: 0 8px; display: flex; align-items: center; }
+  .cricket-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    border-bottom: 1px solid var(--border);
+    gap: 0;
+    cursor: pointer;
+    transition: background 0.1s;
+    min-height: 48px;
+  }
+  .cricket-row:last-child { border-bottom: none; }
+  .cricket-row:hover { background: rgba(255,255,255,0.02); }
+  .cricket-row.fully-closed { opacity: 0.35; }
+  .cricket-marks {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 64px;
+    padding: 8px 12px;
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 1;
+  }
+  .cricket-marks.you { color: var(--accent); }
+  .cricket-marks.bot { color: var(--accent4); }
+  .cricket-marks svg { display: block; }
+  .cricket-num {
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    color: var(--text);
+    min-width: 52px;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 0 8px;
+    text-align: center;
+    position: relative;
+  }
+  .cricket-num.closed-both::after {
+    content: '';
+    position: absolute;
+    left: 6px; right: 6px;
+    top: 50%;
+    height: 2px;
+    background: var(--muted);
+  }
+  .cricket-num.owned-you { color: var(--accent); }
+  .cricket-num.owned-bot { color: var(--accent4); }
+  .cricket-score-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    padding: 12px 0;
+    text-align: center;
+  }
+  .cricket-score-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    line-height: 1;
+  }
+  .cricket-score-val.you { color: var(--accent); }
+  .cricket-score-val.bot { color: var(--accent4); }
+  .cricket-score-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  /* Cricket dart input - multiplier buttons */
+  .cricket-input-area { margin-bottom: 12px; }
+  .cricket-mult-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 8px; }
+  .cricket-mult-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); padding: 10px; font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; letter-spacing: 2px; cursor: pointer; transition: all 0.1s; text-align: center;
+  }
+  .cricket-mult-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(232,255,58,0.08); }
+  .cricket-num-btns { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+  .cricket-num-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 6px; font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; cursor: pointer; transition: all 0.1s; text-align: center;
+  }
+  .cricket-num-btn:hover { border-color: var(--muted); }
+  .cricket-num-btn.closed { opacity: 0.3; pointer-events: none; }
+  .cricket-num-btn.owned { border-color: var(--accent); color: var(--accent); background: rgba(232,255,58,0.05); }
+  .cricket-turn-info {
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted);
+    text-align: center; padding: 8px; letter-spacing: 1px;
+    background: var(--surface2); border: 1px solid var(--border); margin-bottom: 8px;
+  }
+  .cricket-turn-info .dart-pips { color: var(--accent); font-size: 14px; letter-spacing: 3px; }
+  .cricket-miss-btn {
+    width: 100%; background: none; border: 1px solid var(--dim); color: var(--dim);
+    font-family: 'DM Mono', monospace; font-size: 11px; padding: 9px;
+    cursor: pointer; letter-spacing: 1px; text-transform: uppercase; transition: all 0.15s;
+  }
+  .cricket-miss-btn:hover { border-color: var(--muted); color: var(--muted); }
+
+  /* ── BOT OPPONENT ── */
+  .bot-turn-overlay {
+    background: var(--surface2); border: 1px solid var(--accent4);
+    padding: 14px 18px; font-family: 'DM Mono', monospace; font-size: 12px;
+    color: var(--accent4); margin-bottom: 12px; letter-spacing: 0.5px; line-height: 1.8;
+    display: none;
+  }
+  .bot-turn-overlay.visible { display: block; }
+
+  /* ── MOBILE ── */
   @media (max-width: 1100px) {
     .social-layout { grid-template-columns: 1fr 1fr; }
     .social-layout > *:last-child { display: none; }
   }
 
-  @media (max-width: 900px) {
-    .drill-page-grid { grid-template-columns: 1fr; }
+  @media (max-width: 820px) {
+    .hamburger { display: flex; }
+    nav {
+      display: none;
+      width: 100%;
+      order: 99;
+      flex-direction: column;
+      gap: 0;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      margin-top: 4px;
+    }
+    nav.open { display: flex; }
+    nav button {
+      padding: 12px 16px;
+      font-size: 13px;
+      border-left: none; border-right: none; border-top: none;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    nav button:last-child { border-bottom: none; }
+    #auth-container {
+      display: none !important;
+    }
+    #auth-container.mobile-open {
+      display: flex !important;
+      flex-direction: column;
+      width: 100%;
+      order: 100;
+      gap: 6px;
+      padding: 10px 0 4px;
+      border-top: 1px solid var(--border);
+    }
+    #auth-container.mobile-open input { width: 100%; }
+    #userStatus { display: none !important; }
+    .logo span { display: none; }
+    .page { padding: 14px; }
+    .social-layout { grid-template-columns: 1fr; }
+    .social-layout > *:nth-child(3) { display: none; }
+    .social-sidebar:first-child > .panel:last-child { display: none; }
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 10px 14px; }
+    .logo { font-size: 22px; }
+    .page { padding: 10px; }
+    .score-display { font-size: 72px; }
+    .score-meta { grid-template-columns: repeat(3,1fr); }
+    .score-meta .val { font-size: 22px; }
+    .numpad button { font-size: 22px; padding: 14px; }
     .stats-grid { grid-template-columns: repeat(2,1fr); }
     .two-col { grid-template-columns: 1fr; }
-    .co-grid { grid-template-columns: repeat(4,1fr); }
-    header { padding: 16px; }
-    .page { padding: 16px; }
+    .drill-page-grid { grid-template-columns: 1fr; }
+    .co-grid { grid-template-columns: repeat(3,1fr); }
+    .session-setup { flex-direction: column; }
+    .session-setup .setup-select { min-width: 100%; }
+    .btn-new-leg { width: 100%; }
+    .modal { padding: 20px 16px; }
+    .modal-btn-row { grid-template-columns: 1fr; }
+    .two-col.stats-two-col { grid-template-columns: 1fr; }
   }
 
   /* ── SESSION END MODAL ── */
@@ -958,36 +1178,55 @@
 
 <header>
   <div class="logo">Bullboard <span>// PRACTICE</span></div>
-  <nav>
-    <button class="active" onclick="showPage('practice',this)">Practice</button>
-    <button onclick="showPage('drill',this)">Drills</button>
-    <button onclick="showPage('stats',this)">Stats</button>
-    <button onclick="showPage('analysis',this)">Analysis</button>
-    <button onclick="showPage('history',this)">History</button>
-    <button onclick="showPage('social',this)">Social</button>
+
+  <nav id="main-nav">
+    <button class="active" onclick="showPage('practice',this);closeMenu()">Practice</button>
+    <button onclick="showPage('drill',this);closeMenu()">Drills</button>
+    <button onclick="showPage('stats',this);closeMenu()">Stats</button>
+    <button onclick="showPage('analysis',this);closeMenu()">Analysis</button>
+    <button onclick="showPage('history',this);closeMenu()">History</button>
+    <button onclick="showPage('social',this);closeMenu()">Social</button>
   </nav>
-  
-  <!-- ADD AUTH SECTION HERE -->
-  <div id="auth-container" style="display:flex;gap:8px;align-items:center;">
-    <input type="email" id="emailInput" placeholder="Email" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'DM Mono',monospace;font-size:12px;" />
-    <input type="password" id="passwordInput" placeholder="Password" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'DM Mono',monospace;font-size:12px;" />
-    <button id="signUpButton" style="background:var(--accent);color:#000;border:none;padding:8px 14px;font-family:'Bebas Neue',sans-serif;font-size:12px;cursor:pointer;">SIGN UP</button>
-    <button id="signInButton" style="background:none;border:1px solid var(--accent);color:var(--accent);padding:8px 14px;font-family:'Bebas Neue',sans-serif;font-size:12px;cursor:pointer;">SIGN IN</button>
-    <button id="signOutButton" style="display:none;background:none;border:1px solid var(--dim);color:var(--dim);padding:8px 14px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;">SIGN OUT</button>
+
+  <div id="auth-container" style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+    <input type="email" id="emailInput" placeholder="Email" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:DM Mono,monospace;font-size:12px;width:140px;" />
+    <input type="password" id="passwordInput" placeholder="Password" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:DM Mono,monospace;font-size:12px;width:120px;" />
+    <button id="signUpButton" style="background:var(--accent);color:#000;border:none;padding:8px 14px;font-family:Bebas Neue,sans-serif;font-size:12px;cursor:pointer;white-space:nowrap;">SIGN UP</button>
+    <button id="signInButton" style="background:none;border:1px solid var(--accent);color:var(--accent);padding:8px 14px;font-family:Bebas Neue,sans-serif;font-size:12px;cursor:pointer;white-space:nowrap;">SIGN IN</button>
+    <button id="signOutButton" style="display:none;background:none;border:1px solid var(--dim);color:var(--dim);padding:8px 14px;font-family:DM Mono,monospace;font-size:11px;cursor:pointer;white-space:nowrap;">SIGN OUT</button>
   </div>
-  <p id="userStatus" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);position:absolute;right:32px;bottom:-20px;">Not signed in.</p>
+
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <p id="userStatus" style="font-family:DM Mono,monospace;font-size:11px;color:var(--muted);position:absolute;right:20px;bottom:-20px;pointer-events:none;">Not signed in.</p>
 </header>
 <!-- ═══════════════════ PRACTICE PAGE ═══════════════════ -->
 <div id="page-practice" class="page active">
   <div class="session-setup">
-    <select class="setup-select" id="game-mode">
+    <select class="setup-select" id="game-mode" onchange="onGameModeChange()">
       <option value="501">501</option>
       <option value="301">301</option>
+      <option value="cricket">Cricket</option>
     </select>
     <select class="setup-select" id="out-mode">
       <option value="double">Double Out</option>
       <option value="single">Single Out</option>
       <option value="master">Master Out</option>
+    </select>
+    <select class="setup-select" id="bot-level">
+      <option value="none">No Bot</option>
+      <option value="1">Bot — Level 1 (Beginner)</option>
+      <option value="2">Bot — Level 2</option>
+      <option value="3">Bot — Level 3</option>
+      <option value="4">Bot — Level 4</option>
+      <option value="5">Bot — Level 5 (Club)</option>
+      <option value="6">Bot — Level 6</option>
+      <option value="7">Bot — Level 7</option>
+      <option value="8">Bot — Level 8</option>
+      <option value="9">Bot — Level 9</option>
+      <option value="10">Bot — Level 10 (Pro)</option>
     </select>
     <button class="btn-new-leg" onclick="newLeg()">+ New Leg</button>
   </div>
@@ -1018,6 +1257,32 @@
     <div><label>Darts</label><span class="val" id="dart-count">0</span></div>
   </div>
 
+  <!-- Cricket UI (hidden for 01 games) -->
+  <div id="cricket-ui" style="display:none">
+    <div id="bot-turn-overlay" class="bot-turn-overlay"></div>
+    <div class="cricket-board" id="cricket-board">
+      <!-- rendered by renderCricketBoard() -->
+    </div>
+    <div class="cricket-input-area">
+      <div class="cricket-turn-info" id="cricket-turn-info">
+        <span id="cricket-whose-turn">YOUR TURN</span> &nbsp;·&nbsp;
+        Darts: <span class="dart-pips" id="cricket-dart-pips">● ● ●</span>
+      </div>
+      <div class="cricket-mult-row">
+        <button class="cricket-mult-btn active" id="cm-single" onclick="setCricketMult(1,this)">Single</button>
+        <button class="cricket-mult-btn" id="cm-double" onclick="setCricketMult(2,this)">Double</button>
+        <button class="cricket-mult-btn" id="cm-treble" onclick="setCricketMult(3,this)">Treble</button>
+      </div>
+      <div class="cricket-num-btns" id="cricket-num-btns">
+        <!-- rendered dynamically -->
+      </div>
+      <button class="cricket-miss-btn" style="margin-top:8px" onclick="cricketMiss()">Miss (no score)</button>
+    </div>
+  </div>
+
+  <!-- Standard 01 UI (hidden for Cricket) -->
+  <div id="standard-ui">
+
   <!-- Input row -->
   <div class="input-row">
     <div class="input-display" id="input-display"><span class="cursor"></span></div>
@@ -1034,7 +1299,7 @@
   <div class="throw-history" id="throw-history"></div>
 
   <div class="row" style="margin-top:16px">
-    <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;">FEEL</span>
+    <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--muted);letter-spacing:1px;">FEEL</span>
     <div class="feel-btns">
       <button class="feel-btn" onclick="setFeel(1,this)">😩</button>
       <button class="feel-btn" onclick="setFeel(2,this)">😕</button>
@@ -1043,6 +1308,8 @@
       <button class="feel-btn" onclick="setFeel(5,this)">🔥</button>
     </div>
   </div>
+
+  </div> <!-- /standard-ui -->
 
   <input class="tag-input" id="session-notes" placeholder="Session notes... (e.g. 'elbow dropping on high numbers')" />
   <button class="session-end-btn" onclick="openEndSessionModal()">End Session &amp; Save</button>
@@ -1139,11 +1406,11 @@
     <div class="drill-history-grid">
       <div class="panel">
         <div class="panel-title">This Session</div>
-        <div id="drill-session-log" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">No throws logged yet.</div>
+        <div id="drill-session-log" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);">No throws logged yet.</div>
         <div class="drill-save-row">
           <button class="btn-drill-save" onclick="saveDrillSession()">☁ Save Drill Session</button>
           <button class="btn-drill-share" onclick="openDrillShareModal()">↗ Share to Feed</button>
-          <span id="drill-save-status" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);"></span>
+          <span id="drill-save-status" style="font-family:DM Mono,monospace;font-size:11px;color:var(--muted);"></span>
         </div>
       </div>
       <div class="panel">
@@ -1157,7 +1424,7 @@
           <thead><tr><th>Target</th><th>Attempts</th><th>Hits</th><th>Rate</th><th>Top Miss</th></tr></thead>
           <tbody id="drill-alltime-tbody"></tbody>
         </table>
-        <div id="drill-no-data" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:16px;text-align:center;">No data yet for this bed type.</div>
+        <div id="drill-no-data" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);padding:16px;text-align:center;">No data yet for this bed type.</div>
       </div>
     </div>
 
@@ -1167,7 +1434,7 @@
 <!-- ═══════════════════ HISTORY PAGE ═══════════════════ -->
 <div id="page-history" class="page">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--muted);">SESSION HISTORY</div>
+    <div style="font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:3px;color:var(--muted);">SESSION HISTORY</div>
     <div style="display:flex;gap:8px;">
       <select id="history-filter" onchange="renderHistoryPage()" class="setup-select" style="min-width:120px;">
         <option value="all">All Sessions</option>
@@ -1177,7 +1444,7 @@
     </div>
   </div>
   <div id="history-list">
-    <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">No sessions yet — complete a practice session to see your history.</div>
+    <div style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">No sessions yet — complete a practice session to see your history.</div>
   </div>
 </div>
 
@@ -1194,7 +1461,7 @@
     <div class="panel">
       <div class="panel-title">Score Trend</div>
       <div class="trend-chart"><canvas id="trend-canvas"></canvas></div>
-      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:8px;letter-spacing:1px;">3-DART AVERAGE PER SESSION</div>
+      <div style="font-family:DM Mono,monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:8px;letter-spacing:1px;">3-DART AVERAGE PER SESSION</div>
     </div>
     <div class="panel">
       <div class="panel-title">Session Log</div>
@@ -1202,7 +1469,7 @@
         <thead><tr><th>Date</th><th>Legs</th><th>Avg</th><th>CO%</th><th>Feel</th></tr></thead>
         <tbody id="session-tbody"></tbody>
       </table>
-      <div id="no-sessions" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:20px;text-align:center;display:none;">No sessions yet.</div>
+      <div id="no-sessions" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);padding:20px;text-align:center;display:none;">No sessions yet.</div>
     </div>
   </div>
 
@@ -1216,6 +1483,11 @@
     <div class="panel-title">Checkout % Trend</div>
     <div id="co-trend-bars"></div>
   </div>
+
+  <div class="panel" style="margin-top:24px;">
+    <div class="panel-title">Cricket Summary</div>
+    <div id="cricket-stats-panel"><div style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);padding:16px;text-align:center;">No cricket legs yet.</div></div>
+  </div>
 </div>
 
 <!-- ═══════════════════ ANALYSIS PAGE ═══════════════════ -->
@@ -1225,7 +1497,7 @@
       <div class="panel-title">Target Heat Map</div>
       <div class="board-container">
         <canvas id="heatmap-canvas" width="280" height="280"></canvas>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:10px;letter-spacing:1px;text-align:center;">DRILL HIT RATE — BRIGHTER = BETTER</div>
+        <div style="font-family:DM Mono,monospace;font-size:10px;color:var(--muted);margin-top:10px;letter-spacing:1px;text-align:center;">DRILL HIT RATE — BRIGHTER = BETTER</div>
         <div class="toggle-group g3" style="margin-top:10px;width:260px;" id="heatmap-bed-toggle">
           <button class="toggle-btn sel-single" onclick="selectHeatmapBed('single',this)">Single</button>
           <button class="toggle-btn" onclick="selectHeatmapBed('double',this)">Double</button>
@@ -1236,7 +1508,7 @@
     <div class="panel">
       <div class="panel-title">Weak Spots</div>
       <div class="weak-spots" id="weak-spots-container">
-        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:20px;">Log 5+ throws per target to see weak spots.</div>
+        <div style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);text-align:center;padding:20px;">Log 5+ throws per target to see weak spots.</div>
       </div>
     </div>
   </div>
@@ -1244,17 +1516,22 @@
   <div class="two-col" style="margin-bottom:24px;">
     <div class="panel">
       <div class="panel-title">Miss Direction Analysis</div>
-      <div id="miss-analysis" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);line-height:2;">No miss data yet.</div>
+      <div id="miss-analysis" style="font-family:DM Mono,monospace;font-size:13px;color:var(--muted);line-height:2;">No miss data yet.</div>
     </div>
     <div class="panel">
       <div class="panel-title">Checkout Pressure</div>
-      <div id="checkout-pressure" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);line-height:2;">No checkout data yet.</div>
+      <div id="checkout-pressure" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);line-height:2;">No checkout data yet.</div>
     </div>
   </div>
 
   <div class="panel">
     <div class="panel-title">Double Drill Breakdown</div>
-    <div id="double-breakdown" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:12px;">Log double drills to see breakdown.</div>
+    <div id="double-breakdown" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);padding:12px;">Log double drills to see breakdown.</div>
+  </div>
+
+  <div class="panel" style="margin-top:24px;">
+    <div class="panel-title">Cricket Number Frequency</div>
+    <div id="cricket-num-freq" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);padding:16px;text-align:center;">No cricket legs yet.</div>
   </div>
 </div>
 
@@ -1266,7 +1543,7 @@
     <div class="gate-icon">🎯</div>
     <div class="gate-title">Join Bullboard Social</div>
     <div class="gate-sub">Sign in to share your sessions, follow other players, and see what the community is throwing.</div>
-    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">Sign in using the header → then come back here.</div>
+    <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--muted);">Sign in using the header → then come back here.</div>
   </div>
 
   <!-- MAIN SOCIAL CONTENT (shown when logged in) -->
@@ -1281,7 +1558,7 @@
         <div class="profile-sub" id="social-sub">Set up your profile</div>
         <div style="display:flex;gap:6px;margin-top:10px;">
           <input id="social-name-input" class="tag-input" style="margin:0;flex:1;font-size:11px;" placeholder="Display name / handle" />
-          <button onclick="setSocialProfile()" style="background:var(--accent);color:#000;border:none;padding:6px 12px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;">SET</button>
+          <button onclick="setSocialProfile()" style="background:var(--accent);color:#000;border:none;padding:6px 12px;font-family:DM Mono,monospace;font-size:11px;cursor:pointer;letter-spacing:1px;">SET</button>
         </div>
         <div class="profile-stats">
           <div class="profile-stat"><label>Avg</label><span id="social-p-avg">—</span></div>
@@ -1365,7 +1642,7 @@
 
       <!-- Feed -->
       <div class="social-feed" id="social-feed">
-        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">No posts yet — be the first to share!</div>
+        <div style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">No posts yet — be the first to share!</div>
       </div>
     </div>
 
@@ -1373,7 +1650,7 @@
     <div class="social-sidebar">
       <div class="panel">
         <div class="panel-title">Leaderboard</div>
-        <div id="leaderboard-list" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:8px;">No data yet.</div>
+        <div id="leaderboard-list" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);padding:8px;">No data yet.</div>
       </div>
     </div>
 
@@ -1407,6 +1684,7 @@ function defaultState() {
   return {
     sessions: [],
     drillData: { single:{}, double:{}, treble:{} },
+    cricketLegs: [],
   };
 }
 
@@ -1771,17 +2049,39 @@ function completeLeg() {
   const scored = currentLeg.startScore - currentLeg.score;
   const avg = currentLeg.totalDarts > 0 ? (scored/currentLeg.totalDarts)*3 : 0;
   sessionLegs.push({ score:currentLeg.startScore, darts:currentLeg.totalDarts, avg:avg.toFixed(1), checkouts:currentLeg.checkouts, checkoutAttempts:currentLeg.checkoutAttempts, throws:[...currentLeg.throws], timestamp:Date.now() });
+
+  // Run bot leg if bot is set (01 games only)
+  const botLvl = parseInt(document.getElementById('bot-level').value) || 0;
+  if (botLvl > 0) {
+    const startScore = currentLeg.startScore;
+    resetBot(startScore);
+    // Simulate bot finishing the same leg
+    let botRemaining = startScore;
+    let turns = 0;
+    while (botRemaining > 0 && turns < 60) {
+      const res = runBotTurn(botLvl, botRemaining);
+      if (!res) break;
+      botRemaining = res.remaining;
+      turns++;
+    }
+    const p = BOT_PROFILES[botLvl];
+    if (p) toast(p.name + ' would have finished in ~' + turns + ' rounds');
+  }
+
   newLeg();
 }
 
 function newLeg() {
   const mode = document.getElementById('game-mode').value;
-  const startScore = mode==='501'?501:301;
+  if (mode === 'cricket') { newCricketLeg(); return; }
+  // 01 games — read start score directly from dropdown
+  const startScore = mode === '501' ? 501 : 301;
   currentLeg = { score:startScore, startScore, throws:[], round:1, totalDarts:0, checkoutAttempts:0, checkouts:0, mode, outMode:document.getElementById('out-mode').value, feel:currentLeg.feel||3 };
   document.getElementById('score-display').textContent = startScore;
   document.getElementById('throw-history').innerHTML = '';
   inputVal = ''; updateInputDisplay(); updateMeta();
-  toast(`New leg — ${mode}`);
+  document.getElementById('leg-counter').textContent = 'LEG ' + (sessionLegs.length+1) + ' · ' + mode;
+  toast('New leg — ' + mode);
 }
 
 function setFeel(n, btn) {
@@ -2053,7 +2353,7 @@ function updateDrillStats() {
   const missE = Object.entries(d.misses).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${v}`).join(' · ');
 
   el.innerHTML = `
-    <span style="color:var(--accent);font-size:15px;font-family:'Bebas Neue',sans-serif;letter-spacing:2px">${prefix}${selectedTarget}</span>
+    <span style="color:var(--accent);font-size:15px;font-family:Bebas Neue,sans-serif;letter-spacing:2px">${prefix}${selectedTarget}</span>
     &nbsp;—&nbsp;Hit: <span style="color:${col};font-size:15px">${pct}%</span>
     <span style="color:var(--muted)">(${d.hits}/${d.attempts})</span>
     ${missE ? `<br>Misses: <span style="color:var(--accent2)">${missE}</span>` : ''}
@@ -2087,8 +2387,8 @@ function renderDrillSessionLog() {
       const prefix=g.bed==='double'?'D':g.bed==='treble'?'T':'';
       const pct=Math.round(g.hits/g.total*100);
       const col=pct>=60?'var(--accent3)':pct>=35?'var(--accent)':'var(--accent2)';
-      return `<div style="background:var(--surface2);border:1px solid var(--border);padding:8px 12px;font-family:'DM Mono',monospace;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${col}">${prefix}${g.target}</div>
+      return `<div style="background:var(--surface2);border:1px solid var(--border);padding:8px 12px;font-family:DM Mono,monospace;">
+        <div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:${col}">${prefix}${g.target}</div>
         <div style="font-size:11px;color:${col}">${pct}%</div>
         <div style="font-size:10px;color:var(--muted)">${g.hits}/${g.total}</div>
       </div>`;
@@ -2132,7 +2432,7 @@ function renderDrillAlltimeTable() {
     const topMiss = Object.entries(d.misses).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])[0];
     const missStr = topMiss ? `${topMiss[0]} (${topMiss[1]})` : '—';
     return `<tr>
-      <td style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px">${prefix}${t}</td>
+      <td style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:1px">${prefix}${t}</td>
       <td>${d.attempts}</td>
       <td>${d.hits}</td>
       <td class="${cls}">${pct}%</td>
@@ -2183,6 +2483,28 @@ function renderStats() {
   renderTrendChart(sessions.map(s=>parseFloat(s.avg)));
   renderCheckoutDoubles();
   renderCheckoutTrend();
+  renderCricketStats();
+}
+
+function renderCricketStats() {
+  var legs = state.cricketLegs || [];
+  var container = document.getElementById('cricket-stats-panel');
+  if (!container) return;
+  if (legs.length === 0) {
+    container.innerHTML = '<div style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);padding:16px;text-align:center;">No cricket legs yet.</div>';
+    return;
+  }
+  var wins = legs.filter(function(l) { return l.youWon; }).length;
+  var pct = Math.round(wins / legs.length * 100);
+  var avgScore = Math.round(legs.reduce(function(s,l){return s+l.yourScore;},0) / legs.length);
+  var botGames = legs.filter(function(l){return l.botLevel > 0;});
+  var winVsBot = botGames.filter(function(l){return l.youWon;}).length;
+  container.innerHTML = '<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:0;">'
+    + '<div class="stat-card"><label>Cricket Legs</label><div class="big-num">' + legs.length + '</div><div class="sub">played</div></div>'
+    + '<div class="stat-card"><label>Win Rate</label><div class="big-num" style="color:' + (pct>=50?'var(--accent3)':'var(--accent2)') + '">' + pct + '%</div><div class="sub">of legs</div></div>'
+    + '<div class="stat-card"><label>Avg Points</label><div class="big-num">' + avgScore + '</div><div class="sub">per leg</div></div>'
+    + '<div class="stat-card"><label>vs Bot Wins</label><div class="big-num">' + winVsBot + '</div><div class="sub">of ' + botGames.length + '</div></div>'
+    + '</div>';
 }
 
 function renderCheckoutDoubles() {
@@ -2226,21 +2548,21 @@ function renderCheckoutDoubles() {
 function renderCheckoutTrend() {
   const el=document.getElementById('co-trend-bars');
   const sessions=state.sessions;
-  if(sessions.length===0){el.innerHTML=`<div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:12px;">No sessions yet.</div>`;return;}
+  if(sessions.length===0){el.innerHTML=`<div style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);padding:12px;">No sessions yet.</div>`;return;}
 
   const total=sessions.reduce((s,ses)=>s+ses.checkouts,0);
   const totalAtt=sessions.reduce((s,ses)=>s+ses.checkoutAttempts,0);
   el.innerHTML=`
-    <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:14px;">
+    <div style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);margin-bottom:14px;">
       Career: <span style="color:var(--accent3)">${total} checkouts</span> / ${totalAtt} attempts
       &nbsp;·&nbsp; <span style="color:var(--accent)">${totalAtt>0?((total/totalAtt)*100).toFixed(1):0}%</span>
     </div>
-    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;">LAST 10 SESSIONS</div>
+    <div style="font-family:DM Mono,monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;">LAST 10 SESSIONS</div>
     <div style="display:flex;flex-direction:column;gap:5px;">
       ${[...sessions].slice(-10).map(s=>{
         const co=parseInt(s.checkoutPct);
         const col=co>=50?'var(--accent3)':co>=30?'var(--accent)':'var(--accent2)';
-        return `<div style="display:flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;">
+        return `<div style="display:flex;align-items:center;gap:10px;font-family:DM Mono,monospace;font-size:11px;">
           <span style="color:var(--muted);width:60px">${s.date}</span>
           <div style="flex:1;background:var(--dim);height:5px;"><div style="height:5px;background:${col};width:${Math.min(co,100)}%;transition:width 0.4s"></div></div>
           <span style="color:${col};width:36px;text-align:right">${s.checkoutPct}%</span>
@@ -2304,6 +2626,38 @@ function renderAnalysis() {
   renderMissAnalysis();
   renderCheckoutPressure();
   renderDoubleBreakdown();
+  renderCricketNumFreq();
+}
+
+function renderCricketNumFreq() {
+  var el = document.getElementById('cricket-num-freq');
+  var legs = state.cricketLegs || [];
+  if (!el || legs.length === 0) { if(el) el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted)">No cricket legs yet.</div>'; return; }
+
+  // Tally marks hit per number
+  var totals = {};
+  CRICKET_NUMS.forEach(function(n) { totals[String(n)] = 0; });
+  legs.forEach(function(l) {
+    if (!l.marks) return;
+    Object.keys(l.marks).forEach(function(k) { totals[k] = (totals[k]||0) + (l.marks[k]||0); });
+  });
+
+  var maxVal = Math.max.apply(null, Object.values(totals)) || 1;
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">'
+    + CRICKET_NUMS.map(function(n) {
+      var key = String(n);
+      var val = totals[key] || 0;
+      var pct = Math.round(val / maxVal * 100);
+      var label = n === 'B' ? 'BULL' : n;
+      var col = pct >= 70 ? 'var(--accent3)' : pct >= 40 ? 'var(--accent)' : 'var(--accent2)';
+      return '<div style="display:flex;align-items:center;gap:10px;">'
+        + '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:' + col + ';width:44px;text-align:right">' + label + '</div>'
+        + '<div style="flex:1;background:var(--dim);height:6px;">'
+        + '<div style="height:6px;background:' + col + ';width:' + pct + '%;transition:width 0.4s"></div></div>'
+        + '<div style="color:var(--muted);font-size:11px;width:36px;text-align:right">' + val + '</div>'
+        + '</div>';
+    }).join('')
+    + '</div>';
 }
 
 function selectHeatmapBed(type, btn) {
@@ -2423,7 +2777,7 @@ function renderMissAnalysis() {
       ${['left','right','high','low'].map(d=>`
         <div style="text-align:center;padding:14px;background:var(--surface2);border:1px solid var(--border)">
           <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">${d.toUpperCase()}</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:${totals[d]>5?'var(--accent2)':'var(--text)'}">${totals[d]}</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:${totals[d]>5?'var(--accent2)':'var(--text)'}">${totals[d]}</div>
         </div>
       `).join('')}
     </div>
@@ -2485,9 +2839,9 @@ function renderDoubleBreakdown() {
       const col=pct>=60?'var(--accent3)':pct>=35?'var(--accent)':'var(--accent2)';
       const topMiss=Object.entries(d.misses).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])[0];
       const missHint=topMiss?`→ ${topMiss[0]}`:'—';
-      return `<div style="background:var(--surface2);border:1px solid var(--border);padding:12px;font-family:'DM Mono',monospace;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${col};letter-spacing:1px">D${t}</div>
-        <div style="font-size:20px;color:${col};font-family:'Bebas Neue',sans-serif">${pct}%</div>
+      return `<div style="background:var(--surface2);border:1px solid var(--border);padding:12px;font-family:DM Mono,monospace;">
+        <div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:${col};letter-spacing:1px">D${t}</div>
+        <div style="font-size:20px;color:${col};font-family:Bebas Neue,sans-serif">${pct}%</div>
         <div style="font-size:10px;color:var(--muted);margin-top:2px">${d.hits}/${d.attempts}</div>
         <div style="font-size:10px;color:var(--muted)">${missHint}</div>
       </div>`;
@@ -2943,23 +3297,556 @@ function confirmDrillShare() {
 
 
 // ═══════════════════════════════════════════════════
+//  MOBILE MENU
+// ═══════════════════════════════════════════════════
+function toggleMenu() {
+  var nav = document.getElementById('main-nav');
+  var hbg = document.getElementById('hamburger');
+  var auth = document.getElementById('auth-container');
+  var open = nav.classList.toggle('open');
+  hbg.classList.toggle('open', open);
+  if (open) auth.classList.add('mobile-open');
+  else auth.classList.remove('mobile-open');
+}
+function closeMenu() {
+  var nav = document.getElementById('main-nav');
+  var hbg = document.getElementById('hamburger');
+  var auth = document.getElementById('auth-container');
+  nav.classList.remove('open');
+  hbg.classList.remove('open');
+  auth.classList.remove('mobile-open');
+}
+
+// ═══════════════════════════════════════════════════
+//  BOT OPPONENT (01 games)
+// ═══════════════════════════════════════════════════
+// Bot accuracy profile per level: { hitRate, checkoutRate, avgThrow }
+const BOT_PROFILES = [
+  null, // index 0 unused
+  { name:'Child',        avgThrow: 14, checkoutRate: 0.05, hitRate: 0.30 }, // L1
+  { name:'Casual',       avgThrow: 20, checkoutRate: 0.08, hitRate: 0.38 }, // L2
+  { name:'Regular',      avgThrow: 28, checkoutRate: 0.12, hitRate: 0.45 }, // L3
+  { name:'Improving',    avgThrow: 36, checkoutRate: 0.18, hitRate: 0.52 }, // L4
+  { name:'Club',         avgThrow: 45, checkoutRate: 0.25, hitRate: 0.60 }, // L5
+  { name:'Good Club',    avgThrow: 54, checkoutRate: 0.33, hitRate: 0.68 }, // L6
+  { name:'County',       avgThrow: 64, checkoutRate: 0.42, hitRate: 0.76 }, // L7
+  { name:'Semi-Pro',     avgThrow: 74, checkoutRate: 0.52, hitRate: 0.84 }, // L8
+  { name:'Pro',          avgThrow: 85, checkoutRate: 0.64, hitRate: 0.90 }, // L9
+  { name:'World Class',  avgThrow: 96, checkoutRate: 0.78, hitRate: 0.96 }, // L10
+];
+
+let botState = { score: 501, totalDarts: 0, throws: [], checkouts: 0, checkoutAttempts: 0 };
+
+function resetBot(startScore) {
+  botState = { score: startScore, totalDarts: 0, throws: [], checkouts: 0, checkoutAttempts: 0 };
+}
+
+function botThrowScore(level, remaining) {
+  var p = BOT_PROFILES[level];
+  if (!p) return 0;
+  // Simulate 3-dart throw
+  var variance = p.avgThrow * 0.35;
+  var raw = p.avgThrow + (Math.random() - 0.5) * 2 * variance;
+  raw = Math.max(0, Math.min(raw, 180));
+  var score = Math.round(raw);
+  // Near checkout: use checkout rate
+  if (remaining <= 170) {
+    if (remaining <= 40 && Math.random() < p.checkoutRate) {
+      // Checkout!
+      return remaining; // exact checkout
+    }
+    score = Math.min(score, remaining - 2); // don't accidentally bust
+    if (score < 0) score = 0;
+  }
+  return score;
+}
+
+function runBotTurn(level, startScore) {
+  var p = BOT_PROFILES[level];
+  if (!p) return null;
+  var score = botThrowScore(level, startScore);
+  var remaining = startScore - score;
+  var checkout = remaining === 0;
+  var bust = remaining < 0 || (remaining === 1 && document.getElementById('out-mode').value === 'double');
+  if (bust) { score = 0; remaining = startScore; }
+  return { score, remaining, checkout, bust, botName: p.name };
+}
+
+function displayBotTurn(result, level) {
+  var el = document.getElementById('bot-turn-overlay');
+  if (!el || !result) return;
+  var p = BOT_PROFILES[level];
+  var msg = p.name + ' threw ';
+  if (result.bust) msg += result.score + ' — BUST';
+  else if (result.checkout) msg += result.score + ' — CHECKOUT! 🎯';
+  else msg += result.score + ' · ' + result.remaining + ' remaining';
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(function() { el.classList.remove('visible'); }, 2200);
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME MODE SWITCH (01 vs Cricket)
+// ═══════════════════════════════════════════════════
+function onGameModeChange() {
+  var mode = document.getElementById('game-mode').value;
+  var cricketUI = document.getElementById('cricket-ui');
+  var standardUI = document.getElementById('standard-ui');
+  var outModeSelect = document.getElementById('out-mode');
+  var scoreHero = document.querySelector('.score-hero');
+  var scoreMeta = document.querySelector('.score-meta');
+  var botLevelSelect = document.getElementById('bot-level');
+
+  if (mode === 'cricket') {
+    cricketUI.style.display = 'block';
+    standardUI.style.display = 'none';
+    outModeSelect.parentElement && (outModeSelect.style.display = 'none');
+    scoreHero && (scoreHero.style.display = 'none');
+    scoreMeta && (scoreMeta.style.display = 'none');
+    botLevelSelect.style.display = 'inline-block'; // bots work in cricket too
+    newCricketLeg();
+  } else {
+    cricketUI.style.display = 'none';
+    standardUI.style.display = 'block';
+    outModeSelect && (outModeSelect.style.display = 'inline-block');
+    scoreHero && (scoreHero.style.display = 'flex');
+    scoreMeta && (scoreMeta.style.display = 'grid');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  CRICKET GAME ENGINE
+// ═══════════════════════════════════════════════════
+const CRICKET_NUMS = [20, 19, 18, 17, 16, 15, 'B']; // B = Bull (25/50)
+
+// marks: 0=none, 1=slash, 2=X, 3=circled-X (owned), 4=closed (both have 3)
+let cricketState = {
+  you: { marks: {}, score: 0 },
+  bot: { marks: {}, score: 0 },
+  currentMult: 1,
+  dartsLeft: 3,
+  yourTurn: true,
+  round: 1,
+  history: [], // { turn:'you'|'bot', num, mult, marks_after, score_gained }
+  legs: 0,
+  botLevel: 0,
+};
+
+function initCricketMarks() {
+  var m = {};
+  CRICKET_NUMS.forEach(function(n) { m[String(n)] = 0; });
+  return m;
+}
+
+function newCricketLeg() {
+  var botLvl = parseInt(document.getElementById('bot-level').value) || 0;
+  cricketState = {
+    you: { marks: initCricketMarks(), score: 0 },
+    bot: { marks: initCricketMarks(), score: 0 },
+    currentMult: 1,
+    dartsLeft: 3,
+    yourTurn: true,
+    round: 1,
+    history: [],
+    legs: cricketState.legs,
+    botLevel: botLvl,
+  };
+  renderCricketBoard();
+  renderCricketNumBtns();
+  updateCricketTurnInfo();
+}
+
+// Mark symbol SVG
+function markSvg(marks, color) {
+  var sz = 38;
+  var c = color || '#e8ff3a';
+  if (marks === 0) return '<svg width="' + sz + '" height="' + sz + '"></svg>';
+  if (marks === 1) {
+    // Single slash /
+    return '<svg width="' + sz + '" height="' + sz + '" viewBox="0 0 38 38">'
+      + '<line x1="24" y1="4" x2="14" y2="34" stroke="' + c + '" stroke-width="3" stroke-linecap="round"/>'
+      + '</svg>';
+  }
+  if (marks === 2) {
+    // X (two slashes)
+    return '<svg width="' + sz + '" height="' + sz + '" viewBox="0 0 38 38">'
+      + '<line x1="8" y1="6" x2="30" y2="32" stroke="' + c + '" stroke-width="3" stroke-linecap="round"/>'
+      + '<line x1="30" y1="6" x2="8" y2="32" stroke="' + c + '" stroke-width="3" stroke-linecap="round"/>'
+      + '</svg>';
+  }
+  // 3+ = circled X
+  return '<svg width="' + sz + '" height="' + sz + '" viewBox="0 0 38 38">'
+    + '<line x1="8" y1="6" x2="30" y2="32" stroke="' + c + '" stroke-width="3" stroke-linecap="round"/>'
+    + '<line x1="30" y1="6" x2="8" y2="32" stroke="' + c + '" stroke-width="3" stroke-linecap="round"/>'
+    + '<circle cx="19" cy="19" r="16" stroke="' + c + '" stroke-width="2.5" fill="none"/>'
+    + '</svg>';
+}
+
+function renderCricketBoard() {
+  var board = document.getElementById('cricket-board');
+  if (!board) return;
+  var botName = cricketState.botLevel > 0
+    ? (BOT_PROFILES[cricketState.botLevel] ? BOT_PROFILES[cricketState.botLevel].name : 'BOT')
+    : 'BOT';
+
+  var html = '<div class="cricket-header">'
+    + '<div class="ch-player you">YOU</div>'
+    + '<div class="ch-numbers">NUMBER</div>'
+    + '<div class="ch-player bot">' + botName + '</div>'
+    + '</div>';
+
+  CRICKET_NUMS.forEach(function(n) {
+    var key = String(n);
+    var yMarks = cricketState.you.marks[key] || 0;
+    var bMarks = cricketState.bot.marks[key] || 0;
+    var bothClosed = yMarks >= 3 && bMarks >= 3;
+    var numLabel = n === 'B' ? 'BULL' : n;
+    var numClass = 'cricket-num'
+      + (bothClosed ? ' closed-both' : '')
+      + (yMarks >= 3 && !bothClosed ? ' owned-you' : '')
+      + (bMarks >= 3 && !bothClosed ? ' owned-bot' : '');
+    var rowClass = 'cricket-row' + (bothClosed ? ' fully-closed' : '');
+    html += '<div class="' + rowClass + '" onclick="cricketNumClick(\'' + key + '\')">'
+      + '<div class="cricket-marks you">' + markSvg(Math.min(yMarks, 3), '#e8ff3a') + '</div>'
+      + '<div class="' + numClass + '">' + numLabel + '</div>'
+      + '<div class="cricket-marks bot">' + markSvg(Math.min(bMarks, 3), '#a78bfa') + '</div>'
+      + '</div>';
+  });
+
+  // Score row
+  html += '<div class="cricket-score-row">'
+    + '<div><div class="cricket-score-val you">' + cricketState.you.score + '</div><div class="cricket-score-label">YOUR PTS</div></div>'
+    + '<div style="display:flex;align-items:center;padding:0 16px;font-family:\'DM Mono\',monospace;font-size:10px;color:var(--muted);">VS</div>'
+    + '<div><div class="cricket-score-val bot">' + cricketState.bot.score + '</div><div class="cricket-score-label">' + botName + ' PTS</div></div>'
+    + '</div>';
+
+  board.innerHTML = html;
+}
+
+function renderCricketNumBtns() {
+  var container = document.getElementById('cricket-num-btns');
+  if (!container) return;
+  var html = '';
+  CRICKET_NUMS.forEach(function(n) {
+    var key = String(n);
+    var yMarks = cricketState.you.marks[key] || 0;
+    var bMarks = cricketState.bot.marks[key] || 0;
+    var bothClosed = yMarks >= 3 && bMarks >= 3;
+    var owned = yMarks >= 3 && !bothClosed;
+    var cls = 'cricket-num-btn'
+      + (bothClosed ? ' closed' : '')
+      + (owned ? ' owned' : '');
+    var label = n === 'B' ? 'BULL' : n;
+    html += '<button class="' + cls + '" onclick="cricketNumClick(\'' + key + '\')">' + label + '</button>';
+  });
+  container.innerHTML = html;
+}
+
+function updateCricketTurnInfo() {
+  var ti = document.getElementById('cricket-turn-info');
+  var wt = document.getElementById('cricket-whose-turn');
+  var dp = document.getElementById('cricket-dart-pips');
+  if (!ti) return;
+  var dl = cricketState.dartsLeft;
+  var pips = '';
+  for (var i = 0; i < 3; i++) {
+    pips += (i < dl) ? '● ' : '○ ';
+  }
+  if (dp) dp.textContent = pips.trim();
+  if (wt) {
+    if (cricketState.yourTurn) {
+      wt.textContent = 'YOUR TURN';
+      wt.style.color = 'var(--accent)';
+    } else {
+      var botName = cricketState.botLevel > 0 && BOT_PROFILES[cricketState.botLevel]
+        ? BOT_PROFILES[cricketState.botLevel].name.toUpperCase()
+        : "BOT'S TURN";
+      wt.textContent = botName + "'S TURN";
+      wt.style.color = 'var(--accent4)';
+    }
+  }
+}
+
+function setCricketMult(n, btn) {
+  cricketState.currentMult = n;
+  document.querySelectorAll('.cricket-mult-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function cricketNumClick(key) {
+  if (!cricketState.yourTurn) return;
+  applyMarks('you', key, cricketState.currentMult);
+}
+
+function applyMarks(player, key, mult) {
+  // mult = how many marks this dart scores (1=single, 2=double, 3=treble)
+  var gs = cricketState[player];
+  var opp = player === 'you' ? 'bot' : 'you';
+  var oppGs = cricketState[opp];
+  var current = gs.marks[key] || 0;
+  var oppMarks = oppGs.marks[key] || 0;
+
+  if (current >= 3 && oppMarks >= 3) return; // fully closed, ignore
+
+  var gained = 0;
+  var newMarks = current;
+  for (var i = 0; i < mult; i++) {
+    if (newMarks < 3) {
+      newMarks++;
+    } else {
+      // already owned — score points if opp hasn't closed
+      if (oppMarks < 3) {
+        var numVal = key === 'B' ? 25 : parseInt(key);
+        gained += numVal;
+      }
+    }
+  }
+  // If already at 3+ before, all marks score if opp open
+  gs.marks[key] = newMarks;
+  gs.score += gained;
+
+  renderCricketBoard();
+  renderCricketNumBtns();
+
+  // Advance dart count
+  cricketState.dartsLeft--;
+  updateCricketTurnInfo();
+
+  // Reset multiplier to single after each dart
+  cricketState.currentMult = 1;
+  document.querySelectorAll('.cricket-mult-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('cm-single') && document.getElementById('cm-single').classList.add('active');
+
+  if (cricketState.dartsLeft <= 0) {
+    endCricketPlayerTurn();
+  }
+
+  // Check win
+  checkCricketWin();
+}
+
+function cricketMiss() {
+  if (!cricketState.yourTurn) return;
+  cricketState.dartsLeft--;
+  updateCricketTurnInfo();
+  if (cricketState.dartsLeft <= 0) endCricketPlayerTurn();
+}
+
+function endCricketPlayerTurn() {
+  cricketState.dartsLeft = 3;
+  if (cricketState.yourTurn) {
+    // Your turn done — bot goes if bot level set
+    if (cricketState.botLevel > 0) {
+      cricketState.yourTurn = false;
+      updateCricketTurnInfo();
+      setTimeout(runCricketBotTurn, 600);
+    } else {
+      // 2-player local: just flip turns (or solo practice: stay on you)
+      cricketState.round++;
+      updateCricketTurnInfo();
+    }
+  } else {
+    cricketState.yourTurn = true;
+    cricketState.round++;
+    updateCricketTurnInfo();
+  }
+}
+
+function runCricketBotTurn() {
+  var lvl = cricketState.botLevel;
+  var p = BOT_PROFILES[lvl];
+  if (!p) { cricketState.yourTurn = true; updateCricketTurnInfo(); return; }
+
+  // Bot AI: pick targets strategically
+  var botOverlay = document.getElementById('bot-turn-overlay');
+  var msgs = [];
+
+  for (var d = 0; d < 3; d++) {
+    if (checkCricketWinState()) break;
+    var target = chooseBotCricketTarget(lvl);
+    if (!target) break;
+    var hit = Math.random() < p.hitRate;
+    if (hit) {
+      // What multiplier does bot use? Better bots go for trebles
+      var multRoll = Math.random();
+      var mult = 1;
+      if (lvl >= 8 && multRoll < 0.40) mult = 3;
+      else if (lvl >= 5 && multRoll < 0.25) mult = 3;
+      else if (lvl >= 3 && multRoll < 0.20) mult = 2;
+      applyBotMarks(target, mult, msgs);
+    } else {
+      msgs.push('Missed');
+    }
+  }
+
+  if (botOverlay) {
+    botOverlay.textContent = (p.name + ': ' + (msgs.length ? msgs.join(' · ') : 'All misses'));
+    botOverlay.style.display = 'block';
+    setTimeout(function() { botOverlay.style.display = 'none'; }, 2400);
+  }
+
+  cricketState.yourTurn = true;
+  cricketState.dartsLeft = 3;
+  renderCricketBoard();
+  renderCricketNumBtns();
+  updateCricketTurnInfo();
+  checkCricketWin();
+}
+
+function applyBotMarks(key, mult, msgs) {
+  var gs = cricketState.bot;
+  var oppGs = cricketState.you;
+  var current = gs.marks[key] || 0;
+  var oppMarks = oppGs.marks[key] || 0;
+  if (current >= 3 && oppMarks >= 3) return;
+
+  var gained = 0;
+  var newMarks = current;
+  for (var i = 0; i < mult; i++) {
+    if (newMarks < 3) { newMarks++; }
+    else if (oppMarks < 3) {
+      var numVal = key === 'B' ? 25 : parseInt(key);
+      gained += numVal;
+    }
+  }
+  gs.marks[key] = newMarks;
+  gs.score += gained;
+
+  var multLabel = mult === 3 ? 'T' : mult === 2 ? 'D' : 'S';
+  var numLabel = key === 'B' ? 'Bull' : key;
+  var scored = gained > 0 ? ' (+' + gained + ')' : '';
+  msgs.push(multLabel + numLabel + (newMarks >= 3 && newMarks - mult < 3 ? ' ✓' : '') + scored);
+}
+
+function chooseBotCricketTarget(lvl) {
+  // Strategy: close own open numbers first, then score on opponent's open numbers
+  var openForBot = CRICKET_NUMS.map(String).filter(function(k) {
+    return (cricketState.bot.marks[k] || 0) < 3;
+  });
+  var canScore = CRICKET_NUMS.map(String).filter(function(k) {
+    return (cricketState.bot.marks[k] || 0) >= 3 && (cricketState.you.marks[k] || 0) < 3;
+  });
+
+  if (openForBot.length === 0 && canScore.length === 0) return null;
+
+  // Higher level bots prefer scoring; lower bots just close
+  var scoreWeight = lvl / 10.0;
+  if (canScore.length > 0 && Math.random() < scoreWeight) {
+    // Score on highest-value open number
+    canScore.sort(function(a, b) {
+      var av = a === 'B' ? 25 : parseInt(a);
+      var bv = b === 'B' ? 25 : parseInt(b);
+      return bv - av;
+    });
+    return canScore[0];
+  }
+  if (openForBot.length > 0) {
+    // Close highest-value unclosed
+    openForBot.sort(function(a, b) {
+      var av = a === 'B' ? 25 : parseInt(a);
+      var bv = b === 'B' ? 25 : parseInt(b);
+      return bv - av;
+    });
+    return openForBot[0];
+  }
+  return canScore[0] || null;
+}
+
+function checkCricketWinState() {
+  var youDone = CRICKET_NUMS.every(function(n) { return (cricketState.you.marks[String(n)] || 0) >= 3; });
+  var botDone = CRICKET_NUMS.every(function(n) { return (cricketState.bot.marks[String(n)] || 0) >= 3; });
+  return youDone || botDone;
+}
+
+function checkCricketWin() {
+  var youDone = CRICKET_NUMS.every(function(n) { return (cricketState.you.marks[String(n)] || 0) >= 3; });
+  var botDone = CRICKET_NUMS.every(function(n) { return (cricketState.bot.marks[String(n)] || 0) >= 3; });
+
+  if (!youDone && !botDone) return;
+
+  // Win condition: all closed AND higher or equal score
+  var yScore = cricketState.you.score;
+  var bScore = cricketState.bot.score;
+
+  if (youDone && yScore >= bScore) {
+    setTimeout(function() {
+      toast('🏆 YOU WIN! ' + yScore + ' pts vs ' + bScore + ' pts');
+      saveCricketLeg(true);
+    }, 300);
+  } else if (botDone && bScore >= yScore) {
+    setTimeout(function() {
+      var botName = cricketState.botLevel > 0 && BOT_PROFILES[cricketState.botLevel]
+        ? BOT_PROFILES[cricketState.botLevel].name : 'Bot';
+      toast(botName + ' wins! ' + bScore + ' vs ' + yScore);
+      saveCricketLeg(false);
+    }, 300);
+  } else if (youDone && yScore < bScore) {
+    // Must keep scoring to catch up
+    toast('You closed all — but behind on points! Keep scoring.', true);
+  } else if (botDone && bScore < yScore) {
+    toast('Bot closed all — but you\'re ahead! Keep closing.', true);
+  }
+}
+
+function saveCricketLeg(youWon) {
+  var leg = {
+    type: 'cricket',
+    timestamp: Date.now(),
+    round: cricketState.round,
+    yourScore: cricketState.you.score,
+    botScore: cricketState.bot.score,
+    botLevel: cricketState.botLevel,
+    youWon: youWon,
+    marks: JSON.parse(JSON.stringify(cricketState.you.marks)),
+  };
+  if (!state.cricketLegs) state.cricketLegs = [];
+  state.cricketLegs.push(leg);
+  saveState();
+  cricketState.legs++;
+}
+
+// ═══════════════════════════════════════════════════
 //  HISTORY PAGE
 // ═══════════════════════════════════════════════════
 function renderHistoryPage() {
   const el = document.getElementById('history-list');
   const filter = document.getElementById('history-filter') ? document.getElementById('history-filter').value : 'all';
-  let sessions = [...state.sessions].reverse();
 
-  if (filter !== 'all') {
-    sessions = sessions.filter(function(s) { return s.legDetails && s.legDetails[0] && String(s.legDetails[0].score) === filter; });
+  // Cricket legs section
+  let cricketHtml = '';
+  if ((state.cricketLegs || []).length > 0 && (filter === 'all' || filter === 'cricket')) {
+    const legs = [...state.cricketLegs].reverse().slice(0, 20);
+    cricketHtml = '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:3px;color:var(--accent);margin-bottom:12px;margin-top:8px;">CRICKET LEGS</div>';
+    cricketHtml += legs.map(function(l) {
+      const dt = new Date(l.timestamp).toLocaleDateString('en-GB', {day:'numeric',month:'short'});
+      const result = l.youWon ? '<span style="color:var(--accent3)">WIN</span>' : '<span style="color:var(--accent2)">LOSS</span>';
+      const botLabel = l.botLevel > 0 && BOT_PROFILES[l.botLevel] ? BOT_PROFILES[l.botLevel].name : 'Solo';
+      return '<div class="history-session-card" style="border-left:2px solid ' + (l.youWon ? 'var(--accent3)' : 'var(--accent2)') + '">'
+        + '<div class="history-session-header">'
+        + '<div class="history-session-date">' + dt + '</div>'
+        + '<div class="history-session-meta">Cricket · ' + botLabel + ' · Round ' + (l.round || '?') + '</div>'
+        + '<div>' + result + '</div>'
+        + '</div>'
+        + '<div class="history-stat-chips">'
+        + '<div class="history-chip"><label>Your Pts</label><span>' + l.yourScore + '</span></div>'
+        + '<div class="history-chip"><label>' + botLabel + ' Pts</label><span>' + l.botScore + '</span></div>'
+        + '</div></div>';
+    }).join('');
   }
 
-  if (sessions.length === 0) {
+  let sessions = [...state.sessions].reverse();
+  if (filter !== 'all' && filter !== 'cricket') {
+    sessions = sessions.filter(function(s) { return s.legDetails && s.legDetails[0] && String(s.legDetails[0].score) === filter; });
+  } else if (filter === 'cricket') {
+    sessions = [];
+  }
+
+  if (sessions.length === 0 && !cricketHtml) {
     el.innerHTML = '<div style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">No sessions yet — complete a practice session to see your history.</div>';
     return;
   }
 
-  el.innerHTML = sessions.map(function(s) {
+  el.innerHTML = cricketHtml + sessions.map(function(s) {
     const feel = ['','😩','😕','😐','🙂','🔥'][s.feel] || '';
     const co = parseInt(s.checkoutPct);
     const coColor = co>=50?'var(--accent3)':co>=30?'var(--accent)':'var(--accent2)';
