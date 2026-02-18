@@ -2655,6 +2655,93 @@ updateAttemptDots();
     }
   });
 </script>
+  <script>
+function showPage(pageName, buttonEl) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.remove('active');
+  });
   
+  // Remove active class from all nav buttons
+  document.querySelectorAll('nav button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Show the selected page
+  const page = document.getElementById(`page-${pageName}`);
+  if (page) {
+    page.classList.add('active');
+  }
+  
+  // Mark the button as active
+  if (buttonEl) {
+    buttonEl.classList.add('active');
+  }
+}
+
+// Additional functions you'll need
+function numPress(num) {
+  const display = document.getElementById('input-display');
+  display.textContent += num;
+}
+
+function numDel() {
+  const display = document.getElementById('input-display');
+  display.textContent = display.textContent.slice(0, -1);
+}
+
+function submitScore() {
+  console.log('Score submitted');
+}
+
+function bustScore() {
+  console.log('Bust recorded');
+}
+
+function newLeg() {
+  console.log('New leg started');
+}
+
+function setFeel(level, buttonEl) {
+  document.querySelectorAll('.feel-btn').forEach(btn => btn.classList.remove('active'));
+  buttonEl.classList.add('active');
+}
+
+function endSession() {
+  console.log('Session ended');
+}
+
+function toggleVoice() {
+  console.log('Voice toggled');
+}
+
+function selectBedType(type, buttonEl) {
+  document.querySelectorAll('#bed-toggle .toggle-btn').forEach(btn => btn.classList.remove('sel-single', 'sel-double', 'sel-treble'));
+  buttonEl.classList.add('sel-' + type);
+}
+
+function selectDartCount(count, buttonEl) {
+  document.querySelectorAll('#darts-toggle .toggle-btn').forEach(btn => btn.classList.remove('sel-darts'));
+  buttonEl.classList.add('sel-darts');
+}
+
+function selectMiss(direction, buttonEl) {
+  document.querySelectorAll('.miss-btn').forEach(btn => btn.classList.remove('selected'));
+  buttonEl.classList.add('selected');
+}
+
+function logDrill(result) {
+  console.log('Drill logged:', result);
+}
+
+function selectDrillView(bedType, buttonEl) {
+  document.querySelectorAll('#drill-bed-filter .toggle-btn').forEach(btn => btn.classList.remove('sel-single', 'sel-double', 'sel-treble'));
+  buttonEl.classList.add('sel-' + bedType);
+}
+
+function toggleDrillVoice() {
+  console.log('Drill voice toggled');
+}
+</script>
 </body>
 </html>
