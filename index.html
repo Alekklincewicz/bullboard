@@ -780,6 +780,8 @@
     border-color: var(--accent); color: var(--accent); background: rgba(232,255,58,0.05);
   }
 
+  .hidden { display: none !important; }
+
   @media (max-width: 1100px) {
     .social-layout { grid-template-columns: 1fr 1fr; }
     .social-layout > *:last-child { display: none; }
@@ -793,6 +795,147 @@
     header { padding: 16px; }
     .page { padding: 16px; }
   }
+
+  /* ── SESSION END MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    z-index: 500; display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.15s ease;
+  }
+  .modal-overlay.hidden { display: none; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 32px; width: 520px; max-width: 96vw;
+    max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.15s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(12px);opacity:0} to{transform:none;opacity:1} }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+    letter-spacing: 3px; color: var(--accent); margin-bottom: 20px;
+  }
+  .modal-stat-row {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 1px; background: var(--border); margin-bottom: 20px;
+  }
+  .modal-stat-row > div { background: var(--surface2); padding: 14px; text-align: center; }
+  .modal-stat-row label {
+    display: block; font-family: 'DM Mono', monospace; font-size: 9px;
+    color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .modal-stat-row .val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--accent); }
+
+  .modal-section-label {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px; margin-top: 18px;
+  }
+  .modal-share-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; background: var(--surface2);
+    border: 1px solid var(--border); margin-bottom: 8px;
+  }
+  .modal-share-toggle {
+    width: 38px; height: 22px; background: var(--dim);
+    border: 1px solid var(--border); border-radius: 11px;
+    cursor: pointer; position: relative; flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .modal-share-toggle.on { background: var(--accent3); border-color: var(--accent3); }
+  .modal-share-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; background: #fff; border-radius: 50%;
+    transition: left 0.2s;
+  }
+  .modal-share-toggle.on::after { left: 18px; }
+  .modal-share-label { font-family: 'DM Mono', monospace; font-size: 11px; flex: 1; }
+  .modal-share-label span { color: var(--muted); font-size: 10px; display: block; margin-top: 2px; }
+
+  .modal-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; }
+  .modal-btn-cancel {
+    background: none; border: 1px solid var(--dim); color: var(--muted);
+    padding: 14px; font-family: 'DM Mono', monospace; font-size: 12px;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.15s; text-transform: uppercase;
+  }
+  .modal-btn-cancel:hover { border-color: var(--muted); color: var(--text); }
+  .modal-btn-save {
+    background: var(--accent); color: #000; border: none;
+    padding: 14px; font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+    letter-spacing: 3px; cursor: pointer; transition: all 0.15s;
+  }
+  .modal-btn-save:hover { background: #d4e82a; }
+
+  /* ── AUTO-POST SETTINGS ── */
+  .auto-post-panel {
+    background: var(--surface); border: 1px solid var(--border); padding: 20px; margin-bottom: 16px;
+  }
+  .auto-post-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid var(--border);
+  }
+  .auto-post-row:last-child { border-bottom: none; }
+  .auto-post-icon { font-size: 18px; width: 26px; text-align: center; }
+  .auto-post-info { flex: 1; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
+  .auto-post-info span { font-size: 10px; color: var(--muted); display: block; margin-top: 2px; }
+
+  /* ── HISTORY PAGE ── */
+  .history-session-card {
+    background: var(--surface); border: 1px solid var(--border); padding: 20px; margin-bottom: 12px;
+  }
+  .history-session-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+  }
+  .history-session-date {
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--accent);
+  }
+  .history-session-meta { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); flex: 1; }
+  .history-session-feel { font-size: 20px; }
+  .history-stat-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .history-chip {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 5px 10px; font-family: 'DM Mono', monospace; font-size: 11px;
+  }
+  .history-chip label { color: var(--muted); font-size: 9px; letter-spacing: 1px; display: block; text-transform: uppercase; }
+  .history-chip span { color: var(--text); }
+  .history-notes {
+    margin-top: 12px; padding: 8px 12px; background: var(--surface2);
+    border-left: 2px solid var(--dim);
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); line-height: 1.6;
+  }
+
+  /* ── SOCIAL SIGN-IN GATE ── */
+  .social-gate {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 300px; text-align: center; padding: 40px;
+    font-family: 'DM Mono', monospace; color: var(--muted);
+  }
+  .social-gate .gate-icon { font-size: 48px; margin-bottom: 16px; }
+  .social-gate .gate-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+    letter-spacing: 3px; color: var(--text); margin-bottom: 8px;
+  }
+  .social-gate .gate-sub { font-size: 12px; line-height: 1.8; max-width: 360px; margin-bottom: 20px; }
+
+  /* ── DRILL SHARE BUTTON ── */
+  .drill-save-row {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 16px;
+  }
+  .btn-drill-save {
+    background: none; border: 1px solid var(--accent3); color: var(--accent3);
+    padding: 9px 18px; font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.15s; text-transform: uppercase;
+  }
+  .btn-drill-save:hover { background: rgba(58,255,184,0.08); }
+  .btn-drill-share {
+    background: none; border: 1px solid var(--accent4); color: var(--accent4);
+    padding: 9px 18px; font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.15s; text-transform: uppercase;
+  }
+  .btn-drill-share:hover { background: rgba(167,139,250,0.08); }
+
 </style>
 </head>
 <body>
@@ -804,6 +947,7 @@
     <button onclick="showPage('drill',this)">Drills</button>
     <button onclick="showPage('stats',this)">Stats</button>
     <button onclick="showPage('analysis',this)">Analysis</button>
+    <button onclick="showPage('history',this)">History</button>
     <button onclick="showPage('social',this)">Social</button>
   </nav>
   
@@ -885,7 +1029,45 @@
   </div>
 
   <input class="tag-input" id="session-notes" placeholder="Session notes... (e.g. 'elbow dropping on high numbers')" />
-  <button class="session-end-btn" onclick="endSession()">End Session & Save</button>
+  <button class="session-end-btn" onclick="openEndSessionModal()">End Session &amp; Save</button>
+</div>
+
+<!-- ═══════════════════ SESSION END MODAL ═══════════════════ -->
+<div id="session-end-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">End Session</div>
+    <div class="modal-stat-row" id="modal-stats-row">
+      <div><label>Legs</label><span class="val" id="modal-legs">0</span></div>
+      <div><label>Avg</label><span class="val" id="modal-avg">—</span></div>
+      <div><label>CO%</label><span class="val" id="modal-co">—</span></div>
+    </div>
+
+    <div class="modal-section-label">Feel</div>
+    <div style="display:flex;gap:6px;margin-bottom:16px;" id="modal-feel-btns">
+      <button class="feel-btn" onclick="setModalFeel(1,this)">😩</button>
+      <button class="feel-btn" onclick="setModalFeel(2,this)">😕</button>
+      <button class="feel-btn active" onclick="setModalFeel(3,this)">😐</button>
+      <button class="feel-btn" onclick="setModalFeel(4,this)">🙂</button>
+      <button class="feel-btn" onclick="setModalFeel(5,this)">🔥</button>
+    </div>
+
+    <div class="modal-section-label">Notes</div>
+    <textarea id="modal-session-notes" class="tag-input" style="min-height:72px;resize:vertical;" placeholder="How did it feel? e.g. 'elbow dropping on high numbers'"></textarea>
+
+    <div class="modal-section-label">Share to Social</div>
+    <div class="modal-share-row">
+      <div class="modal-share-toggle" id="modal-share-toggle" onclick="toggleModalShare()"></div>
+      <div class="modal-share-label">Post session summary to feed
+        <span>Visible to people who follow you</span>
+      </div>
+    </div>
+    <textarea id="modal-share-text" class="tag-input" style="min-height:56px;resize:vertical;display:none;" placeholder="Add a caption (optional)..."></textarea>
+
+    <div class="modal-btn-row">
+      <button class="modal-btn-cancel" onclick="closeEndSessionModal()">Cancel</button>
+      <button class="modal-btn-save" onclick="confirmEndSession()">Save Session</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════ DRILL PAGE ═══════════════════ -->
@@ -942,10 +1124,9 @@
       <div class="panel">
         <div class="panel-title">This Session</div>
         <div id="drill-session-log" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">No throws logged yet.</div>
-        <div style="margin-top:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <button id="btn-save-drill" onclick="saveDrillSession()"
-            style="background:none;border:1px solid var(--accent3);color:var(--accent3);padding:9px 18px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;"
-            onmouseover="this.style.background='rgba(58,255,184,0.08)'" onmouseout="this.style.background='none'">☁ Save Drill Session</button>
+        <div class="drill-save-row">
+          <button class="btn-drill-save" onclick="saveDrillSession()">☁ Save Drill Session</button>
+          <button class="btn-drill-share" onclick="openDrillShareModal()">↗ Share to Feed</button>
           <span id="drill-save-status" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);"></span>
         </div>
       </div>
@@ -964,6 +1145,23 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ═══════════════════ HISTORY PAGE ═══════════════════ -->
+<div id="page-history" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--muted);">SESSION HISTORY</div>
+    <div style="display:flex;gap:8px;">
+      <select id="history-filter" onchange="renderHistoryPage()" class="setup-select" style="min-width:120px;">
+        <option value="all">All Sessions</option>
+        <option value="501">501 Only</option>
+        <option value="301">301 Only</option>
+      </select>
+    </div>
+  </div>
+  <div id="history-list">
+    <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">No sessions yet — complete a practice session to see your history.</div>
   </div>
 </div>
 
@@ -1046,9 +1244,19 @@
 
 <!-- ═══════════════════ SOCIAL PAGE ═══════════════════ -->
 <div id="page-social" class="page">
-  <div class="social-layout">
 
-    <!-- LEFT SIDEBAR: Profile + Who to follow -->
+  <!-- SIGN-IN GATE (shown when logged out) -->
+  <div id="social-gate" class="social-gate hidden">
+    <div class="gate-icon">🎯</div>
+    <div class="gate-title">Join Bullboard Social</div>
+    <div class="gate-sub">Sign in to share your sessions, follow other players, and see what the community is throwing.</div>
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">Sign in using the header → then come back here.</div>
+  </div>
+
+  <!-- MAIN SOCIAL CONTENT (shown when logged in) -->
+  <div id="social-content" class="social-layout hidden">
+
+    <!-- LEFT SIDEBAR: Profile + Auto-post settings + Who to follow -->
     <div class="social-sidebar">
       <!-- Your profile card -->
       <div class="profile-card">
@@ -1056,7 +1264,7 @@
         <div class="profile-handle" id="social-handle">YOUR HANDLE</div>
         <div class="profile-sub" id="social-sub">Set up your profile</div>
         <div style="display:flex;gap:6px;margin-top:10px;">
-          <input id="social-name-input" class="tag-input" style="margin:0;flex:1;font-size:11px;" placeholder="Your name / handle" />
+          <input id="social-name-input" class="tag-input" style="margin:0;flex:1;font-size:11px;" placeholder="Display name / handle" />
           <button onclick="setSocialProfile()" style="background:var(--accent);color:#000;border:none;padding:6px 12px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;">SET</button>
         </div>
         <div class="profile-stats">
@@ -1064,6 +1272,48 @@
           <div class="profile-stat"><label>Sessions</label><span id="social-p-sessions">0</span></div>
           <div class="profile-stat"><label>Following</label><span id="social-p-following">0</span></div>
           <div class="profile-stat"><label>Followers</label><span id="social-p-followers">—</span></div>
+        </div>
+      </div>
+
+      <!-- Auto-post settings -->
+      <div class="panel">
+        <div class="panel-title">Auto-Post</div>
+        <div id="auto-post-settings">
+          <div class="auto-post-row">
+            <span class="auto-post-icon">🎯</span>
+            <div class="auto-post-info">180s
+              <span>Auto-post when you score 180</span>
+            </div>
+            <div class="modal-share-toggle" id="ap-180" onclick="toggleAutoPost('180',this)"></div>
+          </div>
+          <div class="auto-post-row">
+            <span class="auto-post-icon">🔥</span>
+            <div class="auto-post-info">100+ Visits
+              <span>Auto-post scores of 100 or more</span>
+            </div>
+            <div class="modal-share-toggle" id="ap-ton" onclick="toggleAutoPost('ton',this)"></div>
+          </div>
+          <div class="auto-post-row">
+            <span class="auto-post-icon">✅</span>
+            <div class="auto-post-info">High Checkouts
+              <span>Auto-post checkouts above 100</span>
+            </div>
+            <div class="modal-share-toggle" id="ap-checkout" onclick="toggleAutoPost('checkout',this)"></div>
+          </div>
+          <div class="auto-post-row">
+            <span class="auto-post-icon">📊</span>
+            <div class="auto-post-info">Session Summary
+              <span>Auto-post when ending a session</span>
+            </div>
+            <div class="modal-share-toggle" id="ap-session" onclick="toggleAutoPost('session',this)"></div>
+          </div>
+          <div class="auto-post-row">
+            <span class="auto-post-icon">🎳</span>
+            <div class="auto-post-info">Drill Sessions
+              <span>Auto-post when saving drills</span>
+            </div>
+            <div class="modal-share-toggle" id="ap-drill" onclick="toggleAutoPost('drill',this)"></div>
+          </div>
         </div>
       </div>
 
@@ -1099,36 +1349,39 @@
 
       <!-- Feed -->
       <div class="social-feed" id="social-feed">
-        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">Loading feed…</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">No posts yet — be the first to share!</div>
       </div>
     </div>
 
-    <!-- RIGHT SIDEBAR: Trending + Leaderboard -->
+    <!-- RIGHT SIDEBAR: Leaderboard -->
     <div class="social-sidebar">
-      <!-- Leaderboard -->
       <div class="panel">
-        <div class="panel-title">Weekly Leaders</div>
-        <div id="leaderboard-list"></div>
-      </div>
-
-      <!-- Trending tags -->
-      <div class="panel">
-        <div class="panel-title">Trending</div>
-        <div id="trending-list"></div>
-      </div>
-
-      <!-- Live now -->
-      <div class="panel">
-        <div class="panel-title">Live Now</div>
-        <div id="live-now-list" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">
-        </div>
+        <div class="panel-title">Leaderboard</div>
+        <div id="leaderboard-list" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:8px;">No data yet.</div>
       </div>
     </div>
 
   </div>
 </div>
 
+<!-- DRILL SHARE MODAL -->
+<div id="drill-share-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">Share Drill Session</div>
+    <div id="drill-share-summary" style="margin-bottom:16px;"></div>
+    <div class="modal-section-label">Caption (optional)</div>
+    <textarea id="drill-share-text" class="tag-input" style="min-height:60px;resize:vertical;" placeholder="Add a note about your session..."></textarea>
+    <div class="modal-btn-row">
+      <button class="modal-btn-cancel" onclick="closeDrillShareModal()">Cancel</button>
+      <button class="modal-btn-save" onclick="confirmDrillShare()" style="background:var(--accent4);color:#fff;">Share to Feed</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// Global auth state (set by Firebase module)
+window._currentUser = null;
+
 // ═══════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════
@@ -1420,6 +1673,7 @@ function showPage(name, btn) {
   document.getElementById('page-'+name).classList.add('active');
   btn.classList.add('active');
   if (name === 'stats') renderStats();
+  if (name === 'history') renderHistoryPage();
   if (name === 'analysis') renderAnalysis();
   if (name === 'drill') renderDrillPage();
   if (name === 'social') renderSocialPage();
@@ -1456,6 +1710,7 @@ function processThrow(score, bust, fromVoice) {
     addThrowRow(score, 0, false, true, fromVoice);
     document.getElementById('score-display').textContent = '0';
     toast('🎯 CHECKOUT! Leg complete');
+    if (typeof maybeAutoPostCheckout === 'function') maybeAutoPostCheckout(score);
     setTimeout(() => completeLeg(), 800);
   } else {
     currentLeg.score = remaining;
@@ -1465,6 +1720,7 @@ function processThrow(score, bust, fromVoice) {
     addThrowRow(score, remaining, false, false, fromVoice);
     document.getElementById('score-display').textContent = remaining;
     updateMeta();
+    if (typeof maybeAutoPostTon === 'function') maybeAutoPostTon(score);
   }
   inputVal = ''; updateInputDisplay();
   if (!fromVoice) setTranscript('', '');
@@ -1518,38 +1774,147 @@ function setFeel(n, btn) {
   btn.classList.add('active');
 }
 
-function endSession() {
+// ── Session End Modal ──
+let modalSessionFeel = 3;
+let modalShareEnabled = false;
+
+function openEndSessionModal() {
   if (sessionLegs.length === 0) { toast('No legs completed yet!', true); return; }
   const totalAvg = sessionLegs.reduce((s,l)=>s+parseFloat(l.avg),0) / sessionLegs.length;
   const totalCO = sessionLegs.reduce((s,l)=>s+l.checkouts,0);
   const totalCOAtt = sessionLegs.reduce((s,l)=>s+l.checkoutAttempts,0);
+  const coPct = totalCOAtt>0 ? ((totalCO/totalCOAtt)*100).toFixed(0) : '—';
+
+  document.getElementById('modal-legs').textContent = sessionLegs.length;
+  document.getElementById('modal-avg').textContent = totalAvg.toFixed(1);
+  document.getElementById('modal-co').textContent = coPct === '—' ? '—' : coPct + '%';
+
+  // Sync feel from current leg
+  modalSessionFeel = currentLeg.feel || 3;
+  document.querySelectorAll('#modal-feel-btns .feel-btn').forEach((b,i) => {
+    b.classList.toggle('active', i+1 === modalSessionFeel);
+  });
+
+  // Pre-fill notes
+  document.getElementById('modal-session-notes').value = document.getElementById('session-notes').value;
+
+  // Share toggle
+  modalShareEnabled = false;
+  document.getElementById('modal-share-toggle').classList.remove('on');
+  document.getElementById('modal-share-text').style.display = 'none';
+
+  document.getElementById('session-end-modal').classList.remove('hidden');
+}
+
+function closeEndSessionModal() {
+  document.getElementById('session-end-modal').classList.add('hidden');
+}
+
+function setModalFeel(n, btn) {
+  modalSessionFeel = n;
+  document.querySelectorAll('#modal-feel-btns .feel-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleModalShare() {
+  modalShareEnabled = !modalShareEnabled;
+  const toggle = document.getElementById('modal-share-toggle');
+  const textArea = document.getElementById('modal-share-text');
+  if (modalShareEnabled) {
+    toggle.classList.add('on');
+    textArea.style.display = 'block';
+    // Auto-populate caption
+    const totalAvg = sessionLegs.reduce((s,l)=>s+parseFloat(l.avg),0) / sessionLegs.length;
+    const totalCO = sessionLegs.reduce((s,l)=>s+l.checkouts,0);
+    const totalCOAtt = sessionLegs.reduce((s,l)=>s+l.checkoutAttempts,0);
+    const coPct = totalCOAtt>0 ? ((totalCO/totalCOAtt)*100).toFixed(0) + '%' : '—';
+    const feel = ['','😩','😕','😐','🙂','🔥'][modalSessionFeel] || '';
+    textArea.value = 'Session done — avg ' + totalAvg.toFixed(1) + ', ' + sessionLegs.length + ' leg' + (sessionLegs.length!==1?'s':'') + ', ' + coPct + ' checkout ' + feel;
+  } else {
+    toggle.classList.remove('on');
+    textArea.style.display = 'none';
+  }
+}
+
+function confirmEndSession() {
+  const totalAvg = sessionLegs.reduce((s,l)=>s+parseFloat(l.avg),0) / sessionLegs.length;
+  const totalCO = sessionLegs.reduce((s,l)=>s+l.checkouts,0);
+  const totalCOAtt = sessionLegs.reduce((s,l)=>s+l.checkoutAttempts,0);
+  const notes = document.getElementById('modal-session-notes').value;
   const sessionData = {
     date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),
     timestamp: Date.now(),
     legs: sessionLegs.length,
     avg: totalAvg.toFixed(1),
     checkoutPct: totalCOAtt>0 ? ((totalCO/totalCOAtt)*100).toFixed(0) : 0,
-    feel: currentLeg.feel,
-    notes: document.getElementById('session-notes').value,
+    checkouts: totalCO,
+    checkoutAttempts: totalCOAtt,
+    feel: modalSessionFeel,
+    notes: notes,
     legDetails: sessionLegs.map(l => ({ score:l.score, darts:l.darts, avg:l.avg, checkouts:l.checkouts, checkoutAttempts:l.checkoutAttempts })),
   };
   state.sessions.push(sessionData);
   saveState();
-  // Save to Firebase if signed in
   if (typeof window.saveSessionToFirebase === 'function') {
     window.saveSessionToFirebase(sessionData);
   }
+  // Share to social if toggled
+  if (modalShareEnabled && window._currentUser) {
+    const caption = document.getElementById('modal-share-text').value.trim();
+    const coPct = totalCOAtt>0 ? ((totalCO/totalCOAtt)*100).toFixed(0) + '%' : '—';
+    publishPost('session', caption, [
+      {l:'Avg', v:totalAvg.toFixed(1)},
+      {l:'Legs', v:String(sessionLegs.length)},
+      {l:'CO%',  v:coPct},
+      {l:'Feel', v:(['','😩','😕','😐','🙂','🔥'][modalSessionFeel]||'')},
+    ]);
+    toast('✓ Session saved & shared!');
+  } else {
+    // Check auto-post
+    if (window._currentUser && socialState.autoPost.session) {
+      const coPct = totalCOAtt>0 ? ((totalCO/totalCOAtt)*100).toFixed(0) + '%' : '—';
+      const feel = ['','😩','😕','😐','🙂','🔥'][modalSessionFeel] || '';
+      publishPost('session', 'Session done — avg ' + totalAvg.toFixed(1) + ', ' + sessionLegs.length + ' legs, ' + coPct + ' checkout ' + feel, [
+        {l:'Avg',v:totalAvg.toFixed(1)},{l:'Legs',v:String(sessionLegs.length)},{l:'CO%',v:coPct}
+      ]);
+    }
+    toast('✓ Session saved!');
+  }
   sessionLegs = [];
+  document.getElementById('session-notes').value = '';
+  closeEndSessionModal();
   newLeg();
-  toast('✓ Session saved!');
+}
+
+function endSession() {
+  openEndSessionModal();
 }
 
 function saveDrillSession() {
   if (drillSessionLog.length === 0) { toast('No drill throws logged yet!', true); return; }
-  if (typeof window.saveDrillSessionToFirebase !== 'function') {
-    toast('Sign in to save drill sessions to the cloud', true); return;
+  if (typeof window.saveDrillSessionToFirebase === 'function') {
+    window.saveDrillSessionToFirebase(drillSessionLog, state.drillData);
+  } else {
+    toast('Sign in to save drill sessions to the cloud', true);
   }
-  window.saveDrillSessionToFirebase(drillSessionLog, state.drillData);
+  // Auto-post if enabled
+  if (window._currentUser && socialState.autoPost.drill) {
+    const groups = {};
+    drillSessionLog.forEach(function(e) {
+      const key = e.bed + ':' + e.target;
+      if (!groups[key]) groups[key] = { bed:e.bed, target:e.target, hits:0, total:0 };
+      groups[key].total++;
+      if (e.result==='hit') groups[key].hits++;
+    });
+    const pfx = function(bed) { return bed==='double'?'D':bed==='treble'?'T':''; };
+    const stats = Object.values(groups).map(function(g) {
+      return { l: pfx(g.bed) + g.target, v: Math.round(g.hits/g.total*100) + '%' };
+    });
+    const total = drillSessionLog.length;
+    const hits = drillSessionLog.filter(function(e){return e.result==='hit';}).length;
+    publishPost('drill', 'Drill session — ' + hits + '/' + total + ' (' + Math.round(hits/total*100) + '%) across ' + Object.keys(groups).length + ' targets.', stats, '#a78bfa');
+    toast('Drill session auto-posted!');
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -2224,92 +2589,93 @@ function toggleDrillVoice() {
 // ═══════════════════════════════════════════════════
 //  SOCIAL TAB
 // ═══════════════════════════════════════════════════
-const SOCIAL_KEY = 'bullboard_social_v1';
-
-const DEMO_USERS = [
-  { handle:'PhilTaylor180', avg:58.2, color:'#e8ff3a', followers:1842 },
-  { handle:'ArrowsAnna',    avg:51.4, color:'#3affb8', followers:739  },
-  { handle:'SteelDave',     avg:44.7, color:'#a78bfa', followers:291  },
-  { handle:'FinishLine_K',  avg:62.1, color:'#ff4d4d', followers:3120 },
-  { handle:'BullseyeBex',   avg:47.9, color:'#ff9f43', followers:482  },
-  { handle:'DartsDominic',  avg:55.3, color:'#54a0ff', followers:1103 },
-];
-
-const DEMO_POSTS = [
-  {
-    id:'p1', user:'PhilTaylor180', color:'#e8ff3a', time:'2m ago',
-    type:'checkout', text:'Just hit a 141 checkout in practice — T20, T17, D6. Third time I\'ve landed it this week. Routing is clicking.',
-    stats:[{l:'Score',v:'141'},{l:'Route',v:'T20·T17·D6'}], likes:24, comments:5
-  },
-  {
-    id:'p2', user:'FinishLine_K', color:'#ff4d4d', time:'14m ago',
-    type:'session', text:'Morning session done. Feeling really good about my doubles today — 6 from 11 which is above my usual average.',
-    stats:[{l:'Avg',v:'63.4'},{l:'Legs',v:'8'},{l:'CO%',v:'55%'},{l:'Feel',v:'🔥'}], likes:31, comments:8
-  },
-  {
-    id:'p3', user:'ArrowsAnna', color:'#3affb8', time:'32m ago',
-    type:'drill', text:'30 minutes on D16 and D8. D16 up to 68% now after weeks of it being my weakest. The fix was raising my elbow slightly on release.',
-    stats:[{l:'D16',v:'68%'},{l:'D8',v:'71%'},{l:'Attempts',v:'90'}], likes:18, comments:12
-  },
-  {
-    id:'p4', user:'SteelDave', color:'#a78bfa', time:'1h ago',
-    type:'milestone', text:'🎯 Just crossed 500 legs logged on Bullboard. Started 18 months ago averaging 32 — sitting at 44.7 now. Slow grind but it adds up.',
-    stats:[{l:'Legs',v:'500'},{l:'Avg (now)',v:'44.7'},{l:'Avg (start)',v:'32.1'}], likes:89, comments:22
-  },
-  {
-    id:'p5', user:'DartsDominic', color:'#54a0ff', time:'2h ago',
-    type:'session', text:'Back at the board after a week off. Rustier than expected — took 4 legs to find my rhythm again. Anyone else find breaks wreck their release timing?',
-    stats:[{l:'Avg',v:'48.1'},{l:'Legs',v:'6'},{l:'Feel',v:'😕'}], likes:9, comments:14
-  },
-  {
-    id:'p6', user:'BullseyeBex', color:'#ff9f43', time:'3h ago',
-    type:'checkout', text:'Finally hit the D Bull finish I\'ve been chasing. 85 out on tops then bull. Will take it!',
-    stats:[{l:'Checkout',v:'85'},{l:'Route',v:'T15·Bull'}], likes:44, comments:7
-  },
-];
+const SOCIAL_KEY = 'bullboard_social_v2';
 
 let socialState = {
   myHandle: '',
   following: [],
   feedFilter: 'all',
-  posts: [...DEMO_POSTS],
+  posts: [],
   likes: {},
+  autoPost: { '180': false, ton: false, checkout: false, session: false, drill: false },
 };
 
 function loadSocialState() {
   try {
     const s = JSON.parse(localStorage.getItem(SOCIAL_KEY));
-    if (s) socialState = { ...socialState, ...s, posts: [...DEMO_POSTS, ...(s.myPosts||[])] };
+    if (s) {
+      socialState = {
+        ...socialState, ...s,
+        posts: s.posts || [],
+        autoPost: { ...socialState.autoPost, ...(s.autoPost || {}) }
+      };
+    }
   } catch(e) {}
 }
 function saveSocialState() {
-  const toSave = { myHandle: socialState.myHandle, following: socialState.following, likes: socialState.likes, myPosts: socialState.posts.filter(p=>p.isOwn) };
-  localStorage.setItem(SOCIAL_KEY, JSON.stringify(toSave));
+  localStorage.setItem(SOCIAL_KEY, JSON.stringify({
+    myHandle: socialState.myHandle,
+    following: socialState.following,
+    likes: socialState.likes,
+    posts: socialState.posts.filter(p => p.isOwn),
+    autoPost: socialState.autoPost,
+  }));
 }
 loadSocialState();
 
+// ── Gate: show/hide based on auth state ──
+function updateSocialGate(isSignedIn, email) {
+  const gate = document.getElementById('social-gate');
+  const content = document.getElementById('social-content');
+  if (!gate || !content) return;
+  if (isSignedIn) {
+    gate.classList.add('hidden');
+    content.classList.remove('hidden');
+    if (!socialState.myHandle && email) {
+      socialState.myHandle = email.split('@')[0];
+      saveSocialState();
+    }
+  } else {
+    gate.classList.remove('hidden');
+    content.classList.add('hidden');
+  }
+}
+
 function renderSocialPage() {
-  // Profile
-  const handle = socialState.myHandle || 'YOU';
+  const isSignedIn = !!window._currentUser;
+  updateSocialGate(isSignedIn, window._currentUser ? window._currentUser.email : null);
+  if (!isSignedIn) return;
+
+  const emailPrefix = window._currentUser && window._currentUser.email ? window._currentUser.email.split('@')[0] : 'You';
+  const handle = socialState.myHandle || emailPrefix;
   const initials = handle.slice(0,2).toUpperCase();
   document.getElementById('social-avatar').textContent = initials;
   document.getElementById('composer-avatar').textContent = initials;
   document.getElementById('social-handle').textContent = handle.toUpperCase();
-  document.getElementById('social-sub').textContent = `@${handle.toLowerCase()} · Bullboard`;
+  document.getElementById('social-sub').textContent = '@' + handle.toLowerCase() + ' · Bullboard';
   document.getElementById('social-name-input').value = socialState.myHandle;
 
-  // Profile stats from game data
   const sessions = state.sessions;
   const avg = sessions.length ? (sessions.reduce((s,ses)=>s+parseFloat(ses.avg),0)/sessions.length).toFixed(1) : '—';
   document.getElementById('social-p-avg').textContent = avg;
   document.getElementById('social-p-sessions').textContent = sessions.length;
   document.getElementById('social-p-following').textContent = socialState.following.length;
 
+  Object.keys(socialState.autoPost).forEach(function(key) {
+    const el = document.getElementById('ap-' + key);
+    if (el) { if (socialState.autoPost[key]) el.classList.add('on'); else el.classList.remove('on'); }
+  });
+
   renderFollowList();
   renderFeed();
   renderLeaderboard();
-  renderTrending();
-  renderLiveNow();
+}
+
+function toggleAutoPost(key, el) {
+  socialState.autoPost[key] = !socialState.autoPost[key];
+  if (socialState.autoPost[key]) el.classList.add('on'); else el.classList.remove('on');
+  saveSocialState();
+  toast(socialState.autoPost[key] ? 'Auto-post enabled' : 'Auto-post disabled');
 }
 
 function setSocialProfile() {
@@ -2318,91 +2684,97 @@ function setSocialProfile() {
   socialState.myHandle = val;
   saveSocialState();
   renderSocialPage();
-  toast('Profile updated');
+  toast('Handle updated');
 }
 
 function renderFollowList() {
   const el = document.getElementById('follow-list');
-  const suggestions = DEMO_USERS.filter(u => !socialState.following.includes(u.handle)).slice(0,4);
-  el.innerHTML = suggestions.map(u => {
-    const init = u.handle.slice(0,2).toUpperCase();
-    return `<div class="follow-row">
-      <div class="follow-avatar" style="background:${u.color}">${init}</div>
-      <div class="follow-info">
-        <div class="follow-name">${u.handle}</div>
-        <div class="follow-avg">Avg ${u.avg} · ${u.followers.toLocaleString()} followers</div>
-      </div>
-      <button class="follow-btn" onclick="followUser('${u.handle}',this)">+ Follow</button>
-    </div>`;
-  }).join('') || '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted);padding:10px;">Following everyone!</div>';
+  const followed = socialState.following;
+  if (followed.length === 0) {
+    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted);padding:10px;">No one followed yet. Invite friends!</div>';
+    return;
+  }
+  el.innerHTML = followed.map(function(h) {
+    const init = h.slice(0,2).toUpperCase();
+    return '<div class="follow-row">'
+      + '<div class="follow-avatar" style="background:var(--accent)">' + init + '</div>'
+      + '<div class="follow-info"><div class="follow-name">' + h + '</div><div class="follow-avg">Following</div></div>'
+      + '<button class="follow-btn following" onclick="unfollowUser(\'' + h + '\',this)">✓ Following</button>'
+      + '</div>';
+  }).join('');
+}
+
+function unfollowUser(handle, btn) {
+  socialState.following = socialState.following.filter(function(h) { return h !== handle; });
+  saveSocialState();
+  document.getElementById('social-p-following').textContent = socialState.following.length;
+  toast('Unfollowed ' + handle);
+  renderFollowList();
 }
 
 function followUser(handle, btn) {
   if (!socialState.following.includes(handle)) {
     socialState.following.push(handle);
     saveSocialState();
-    btn.textContent = '✓ Following';
-    btn.classList.add('following');
     document.getElementById('social-p-following').textContent = socialState.following.length;
-    toast(`Following ${handle}`);
-    setTimeout(() => renderFollowList(), 800);
+    toast('Following ' + handle);
+    renderFollowList();
   }
 }
 
 function setFeedFilter(filter, btn) {
   socialState.feedFilter = filter;
-  document.querySelectorAll('.feed-filter').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.feed-filter').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   renderFeed();
 }
 
 function renderFeed() {
   const el = document.getElementById('social-feed');
-  let posts = socialState.posts;
+  let posts = socialState.posts.slice().reverse();
 
   if (socialState.feedFilter !== 'all') {
     const map = { sessions:'session', checkouts:'checkout', drills:'drill', milestones:'milestone' };
     const t = map[socialState.feedFilter];
-    posts = posts.filter(p => p.type === t);
+    posts = posts.filter(function(p) { return p.type === t; });
   }
 
   if (posts.length === 0) {
-    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">Nothing here yet in this category.</div>';
+    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">No posts yet — share your first session!</div>';
     return;
   }
 
-  el.innerHTML = posts.map(p => {
-    const init = p.user.slice(0,2).toUpperCase();
+  el.innerHTML = posts.map(function(p) {
+    const handle = p.user || 'Anonymous';
+    const init = handle.slice(0,2).toUpperCase();
+    const color = p.color || '#e8ff3a';
     const isLiked = !!socialState.likes[p.id];
     const likeCount = (p.likes||0) + (isLiked ? 1 : 0);
-    const stats = (p.stats||[]).map(s =>
-      `<div class="post-stat-chip"><label>${s.l}</label><span>${s.v}</span></div>`
-    ).join('');
-
-    // Highlight numbers in post body
-    const body = p.text
+    const statsHtml = (p.stats||[]).map(function(s) {
+      return '<div class="post-stat-chip"><label>' + s.l + '</label><span>' + s.v + '</span></div>';
+    }).join('');
+    const body = (p.text||'')
       .replace(/\b(\d{3})\b/g, '<span class="highlight">$1</span>')
       .replace(/\b([Dd]\d+)\b/g, '<span class="highlight2">$1</span>');
 
-    return `<div class="post-card" id="post-${p.id}">
-      <div class="post-header">
-        <div class="post-avatar" style="background:${p.color}">${init}</div>
-        <div class="post-meta">
-          <div class="post-handle">${p.user}</div>
-          <div class="post-time">${p.time}</div>
-        </div>
-        <div class="post-type-badge ${p.type}">${p.type}</div>
-      </div>
-      <div class="post-body">${body}</div>
-      ${stats ? `<div class="post-stats-row">${stats}</div>` : ''}
-      <div class="post-actions">
-        <button class="post-action-btn ${isLiked?'liked':''}" onclick="toggleLike('${p.id}',this)">
-          ${isLiked?'♥':'♡'} <span class="like-count">${likeCount}</span>
-        </button>
-        <button class="post-action-btn" onclick="toast('Comments coming soon!')">💬 ${p.comments||0}</button>
-        <button class="post-action-btn" onclick="toast('Shared!')">↗ Share</button>
-      </div>
-    </div>`;
+    return '<div class="post-card" id="post-' + p.id + '">'
+      + '<div class="post-header">'
+      + '<div class="post-avatar" style="background:' + color + '">' + init + '</div>'
+      + '<div class="post-meta">'
+      + '<div class="post-handle">' + handle + '</div>'
+      + '<div class="post-time">' + (p.time||'just now') + '</div>'
+      + '</div>'
+      + '<div class="post-type-badge ' + (p.type||'session') + '">' + (p.type||'session') + '</div>'
+      + '</div>'
+      + '<div class="post-body">' + body + '</div>'
+      + (statsHtml ? '<div class="post-stats-row">' + statsHtml + '</div>' : '')
+      + '<div class="post-actions">'
+      + '<button class="post-action-btn ' + (isLiked?'liked':'') + '" onclick="toggleLike(\'' + p.id + '\',this)">'
+      + (isLiked?'♥':'♡') + ' <span class="like-count">' + likeCount + '</span></button>'
+      + '<button class="post-action-btn" onclick="toast(\'Comments coming soon!\')">💬 ' + (p.comments||0) + '</button>'
+      + (p.isOwn ? '<button class="post-action-btn" style="color:var(--accent2);border-color:rgba(255,77,77,0.4)" onclick="deletePost(\'' + p.id + '\')">✕</button>' : '')
+      + '</div>'
+      + '</div>';
   }).join('');
 }
 
@@ -2410,91 +2782,188 @@ function toggleLike(postId, btn) {
   socialState.likes[postId] = !socialState.likes[postId];
   saveSocialState();
   const isLiked = socialState.likes[postId];
-  const post = socialState.posts.find(p=>p.id===postId);
-  const likeCount = (post?.likes||0) + (isLiked?1:0);
-  btn.className = `post-action-btn ${isLiked?'liked':''}`;
-  btn.innerHTML = `${isLiked?'♥':'♡'} <span class="like-count">${likeCount}</span>`;
+  const post = socialState.posts.find(function(p){return p.id===postId;});
+  const likeCount = ((post ? post.likes : 0)||0) + (isLiked?1:0);
+  btn.className = 'post-action-btn ' + (isLiked?'liked':'');
+  btn.innerHTML = (isLiked?'♥':'♡') + ' <span class="like-count">' + likeCount + '</span>';
 }
 
-function submitPost() {
-  const text = document.getElementById('post-text').value.trim();
-  if (!text) { toast('Write something first!', true); return; }
-  const handle = socialState.myHandle || 'You';
-  const newPost = {
-    id: 'own_' + Date.now(),
+function deletePost(postId) {
+  socialState.posts = socialState.posts.filter(function(p) { return p.id !== postId; });
+  saveSocialState();
+  renderFeed();
+  toast('Post deleted');
+}
+
+function publishPost(type, text, stats, extraColor) {
+  const emailPrefix = window._currentUser && window._currentUser.email ? window._currentUser.email.split('@')[0] : 'You';
+  const handle = socialState.myHandle || emailPrefix;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ' · ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  const post = {
+    id: 'p_' + Date.now(),
     user: handle,
-    color: '#e8ff3a',
-    time: 'just now',
-    type: 'session',
-    text,
-    stats: [],
+    color: extraColor || '#e8ff3a',
+    time: timeStr,
+    type: type,
+    text: text,
+    stats: stats || [],
     likes: 0,
     comments: 0,
     isOwn: true,
   };
-  socialState.posts.unshift(newPost);
+  socialState.posts.push(post);
   saveSocialState();
+  // Only re-render if on social page
+  if (document.getElementById('page-social').classList.contains('active')) renderFeed();
+  return post;
+}
+
+function submitPost() {
+  if (!window._currentUser) { toast('Sign in to post', true); return; }
+  const text = document.getElementById('post-text').value.trim();
+  if (!text) { toast('Write something first!', true); return; }
+  publishPost('session', text, []);
   document.getElementById('post-text').value = '';
-  renderFeed();
   toast('Posted!');
 }
 
 function shareLastSession() {
   const sessions = state.sessions;
-  if (!sessions.length) { toast('No sessions saved yet — end a session first', true); return; }
+  if (!sessions.length) { toast('No sessions saved yet', true); return; }
   const s = sessions[sessions.length-1];
   const feel = ['','😩','😕','😐','🙂','🔥'][s.feel] || '';
   document.getElementById('post-text').value =
-    `Session done — avg ${s.avg}, ${s.legs} leg${s.legs!==1?'s':''}, ${s.checkoutPct}% checkout. ${feel}`;
+    'Session — avg ' + s.avg + ', ' + s.legs + ' leg' + (s.legs!==1?'s':'') + ', ' + s.checkoutPct + '% checkout ' + feel;
   toast('Session data added — edit and post!');
 }
 
 function renderLeaderboard() {
   const el = document.getElementById('leaderboard-list');
-  const leaders = [...DEMO_USERS].sort((a,b) => b.avg - a.avg).slice(0,5);
-  el.innerHTML = leaders.map((u,i) => {
-    const init = u.handle.slice(0,2).toUpperCase();
-    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;">
-      <span style="font-size:14px;width:22px">${medal||'#'+(i+1)}</span>
-      <div class="follow-avatar" style="background:${u.color};width:28px;height:28px;font-size:11px;">${init}</div>
-      <div style="flex:1;font-size:12px;color:var(--text)">${u.handle}</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${u.color}">${u.avg}</div>
-    </div>`;
+  const sessions = state.sessions;
+  if (!sessions.length) {
+    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted);padding:8px;">Complete sessions to appear here.</div>';
+    return;
+  }
+  const emailPrefix = window._currentUser && window._currentUser.email ? window._currentUser.email.split('@')[0] : 'You';
+  const handle = socialState.myHandle || emailPrefix;
+  const avg = (sessions.reduce(function(s,ses){return s+parseFloat(ses.avg);},0)/sessions.length).toFixed(1);
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-family:\'DM Mono\',monospace;">'
+    + '<span style="font-size:14px;width:22px">🥇</span>'
+    + '<div class="follow-avatar" style="background:var(--accent);width:28px;height:28px;font-size:11px;color:#000">' + handle.slice(0,2).toUpperCase() + '</div>'
+    + '<div style="flex:1;font-size:12px;color:var(--text)">' + handle + '</div>'
+    + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:var(--accent)">' + avg + '</div>'
+    + '</div>'
+    + '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--muted);padding-top:8px;border-top:1px solid var(--border);">Invite friends to compete!</div>';
+}
+
+// ── AUTO-POST TRIGGERS ──
+function maybeAutoPostTon(score) {
+  if (!window._currentUser || !window._currentUser.email) return;
+  if (score === 180 && socialState.autoPost['180']) {
+    publishPost('milestone', '🎯 ONE HUNDRED AND EIGHTY! Scored 180 in practice.', [{l:'Score',v:'180'}], '#ff4d4d');
+    toast('Auto-posted: 180!');
+  } else if (score >= 100 && socialState.autoPost.ton) {
+    publishPost('session', 'Scored ' + score + ' in practice. 🔥', [{l:'Score',v:String(score)}]);
+    toast('Auto-posted: ' + score);
+  }
+}
+
+function maybeAutoPostCheckout(score) {
+  if (!window._currentUser || !window._currentUser.email) return;
+  if (score >= 100 && socialState.autoPost.checkout) {
+    publishPost('checkout', '✅ Checkout! Finished on ' + score + ' to win the leg.', [{l:'Checkout',v:String(score)}], '#3affb8');
+    toast('Auto-posted: ' + score + ' checkout');
+  }
+}
+
+// ── Drill share modal ──
+function openDrillShareModal() {
+  if (!window._currentUser) { toast('Sign in to share', true); return; }
+  if (drillSessionLog.length === 0) { toast('No drill throws logged yet', true); return; }
+  const groups = {};
+  drillSessionLog.forEach(function(e) {
+    const key = e.bed + ':' + e.target;
+    if (!groups[key]) groups[key] = { bed:e.bed, target:e.target, hits:0, total:0 };
+    groups[key].total++;
+    if (e.result==='hit') groups[key].hits++;
+  });
+  const pfx = function(bed) { return bed==='double'?'D':bed==='treble'?'T':''; };
+  const chips = Object.values(groups).map(function(g) {
+    const pct = Math.round(g.hits/g.total*100);
+    const col = pct>=60?'var(--accent3)':pct>=35?'var(--accent)':'var(--accent2)';
+    return '<div class="post-stat-chip"><label>' + pfx(g.bed) + g.target + '</label><span style="color:' + col + '">' + pct + '%</span></div>';
   }).join('');
+  document.getElementById('drill-share-summary').innerHTML = '<div class="post-stats-row">' + chips + '</div>';
+  document.getElementById('drill-share-text').value = '';
+  document.getElementById('drill-share-modal').classList.remove('hidden');
 }
 
-function renderTrending() {
-  const tags = [
-    ['#Checkout141','38 posts'], ['#DoubleTop','29 posts'], ['#Bullseye','21 posts'],
-    ['#DrillMode','17 posts'], ['#9Darter','14 posts'], ['#180Club','11 posts'],
-  ];
-  document.getElementById('trending-list').innerHTML = tags.map((t,i) =>
-    `<div class="trending-row">
-      <span class="trending-rank">${i+1}</span>
-      <span class="trending-tag">${t[0]}</span>
-      <span class="trending-count">${t[1]}</span>
-    </div>`
-  ).join('');
+function closeDrillShareModal() {
+  document.getElementById('drill-share-modal').classList.add('hidden');
 }
 
-function renderLiveNow() {
-  const live = [
-    { handle:'FinishLine_K', color:'#ff4d4d', action:'Playing 501 · Leg 4' },
-    { handle:'ArrowsAnna',   color:'#3affb8', action:'Drilling D16' },
-  ];
-  document.getElementById('live-now-list').innerHTML = live.map(u => {
-    const init = u.handle.slice(0,2).toUpperCase();
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
-      <div style="position:relative">
-        <div class="follow-avatar" style="background:${u.color};width:30px;height:30px;font-size:12px;">${init}</div>
-        <div style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#3affb8;border:1px solid var(--bg);animation:dpulse 1.5s infinite"></div>
-      </div>
-      <div>
-        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text)">${u.handle}</div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${u.action}</div>
-      </div>
-    </div>`;
+function confirmDrillShare() {
+  const caption = document.getElementById('drill-share-text').value.trim();
+  const groups = {};
+  drillSessionLog.forEach(function(e) {
+    const key = e.bed + ':' + e.target;
+    if (!groups[key]) groups[key] = { bed:e.bed, target:e.target, hits:0, total:0 };
+    groups[key].total++;
+    if (e.result==='hit') groups[key].hits++;
+  });
+  const pfx = function(bed) { return bed==='double'?'D':bed==='treble'?'T':''; };
+  const stats = Object.values(groups).map(function(g) {
+    const pct = Math.round(g.hits/g.total*100);
+    return { l: pfx(g.bed) + g.target, v: pct + '%' };
+  });
+  const total = drillSessionLog.length;
+  const hits = drillSessionLog.filter(function(e){return e.result==='hit';}).length;
+  const defaultText = 'Drill session — ' + hits + '/' + total + ' (' + Math.round(hits/total*100) + '%) across ' + Object.keys(groups).length + ' targets.';
+  publishPost('drill', caption || defaultText, stats, '#a78bfa');
+  closeDrillShareModal();
+  toast('Drill session shared!');
+}
+
+
+// ═══════════════════════════════════════════════════
+//  HISTORY PAGE
+// ═══════════════════════════════════════════════════
+function renderHistoryPage() {
+  const el = document.getElementById('history-list');
+  const filter = document.getElementById('history-filter') ? document.getElementById('history-filter').value : 'all';
+  let sessions = [...state.sessions].reverse();
+
+  if (filter !== 'all') {
+    sessions = sessions.filter(function(s) { return s.legDetails && s.legDetails[0] && String(s.legDetails[0].score) === filter; });
+  }
+
+  if (sessions.length === 0) {
+    el.innerHTML = '<div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">No sessions yet — complete a practice session to see your history.</div>';
+    return;
+  }
+
+  el.innerHTML = sessions.map(function(s) {
+    const feel = ['','😩','😕','😐','🙂','🔥'][s.feel] || '';
+    const co = parseInt(s.checkoutPct);
+    const coColor = co>=50?'var(--accent3)':co>=30?'var(--accent)':'var(--accent2)';
+    const avgColor = parseFloat(s.avg)>=55?'var(--accent3)':'var(--text)';
+    const notesHtml = s.notes ? '<div class="history-notes">' + s.notes + '</div>' : '';
+
+    return '<div class="history-session-card">'
+      + '<div class="history-session-header">'
+      + '<div class="history-session-date">' + s.date + '</div>'
+      + '<div class="history-session-meta">' + s.legs + ' leg' + (s.legs!==1?'s':'') + '</div>'
+      + '<div class="history-session-feel">' + feel + '</div>'
+      + '</div>'
+      + '<div class="history-stat-chips">'
+      + '<div class="history-chip"><label>Avg</label><span style="color:' + avgColor + '">' + s.avg + '</span></div>'
+      + '<div class="history-chip"><label>CO%</label><span style="color:' + coColor + '">' + s.checkoutPct + '%</span></div>'
+      + '<div class="history-chip"><label>Legs</label><span>' + s.legs + '</span></div>'
+      + (s.checkouts !== undefined ? '<div class="history-chip"><label>Checkouts</label><span>' + s.checkouts + '/' + (s.checkoutAttempts||'?') + '</span></div>' : '')
+      + '</div>'
+      + notesHtml
+      + '</div>';
   }).join('');
 }
 
@@ -2715,6 +3184,7 @@ updateAttemptDots();
 
   // ── Auth state observer ──
   onAuthStateChanged(auth, (user) => {
+    window._currentUser = user || null;
     if (user) {
       userStatus.textContent = `Signed in as ${user.email}`;
       signOutButton.style.display = 'inline-block';
@@ -2724,6 +3194,8 @@ updateAttemptDots();
       signInButton.style.display = 'none';
       // Load their cloud data and merge
       loadUserData(user.uid);
+      // Update social gate + profile defaults
+      if (typeof updateSocialGate === 'function') updateSocialGate(true, user.email);
     } else {
       userStatus.textContent = 'Not signed in';
       signOutButton.style.display = 'none';
@@ -2731,6 +3203,7 @@ updateAttemptDots();
       passwordInput.style.display = 'inline-block';
       signUpButton.style.display = 'inline-block';
       signInButton.style.display = 'inline-block';
+      if (typeof updateSocialGate === 'function') updateSocialGate(false, null);
     }
   });
 </script>
