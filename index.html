@@ -2533,8 +2533,14 @@ updateAttemptDots();
   // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js"; // For Cloud Firestore
-  import { getAuth } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js"; // For Firebase Authentication
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
   // Your web app's Firebase configuration
   const firebaseConfig = {
@@ -2549,11 +2555,156 @@ updateAttemptDots();
 
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const db = getFirestore(app); // Initialize Cloud Firestore
-  const auth = getAuth(app); // Initialize Firebase Authentication
+  const analytics = getAnalytics(app); // Initializing Analytics
+  const db = getFirestore(app);       // Initializing Cloud Firestore
+  const auth = getAuth(app);         // Initializing Firebase Authentication
+
+  // --- Get HTML Elements for Authentication ---
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const signUpButton = document.getElementById('signUpButton');
+  const signInButton = document.getElementById('signInButton');
+  const signOutButton = document.getElementById('signOutButton');
+  const userStatus = document.getElementById('userStatus');
+  const authMessage = document.getElementById('authMessage'); // Message above score input
+
+
+  // --- Get HTML Elements for Scoring ---
+  const scoreInputSection = document.getElementById('scoreInputSection');
+  const playerNameInput = document.getElementById('playerNameInput');
+  const scoreInput = document.getElementById('scoreInput');
+  // const saveScoreButton = document.getElementById('saveScoreButton'); // No longer needed directly, using onclick
+  const saveStatus = document.getElementById('saveStatus');
+
+
+  // --- Authentication Functions ---
+
+  // Handle Sign Up
+  if (signUpButton) { // Check if element exists before adding listener
+    signUpButton.addEventListener('click', async () => {
+      const email = emailInput.value;
+      const password = passwordInput.value;
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        console.log("User signed up:", userCredential.user.email);
+        // UI update will be handled by onAuthStateChanged
+      } catch (error) {
+        console.error("Error signing up:", error.message);
+        alert("Error signing up: " + error.message); // Basic error display
+      }
+    });
+  }
+
+
+  // Handle Sign In
+  if (signInButton) { // Check if element exists before adding listener
+    signInButton.addEventListener('click', async () => {
+      const email = emailInput.value;
+      const password = passwordInput.value;
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log("User signed in:", userCredential.user.email);
+        // UI update will be handled by onAuthStateChanged
+      } catch (error) {
+        console.error("Error signing in:", error.message);
+        alert("Error signing in: " + error.message); // Basic error display
+      }
+    });
+  }
+
+
+  // Handle Sign Out
+  if (signOutButton) { // Check if element exists before adding listener
+    signOutButton.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        console.log("User signed out.");
+        // UI update will be handled by onAuthStateChanged
+      } catch (error) {
+        console.error("Error signing out:", error.message);
+        alert("Error signing out: " + error.message); // Basic error display
+      }
+    });
+  }
+
+
+  // --- Global Functions for Score Buttons (made accessible via window) ---
+  window.submitScore = async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      saveStatus.textContent = "Please sign in to save scores.";
+      return;
+    }
+
+    const playerName = playerNameInput.value || (currentUser.email ? currentUser.email.split('@')[0] : "Anonymous");
+    const score = parseInt(scoreInput.value, 10);
+
+    if (isNaN(score) || score <= 0) {
+      saveStatus.textContent = "Please enter a valid score.";
+      return;
+    }
+
+    try {
+      const docRef = await addDoc(collection(db, "dartsScores"), {
+        userId: currentUser.uid,
+        playerName: playerName,
+        score: score,
+        timestamp: new Date().toISOString()
+      });
+      saveStatus.textContent = `Score saved! Document ID: ${docRef.id}`;
+      playerNameInput.value = '';
+      scoreInput.value = '';
+      console.log("Document written with ID: ", docRef.id);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+      saveStatus.textContent = "Error saving score: " + e.message;
+    }
+  };
+
+  window.bustScore = () => {
+    saveStatus.textContent = "Bust button clicked!";
+    console.log("Bust button was clicked.");
+    scoreInput.value = ''; // Clear the score input
+  };
+
+
+  // --- Listen for Authentication State Changes ---
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in
+      userStatus.textContent = `Welcome, ${user.email}!`;
+      if (signOutButton) signOutButton.style.display = 'block';
+      // Hide auth inputs
+      if (emailInput) emailInput.style.display = 'none';
+      if (passwordInput) passwordInput.style.display = 'none';
+      if (signUpButton) signUpButton.style.display = 'none';
+      if (signInButton) signInButton.style.display = 'none';
+      if (authMessage) authMessage.style.display = 'none';
+
+      // Show score input section
+      if (scoreInputSection) scoreInputSection.style.display = 'block';
+      if (playerNameInput && !playerNameInput.value) { // Pre-fill player name if empty
+          playerNameInput.value = user.email.split('@')[0];
+      }
+
+    } else {
+      // User is signed out
+      userStatus.textContent = "Not signed in.";
+      if (signOutButton) signOutButton.style.display = 'none';
+      // Show auth inputs
+      if (emailInput) emailInput.style.display = 'block';
+      if (passwordInput) passwordInput.style.display = 'block';
+      if (signUpButton) signUpButton.style.display = 'block';
+      if (signInButton) signInButton.style.display = 'block';
+      if (authMessage) authMessage.style.display = 'block';
+
+      // Hide score input section
+      if (scoreInputSection) scoreInputSection.style.display = 'none';
+      if (saveStatus) saveStatus.textContent = ""; // Clear status
+    }
+  });
 </script>
-<script type="module">
+
   import {
     getAuth,
     createUserWithEmailAndPassword,
