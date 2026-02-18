@@ -871,17 +871,6 @@
     <button class="del" onclick="numDel()">⌫</button>
   </div>
 
-<hr>
-<h2>Save Darts Score</h2>
-<p id="authMessage">Sign in to save your scores!</p> <!-- Added an ID for dynamic message -->
-<div id="scoreInputSection" style="display:none;">
-  <input type="text" id="playerNameInput" placeholder="Player Name (optional)" />
-  <input type="number" id="scoreInput" placeholder="Score" />
-  
-  <button class="btn-submit" onclick="submitScore()">SUBMIT SCORE</button>
-  <button class="btn-bust" onclick="bustScore()">BUST</button>
-  <p id="saveStatus"></p>
-</div>
   <div class="throw-history" id="throw-history"></div>
 
   <div class="row" style="margin-top:16px">
@@ -953,6 +942,12 @@
       <div class="panel">
         <div class="panel-title">This Session</div>
         <div id="drill-session-log" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">No throws logged yet.</div>
+        <div style="margin-top:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <button id="btn-save-drill" onclick="saveDrillSession()"
+            style="background:none;border:1px solid var(--accent3);color:var(--accent3);padding:9px 18px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;"
+            onmouseover="this.style.background='rgba(58,255,184,0.08)'" onmouseout="this.style.background='none'">☁ Save Drill Session</button>
+          <span id="drill-save-status" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);"></span>
+        </div>
       </div>
       <div class="panel">
         <div class="panel-title">All-Time by Bed Type</div>
@@ -1159,6 +1154,9 @@ function loadState() {
 
 function saveState() { localStorage.setItem(DB_KEY, JSON.stringify(state)); }
 let state = loadState();
+// Expose to Firebase module script
+window.state = state;
+window.saveState = saveState;
 
 // ═══════════════════════════════════════════════════
 //  LEG STATE
@@ -1525,7 +1523,7 @@ function endSession() {
   const totalAvg = sessionLegs.reduce((s,l)=>s+parseFloat(l.avg),0) / sessionLegs.length;
   const totalCO = sessionLegs.reduce((s,l)=>s+l.checkouts,0);
   const totalCOAtt = sessionLegs.reduce((s,l)=>s+l.checkoutAttempts,0);
-  state.sessions.push({
+  const sessionData = {
     date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),
     timestamp: Date.now(),
     legs: sessionLegs.length,
@@ -1533,11 +1531,25 @@ function endSession() {
     checkoutPct: totalCOAtt>0 ? ((totalCO/totalCOAtt)*100).toFixed(0) : 0,
     feel: currentLeg.feel,
     notes: document.getElementById('session-notes').value,
-  });
+    legDetails: sessionLegs.map(l => ({ score:l.score, darts:l.darts, avg:l.avg, checkouts:l.checkouts, checkoutAttempts:l.checkoutAttempts })),
+  };
+  state.sessions.push(sessionData);
   saveState();
+  // Save to Firebase if signed in
+  if (typeof window.saveSessionToFirebase === 'function') {
+    window.saveSessionToFirebase(sessionData);
+  }
   sessionLegs = [];
   newLeg();
   toast('✓ Session saved!');
+}
+
+function saveDrillSession() {
+  if (drillSessionLog.length === 0) { toast('No drill throws logged yet!', true); return; }
+  if (typeof window.saveDrillSessionToFirebase !== 'function') {
+    toast('Sign in to save drill sessions to the cloud', true); return;
+  }
+  window.saveDrillSessionToFirebase(drillSessionLog, state.drillData);
 }
 
 // ═══════════════════════════════════════════════════
@@ -2518,15 +2530,20 @@ document.addEventListener('keydown', e=>{
   }
 });
 
+// Expose render functions for post-load refresh
+window.renderStats = renderStats;
+window.toast = toast;
+
 // init
 updateMeta();
 updateAttemptDots();
 </script>
 <script type="module">
-  // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+  import {
+    getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc
+  } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
   import {
     getAuth,
     createUserWithEmailAndPassword,
@@ -2535,7 +2552,6 @@ updateAttemptDots();
     onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-  // Your web app's Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyCXwpk8nmBXXxHbXRINEEIqFt-18emUxjQ",
     authDomain: "bullboard-68766.firebaseapp.com",
@@ -2546,140 +2562,178 @@ updateAttemptDots();
     measurementId: "G-Z04BZD17CW"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app); // Initializing Analytics
-  const db = getFirestore(app);       // Initializing Cloud Firestore
-  const auth = getAuth(app);         // Initializing Firebase Authentication
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  // --- Get HTML Elements for Authentication ---
-  const emailInput = document.getElementById('emailInput');
+  // ── DOM refs ──
+  const emailInput    = document.getElementById('emailInput');
   const passwordInput = document.getElementById('passwordInput');
-  const signUpButton = document.getElementById('signUpButton');
-  const signInButton = document.getElementById('signInButton');
+  const signUpButton  = document.getElementById('signUpButton');
+  const signInButton  = document.getElementById('signInButton');
   const signOutButton = document.getElementById('signOutButton');
-  const userStatus = document.getElementById('userStatus');
-  const authMessage = document.getElementById('authMessage'); // Message above score input
+  const userStatus    = document.getElementById('userStatus');
 
-
-  // --- Get HTML Elements for Scoring ---
-  const scoreInputSection = document.getElementById('scoreInputSection');
-  const playerNameInput = document.getElementById('playerNameInput');
-  const scoreInput = document.getElementById('scoreInput');
-  // const saveScoreButton = document.getElementById('saveScoreButton'); // No longer needed directly, using onclick
-  const saveStatus = document.getElementById('saveStatus');
-
-
-  // --- Authentication Functions ---
-
-  // Handle Sign Up
-  if (signUpButton) { // Check if element exists before adding listener
-    signUpButton.addEventListener('click', async () => {
-      const email = emailInput.value;
-      const password = passwordInput.value;
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        console.log("User signed up:", userCredential.user.email);
-        // UI update will be handled by onAuthStateChanged
-      } catch (error) {
-        console.error("Error signing up:", error.message);
-        alert("Error signing up: " + error.message); // Basic error display
-      }
-    });
-  }
-
-
-  // Handle Sign In
-  if (signInButton) { // Check if element exists before adding listener
-    signInButton.addEventListener('click', async () => {
-      const email = emailInput.value;
-      const password = passwordInput.value;
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        console.log("User signed in:", userCredential.user.email);
-        // UI update will be handled by onAuthStateChanged
-      } catch (error) {
-        console.error("Error signing in:", error.message);
-        alert("Error signing in: " + error.message); // Basic error display
-      }
-    });
-  }
-
-
-  // Handle Sign Out
-  if (signOutButton) { // Check if element exists before adding listener
-    signOutButton.addEventListener('click', async () => {
-      try {
-        await signOut(auth);
-        console.log("User signed out.");
-        // UI update will be handled by onAuthStateChanged
-      } catch (error) {
-        console.error("Error signing out:", error.message);
-        alert("Error signing out: " + error.message); // Basic error display
-      }
-    });
-  }
-
-
-  // --- Global Functions for Score Buttons (made accessible via window) ---
-  // Firebase save helper — called after a leg completes to persist to Firestore
-  window.saveScoreToFirebase = async (scoreData) => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) return; // Not signed in, skip silently
+  // ── Auth: Sign Up ──
+  signUpButton.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) { alert('Enter email and password'); return; }
     try {
-      await addDoc(collection(db, "dartsScores"), {
-        userId: currentUser.uid,
-        playerName: currentUser.email ? currentUser.email.split('@')[0] : "Anonymous",
-        ...scoreData,
-        timestamp: new Date().toISOString()
-      });
-      console.log("Score saved to Firebase");
+      await createUserWithEmailAndPassword(auth, email, password);
+      emailInput.value = ''; passwordInput.value = '';
+    } catch (e) { alert('Sign up error: ' + e.message); }
+  });
+
+  // ── Auth: Sign In ──
+  signInButton.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) { alert('Enter email and password'); return; }
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      emailInput.value = ''; passwordInput.value = '';
+    } catch (e) { alert('Sign in error: ' + e.message); }
+  });
+
+  // ── Auth: Sign Out ──
+  signOutButton.addEventListener('click', async () => {
+    try { await signOut(auth); } catch (e) { alert('Sign out error: ' + e.message); }
+  });
+
+  // ── Load sessions from Firestore into local state ──
+  async function loadUserData(uid) {
+    try {
+      // Load practice sessions
+      const sessSnap = await getDocs(query(collection(db, 'sessions'), where('userId', '==', uid)));
+      const cloudSessions = [];
+      sessSnap.forEach(d => cloudSessions.push(d.data()));
+      if (cloudSessions.length > 0) {
+        // Merge cloud sessions with local, deduplicate by timestamp
+        const localTs = new Set(window.state.sessions.map(s => s.timestamp));
+        cloudSessions.forEach(s => { if (!localTs.has(s.timestamp)) window.state.sessions.push(s); });
+        window.state.sessions.sort((a,b) => a.timestamp - b.timestamp);
+        window.saveState();
+        console.log(`Loaded ${cloudSessions.length} session(s) from cloud`);
+      }
+
+      // Load drill data snapshot (we store per-user drill totals as one doc)
+      const drillSnap = await getDocs(query(collection(db, 'drillData'), where('userId', '==', uid)));
+      if (!drillSnap.empty) {
+        const cloudDrill = drillSnap.docs[0].data().drillData;
+        // Deep-merge: add cloud counts to local, keeping whichever is higher per target
+        if (cloudDrill) {
+          ['single','double','treble'].forEach(bed => {
+            if (!cloudDrill[bed]) return;
+            Object.entries(cloudDrill[bed]).forEach(([target, cd]) => {
+              const ld = window.state.drillData[bed][target];
+              if (!ld) {
+                window.state.drillData[bed][target] = cd;
+              } else {
+                // Use the record with more attempts (cloud is source of truth if larger)
+                if (cd.attempts > ld.attempts) window.state.drillData[bed][target] = cd;
+              }
+            });
+          });
+          window.saveState();
+          console.log('Drill data synced from cloud');
+        }
+      }
+
+      // Refresh UI after load
+      if (typeof window.renderStats === 'function') window.renderStats();
     } catch (e) {
-      console.error("Error saving score to Firebase:", e.message);
+      console.error('Error loading user data:', e.message);
+    }
+  }
+
+  // ── Save a practice session to Firestore ──
+  window.saveSessionToFirebase = async (sessionData) => {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await addDoc(collection(db, 'sessions'), {
+        userId: user.uid,
+        ...sessionData,
+        savedAt: new Date().toISOString()
+      });
+      console.log('Session saved to cloud');
+    } catch (e) {
+      console.error('Error saving session:', e.message);
+      // Don't alert — local save already succeeded
     }
   };
 
+  // ── Save drill session log + updated totals to Firestore ──
+  window.saveDrillSessionToFirebase = async (drillLog, drillTotals) => {
+    const user = auth.currentUser;
+    if (!user) {
+      document.getElementById('drill-save-status').textContent = '⚠ Sign in to save to cloud';
+      return;
+    }
+    const statusEl = document.getElementById('drill-save-status');
+    statusEl.style.color = 'var(--muted)';
+    statusEl.textContent = 'Saving…';
+    try {
+      // Save the raw session log (individual throws)
+      await addDoc(collection(db, 'drillSessions'), {
+        userId: user.uid,
+        timestamp: Date.now(),
+        savedAt: new Date().toISOString(),
+        throws: drillLog,
+        summary: (() => {
+          const groups = {};
+          drillLog.forEach(e => {
+            const key = `${e.bed}:${e.target}`;
+            if (!groups[key]) groups[key] = { bed:e.bed, target:e.target, hits:0, total:0 };
+            groups[key].total++;
+            if (e.result === 'hit') groups[key].hits++;
+          });
+          return Object.values(groups);
+        })()
+      });
 
-  // --- Listen for Authentication State Changes ---
+      // Upsert the all-time drill totals document (one doc per user)
+      const drillDocId = `drill_${user.uid}`;
+      await setDoc(doc(db, 'drillData', drillDocId), {
+        userId: user.uid,
+        drillData: drillTotals,
+        updatedAt: new Date().toISOString()
+      });
+
+      statusEl.style.color = 'var(--accent3)';
+      statusEl.textContent = '✓ Saved to cloud';
+      if (typeof window.toast === 'function') window.toast('✓ Drill session saved to cloud!');
+      setTimeout(() => { statusEl.textContent = ''; }, 4000);
+    } catch (e) {
+      console.error('Error saving drill session:', e.message);
+      statusEl.style.color = 'var(--accent2)';
+      statusEl.textContent = '✗ Save failed — check connection';
+    }
+  };
+
+  // ── Auth state observer ──
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // User is signed in
-      userStatus.textContent = `Welcome, ${user.email}!`;
-      if (signOutButton) signOutButton.style.display = 'block';
-      // Hide auth inputs
-      if (emailInput) emailInput.style.display = 'none';
-      if (passwordInput) passwordInput.style.display = 'none';
-      if (signUpButton) signUpButton.style.display = 'none';
-      if (signInButton) signInButton.style.display = 'none';
-      if (authMessage) authMessage.style.display = 'none';
-
-      // Show score input section
-      if (scoreInputSection) scoreInputSection.style.display = 'block';
-      if (playerNameInput && !playerNameInput.value) { // Pre-fill player name if empty
-          playerNameInput.value = user.email.split('@')[0];
-      }
-
+      userStatus.textContent = `Signed in as ${user.email}`;
+      signOutButton.style.display = 'inline-block';
+      emailInput.style.display = 'none';
+      passwordInput.style.display = 'none';
+      signUpButton.style.display = 'none';
+      signInButton.style.display = 'none';
+      // Load their cloud data and merge
+      loadUserData(user.uid);
     } else {
-      // User is signed out
-      userStatus.textContent = "Not signed in.";
-      if (signOutButton) signOutButton.style.display = 'none';
-      // Show auth inputs
-      if (emailInput) emailInput.style.display = 'block';
-      if (passwordInput) passwordInput.style.display = 'block';
-      if (signUpButton) signUpButton.style.display = 'block';
-      if (signInButton) signInButton.style.display = 'block';
-      if (authMessage) authMessage.style.display = 'block';
-
-      // Hide score input section
-      if (scoreInputSection) scoreInputSection.style.display = 'none';
-      if (saveStatus) saveStatus.textContent = ""; // Clear status
+      userStatus.textContent = 'Not signed in';
+      signOutButton.style.display = 'none';
+      emailInput.style.display = 'inline-block';
+      passwordInput.style.display = 'inline-block';
+      signUpButton.style.display = 'inline-block';
+      signInButton.style.display = 'inline-block';
     }
   });
 </script>
- 
-  
 
-
-  
 </body>
 </html>
