@@ -2743,5 +2743,49 @@ function toggleDrillVoice() {
   console.log('Drill voice toggled');
 }
 </script>
+<script>
+// Add this function to handle game mode changes
+document.getElementById('game-mode').addEventListener('change', function(e) {
+  const gameMode = e.target.value;
+  document.getElementById('score-display').textContent = gameMode;
+  document.getElementById('leg-counter').textContent = `LEG 1 · ${gameMode}`;
+  // Reset any current input
+  document.getElementById('input-display').textContent = '';
+});
+
+// Also initialize on page load
+window.addEventListener('load', function() {
+  const gameMode = document.getElementById('game-mode').value;
+  document.getElementById('score-display').textContent = gameMode;
+  document.getElementById('leg-counter').textContent = `LEG 1 · ${gameMode}`;
+});
+
+function showPage(pageName, buttonEl) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.remove('active');
+  });
+  
+  // Remove active class from all nav buttons
+  document.querySelectorAll('nav button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Show the selected page
+  const page = document.getElementById(`page-${pageName}`);
+  if (page) {
+    page.classList.add('active');
+  }
+  
+  // Mark the button as active
+  if (buttonEl) {
+    buttonEl.classList.add('active');
+  }
+}
+
+// ... rest of your functions ...
+</script>
+
+  
 </body>
 </html>
