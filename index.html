@@ -520,10 +520,10 @@
   .voice-btn-hero {
     width: 100px;
     min-height: 120px;
-    background: var(--surface2);
+    background: rgba(232,255,58,0.06);
     border: none;
-    border-left: 1px solid var(--border);
-    color: var(--muted);
+    border-left: 2px solid rgba(232,255,58,0.3);
+    color: var(--accent);
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -532,23 +532,39 @@
     gap: 6px;
     transition: all 0.15s;
     flex-shrink: 0;
+    position: relative;
   }
-  .voice-btn-hero:hover { background: var(--dim); color: var(--text); }
+  .voice-btn-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(232,255,58,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .voice-btn-hero:hover {
+    background: rgba(232,255,58,0.12);
+    border-left-color: var(--accent);
+    color: var(--accent);
+  }
   .voice-btn-hero.listening {
     border-left-color: var(--accent2);
     color: var(--accent2);
-    background: rgba(255,77,77,0.1);
+    background: rgba(255,77,77,0.12);
     animation: voicePulse 1s infinite;
   }
-  .voice-btn-hero .mic-icon { font-size: 36px; line-height: 1; }
+  .voice-btn-hero.listening::before {
+    background: radial-gradient(ellipse at center, rgba(255,77,77,0.12) 0%, transparent 70%);
+  }
+  .voice-btn-hero .mic-icon { font-size: 36px; line-height: 1; filter: drop-shadow(0 0 8px rgba(232,255,58,0.5)); }
+  .voice-btn-hero.listening .mic-icon { filter: drop-shadow(0 0 8px rgba(255,77,77,0.6)); }
   .voice-btn-hero .mic-label {
     font-family: 'DM Mono', monospace;
     font-size: 9px;
     letter-spacing: 2px;
-    opacity: 0.5;
+    opacity: 0.8;
     text-transform: uppercase;
   }
-  .voice-btn-hero.listening .mic-label { opacity: 1; color: var(--accent2); content: 'LISTENING'; }
+  .voice-btn-hero.listening .mic-label { opacity: 1; color: var(--accent2); }
 
   /* ── DRILL VOICE STATUS ── */
   .drill-voice-bar {
@@ -983,7 +999,7 @@
     <div class="score-display" id="score-display">501</div>
     <button class="voice-btn-hero" id="voice-btn" onclick="toggleVoice()" title="Voice score input (or press Spacebar)">
       <span class="mic-icon">🎙</span>
-      <span class="mic-label">HIT SPACE</span>
+      <span class="mic-label">SPACE</span>
     </button>
   </div>
 
@@ -3129,8 +3145,11 @@ updateAttemptDots();
       });
       console.log('Session saved to cloud');
     } catch (e) {
-      console.error('Error saving session:', e.message);
-      // Don't alert — local save already succeeded
+      console.error('Session save error:', e.code, e.message);
+      if (e.code === 'permission-denied') {
+        if (typeof window.toast === 'function') window.toast('Session saved locally. Cloud sync blocked — check Firestore rules.', true);
+      }
+      // Silent fail for network issues — local save already succeeded
     }
   };
 
@@ -3145,22 +3164,24 @@ updateAttemptDots();
     statusEl.style.color = 'var(--muted)';
     statusEl.textContent = 'Saving…';
     try {
-      // Save the raw session log (individual throws)
+      // Build summary inline (no IIFE to keep stack traces clean)
+      const groups = {};
+      drillLog.forEach(e => {
+        const key = `${e.bed}:${e.target}`;
+        if (!groups[key]) groups[key] = { bed: e.bed, target: e.target, hits: 0, total: 0 };
+        groups[key].total++;
+        if (e.result === 'hit') groups[key].hits++;
+      });
+      const summary = Object.values(groups);
+
+      // Save the raw session log
       await addDoc(collection(db, 'drillSessions'), {
         userId: user.uid,
         timestamp: Date.now(),
         savedAt: new Date().toISOString(),
+        throwCount: drillLog.length,
         throws: drillLog,
-        summary: (() => {
-          const groups = {};
-          drillLog.forEach(e => {
-            const key = `${e.bed}:${e.target}`;
-            if (!groups[key]) groups[key] = { bed:e.bed, target:e.target, hits:0, total:0 };
-            groups[key].total++;
-            if (e.result === 'hit') groups[key].hits++;
-          });
-          return Object.values(groups);
-        })()
+        summary
       });
 
       // Upsert the all-time drill totals document (one doc per user)
@@ -3169,16 +3190,26 @@ updateAttemptDots();
         userId: user.uid,
         drillData: drillTotals,
         updatedAt: new Date().toISOString()
-      });
+      }, { merge: true });
 
       statusEl.style.color = 'var(--accent3)';
       statusEl.textContent = '✓ Saved to cloud';
       if (typeof window.toast === 'function') window.toast('✓ Drill session saved to cloud!');
       setTimeout(() => { statusEl.textContent = ''; }, 4000);
     } catch (e) {
-      console.error('Error saving drill session:', e.message);
+      console.error('Drill save error:', e.code, e.message);
       statusEl.style.color = 'var(--accent2)';
-      statusEl.textContent = '✗ Save failed — check connection';
+      // Show specific reason rather than generic message
+      if (e.code === 'permission-denied') {
+        statusEl.textContent = '✗ Permission denied — check Firestore rules';
+        if (typeof window.toast === 'function') window.toast('Save failed: Firestore rules block writes. Open Firebase Console → Firestore → Rules and allow authenticated writes.', true);
+      } else if (e.code === 'unavailable' || e.message?.includes('network')) {
+        statusEl.textContent = '✗ Offline — data saved locally';
+        if (typeof window.toast === 'function') window.toast('No connection — drill saved locally only', true);
+      } else {
+        statusEl.textContent = `✗ ${e.code || 'Save failed'}`;
+        if (typeof window.toast === 'function') window.toast(`Save error: ${e.message}`, true);
+      }
     }
   };
 
