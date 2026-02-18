@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DARTBOARD — Practice Tracker</title>
+<title>BULLBOARD — Practice Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -152,29 +152,6 @@
     animation: blink 1s infinite;
   }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-  /* ── VOICE BUTTON ── */
-  .voice-btn {
-    width: 64px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-  .voice-btn:hover { border-color: var(--accent2); color: var(--accent2); }
-  .voice-btn.listening {
-    border-color: var(--accent2);
-    color: var(--accent2);
-    background: rgba(255,77,77,0.1);
-    animation: voicePulse 1s infinite;
-  }
-  @keyframes voicePulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,77,0.4)} 50%{box-shadow:0 0 0 8px rgba(255,77,77,0)} }
 
   /* ── VOICE TRANSCRIPT DISPLAY ── */
   .voice-transcript {
@@ -522,6 +499,291 @@
   .voice-help.visible { display: block; }
   .voice-help span { color: var(--accent2); }
 
+  @keyframes voicePulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,77,0.4)} 50%{box-shadow:0 0 0 10px rgba(255,77,77,0)} }
+
+  /* ── SCORE HERO (score + big mic) ── */
+  .score-hero {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .score-hero .score-display {
+    flex: 1;
+    border: none;
+    margin: 0;
+    padding: 16px 24px;
+  }
+  .voice-btn-hero {
+    width: 100px;
+    min-height: 120px;
+    background: var(--surface2);
+    border: none;
+    border-left: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .voice-btn-hero:hover { background: var(--dim); color: var(--text); }
+  .voice-btn-hero.listening {
+    border-left-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(255,77,77,0.1);
+    animation: voicePulse 1s infinite;
+  }
+  .voice-btn-hero .mic-icon { font-size: 36px; line-height: 1; }
+  .voice-btn-hero .mic-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    opacity: 0.5;
+    text-transform: uppercase;
+  }
+  .voice-btn-hero.listening .mic-label { opacity: 1; color: var(--accent2); content: 'LISTENING'; }
+
+  /* ── DRILL VOICE STATUS ── */
+  .drill-voice-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .drill-voice-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .drill-voice-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .drill-voice-btn.listening {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(255,77,77,0.1);
+    animation: voicePulse 1s infinite;
+  }
+  .drill-transcript {
+    flex: 1;
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .drill-transcript.heard { color: var(--accent2); font-style: normal; }
+  .drill-transcript.parsed { color: var(--accent3); font-style: normal; }
+
+  /* ── SOCIAL TAB ── */
+  .social-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 260px;
+    gap: 24px;
+    align-items: start;
+  }
+  .social-sidebar { display: flex; flex-direction: column; gap: 16px; }
+  .social-feed { display: flex; flex-direction: column; gap: 12px; }
+
+  /* Profile card */
+  .profile-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+  .profile-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px; color: #000;
+    margin-bottom: 12px;
+  }
+  .profile-handle {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 2px; color: var(--text);
+  }
+  .profile-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 14px;
+  }
+  .profile-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px; background: var(--border);
+    margin-top: 12px;
+  }
+  .profile-stat {
+    background: var(--surface2);
+    padding: 10px 12px;
+    font-family: 'DM Mono', monospace;
+  }
+  .profile-stat label { font-size: 9px; color: var(--muted); letter-spacing: 1px; display: block; text-transform: uppercase; }
+  .profile-stat span { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent); }
+
+  /* Who to follow */
+  .follow-list { display: flex; flex-direction: column; gap: 2px; }
+  .follow-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    transition: background 0.1s;
+  }
+  .follow-row:hover { background: var(--dim); }
+  .follow-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #000;
+    flex-shrink: 0;
+  }
+  .follow-info { flex: 1; min-width: 0; }
+  .follow-name { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
+  .follow-avg { font-size: 10px; color: var(--muted); }
+  .follow-btn {
+    background: none; border: 1px solid var(--accent3); color: var(--accent3);
+    padding: 4px 10px; font-family: 'DM Mono', monospace; font-size: 10px;
+    cursor: pointer; transition: all 0.1s; letter-spacing: 1px; white-space: nowrap;
+  }
+  .follow-btn:hover { background: rgba(58,255,184,0.1); }
+  .follow-btn.following { border-color: var(--dim); color: var(--muted); }
+
+  /* Feed post cards */
+  .post-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 18px 20px;
+    transition: border-color 0.15s;
+    animation: slideIn 0.25s ease;
+  }
+  .post-card:hover { border-color: #3a3a3a; }
+  .post-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .post-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #000;
+    flex-shrink: 0;
+  }
+  .post-meta { flex: 1; }
+  .post-handle { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); font-weight: 500; }
+  .post-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+  .post-type-badge {
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px;
+    padding: 3px 8px; border: 1px solid; text-transform: uppercase;
+  }
+  .post-type-badge.session { border-color: rgba(232,255,58,0.4); color: var(--accent); background: rgba(232,255,58,0.05); }
+  .post-type-badge.checkout { border-color: rgba(58,255,184,0.4); color: var(--accent3); background: rgba(58,255,184,0.05); }
+  .post-type-badge.drill { border-color: rgba(167,139,250,0.4); color: var(--accent4); background: rgba(167,139,250,0.05); }
+  .post-type-badge.milestone { border-color: rgba(255,77,77,0.4); color: var(--accent2); background: rgba(255,77,77,0.05); }
+
+  .post-body { font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 12px; }
+  .post-body .highlight { color: var(--accent); font-weight: 600; }
+  .post-body .highlight2 { color: var(--accent3); font-weight: 600; }
+
+  .post-stats-row {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
+  }
+  .post-stat-chip {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 5px 10px; font-family: 'DM Mono', monospace; font-size: 11px;
+  }
+  .post-stat-chip label { color: var(--muted); font-size: 9px; letter-spacing: 1px; display: block; text-transform: uppercase; }
+  .post-stat-chip span { color: var(--text); }
+
+  .post-actions {
+    display: flex; gap: 6px; border-top: 1px solid var(--border); padding-top: 12px;
+  }
+  .post-action-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); padding: 6px 14px;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px;
+    cursor: pointer; transition: all 0.1s; text-transform: uppercase;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .post-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .post-action-btn.liked { border-color: var(--accent2); color: var(--accent2); background: rgba(255,77,77,0.07); }
+
+  /* Trending panel */
+  .trending-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; background: var(--surface2);
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    border-bottom: 1px solid var(--border);
+  }
+  .trending-rank { color: var(--muted); width: 18px; font-size: 10px; }
+  .trending-tag { color: var(--accent); flex: 1; }
+  .trending-count { color: var(--muted); font-size: 10px; }
+
+  /* Post composer */
+  .post-composer {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 4px;
+  }
+  .composer-row { display: flex; gap: 10px; align-items: flex-start; }
+  .composer-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    resize: none; min-height: 44px;
+  }
+  .composer-input::placeholder { color: var(--muted); }
+  .composer-input:focus { outline: 1px solid var(--accent); }
+  .composer-actions { display: flex; gap: 6px; margin-top: 10px; justify-content: flex-end; }
+  .btn-post {
+    background: var(--accent); color: #000;
+    border: none; padding: 8px 20px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px;
+    cursor: pointer; transition: all 0.1s;
+  }
+  .btn-post:hover { background: #d4e82a; }
+  .btn-share-session {
+    background: none; border: 1px solid var(--accent3); color: var(--accent3);
+    padding: 8px 14px; font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.1s;
+  }
+  .btn-share-session:hover { background: rgba(58,255,184,0.08); }
+
+  /* Feed filter tabs */
+  .feed-filters {
+    display: flex; gap: 4px; margin-bottom: 16px;
+  }
+  .feed-filter {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    padding: 6px 14px; font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.1s; text-transform: uppercase;
+  }
+  .feed-filter.active, .feed-filter:hover {
+    border-color: var(--accent); color: var(--accent); background: rgba(232,255,58,0.05);
+  }
+
+  @media (max-width: 1100px) {
+    .social-layout { grid-template-columns: 1fr 1fr; }
+    .social-layout > *:last-child { display: none; }
+  }
+
   @media (max-width: 900px) {
     .drill-page-grid { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2,1fr); }
@@ -535,12 +797,13 @@
 <body>
 
 <header>
-  <div class="logo">Dartboard <span>// PRACTICE</span></div>
+  <div class="logo">Bullboard <span>// PRACTICE</span></div>
   <nav>
     <button class="active" onclick="showPage('practice',this)">Practice</button>
     <button onclick="showPage('drill',this)">Drills</button>
     <button onclick="showPage('stats',this)">Stats</button>
     <button onclick="showPage('analysis',this)">Analysis</button>
+    <button onclick="showPage('social',this)">Social</button>
   </nav>
 </header>
 
@@ -560,7 +823,24 @@
   </div>
 
   <div class="leg-counter" id="leg-counter">LEG 1 · 501</div>
-  <div class="score-display" id="score-display">501</div>
+
+  <!-- Score + big mic hero row -->
+  <div class="score-hero">
+    <div class="score-display" id="score-display">501</div>
+    <button class="voice-btn-hero" id="voice-btn" onclick="toggleVoice()" title="Voice score input (or press Spacebar)">
+      <span class="mic-icon">🎙</span>
+      <span class="mic-label">SPACE</span>
+    </button>
+  </div>
+
+  <!-- Voice transcript -->
+  <div class="voice-transcript" id="voice-transcript"></div>
+
+  <!-- Voice help text (shown after first tap) -->
+  <div class="voice-help" id="voice-help">
+    Say the <span>total</span> (e.g. "one forty") · or dart-by-dart: <span>"treble 20 single 5 double 16"</span><br>
+    Supports: <span>double / treble / triple</span> + number · Say <span>"bust"</span> to bust · Press <span>Spacebar</span> to activate
+  </div>
 
   <div class="score-meta">
     <div><label>Round</label><span class="val" id="round-num">1</span></div>
@@ -568,19 +848,9 @@
     <div><label>Darts</label><span class="val" id="dart-count">0</span></div>
   </div>
 
-  <!-- Voice transcript -->
-  <div class="voice-transcript" id="voice-transcript"></div>
-
-  <!-- Input row with mic -->
+  <!-- Input row -->
   <div class="input-row">
     <div class="input-display" id="input-display"><span class="cursor"></span></div>
-    <button class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="Voice input — say a score">🎙</button>
-  </div>
-
-  <!-- Voice help text -->
-  <div class="voice-help" id="voice-help">
-    Say the <span>total</span> (e.g. "one forty") · or dart-by-dart: <span>"treble 20 single 5 double 16"</span><br>
-    Supports: <span>double / treble / triple</span> + number. Say <span>"bust"</span> to bust.
   </div>
 
   <div class="numpad">
@@ -644,6 +914,12 @@
         <button class="miss-btn" onclick="selectMiss('high',this)">↑ High</button>
         <button class="miss-btn" onclick="selectMiss('low',this)">↓ Low</button>
         <button class="miss-btn" onclick="selectMiss('right',this)">→ Right</button>
+      </div>
+
+      <div class="dsec">Voice Input</div>
+      <div class="drill-voice-bar">
+        <button class="drill-voice-btn" id="drill-voice-btn" onclick="toggleDrillVoice()">🎙 <span id="drill-voice-btn-label">Tap to speak</span></button>
+        <div class="drill-transcript" id="drill-transcript">Say "Hit" or "Miss left / right / high / low"</div>
       </div>
 
       <div class="drill-action-btns">
@@ -752,6 +1028,90 @@
   <div class="panel">
     <div class="panel-title">Double Drill Breakdown</div>
     <div id="double-breakdown" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:12px;">Log double drills to see breakdown.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SOCIAL PAGE ═══════════════════ -->
+<div id="page-social" class="page">
+  <div class="social-layout">
+
+    <!-- LEFT SIDEBAR: Profile + Who to follow -->
+    <div class="social-sidebar">
+      <!-- Your profile card -->
+      <div class="profile-card">
+        <div class="profile-avatar" id="social-avatar">?</div>
+        <div class="profile-handle" id="social-handle">YOUR HANDLE</div>
+        <div class="profile-sub" id="social-sub">Set up your profile</div>
+        <div style="display:flex;gap:6px;margin-top:10px;">
+          <input id="social-name-input" class="tag-input" style="margin:0;flex:1;font-size:11px;" placeholder="Your name / handle" />
+          <button onclick="setSocialProfile()" style="background:var(--accent);color:#000;border:none;padding:6px 12px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;">SET</button>
+        </div>
+        <div class="profile-stats">
+          <div class="profile-stat"><label>Avg</label><span id="social-p-avg">—</span></div>
+          <div class="profile-stat"><label>Sessions</label><span id="social-p-sessions">0</span></div>
+          <div class="profile-stat"><label>Following</label><span id="social-p-following">0</span></div>
+          <div class="profile-stat"><label>Followers</label><span id="social-p-followers">—</span></div>
+        </div>
+      </div>
+
+      <!-- Who to follow -->
+      <div class="panel">
+        <div class="panel-title">Who to Follow</div>
+        <div class="follow-list" id="follow-list"></div>
+      </div>
+    </div>
+
+    <!-- CENTER: Feed -->
+    <div>
+      <!-- Composer -->
+      <div class="post-composer">
+        <div class="composer-row">
+          <div class="post-avatar" id="composer-avatar" style="background:var(--accent);color:#000;">?</div>
+          <textarea class="composer-input" id="post-text" placeholder="Share a score, brag about a checkout, log a session..." rows="2"></textarea>
+        </div>
+        <div class="composer-actions">
+          <button class="btn-share-session" onclick="shareLastSession()">📊 Share Last Session</button>
+          <button class="btn-post" onclick="submitPost()">POST</button>
+        </div>
+      </div>
+
+      <!-- Feed filters -->
+      <div class="feed-filters">
+        <button class="feed-filter active" onclick="setFeedFilter('all',this)">All</button>
+        <button class="feed-filter" onclick="setFeedFilter('sessions',this)">Sessions</button>
+        <button class="feed-filter" onclick="setFeedFilter('checkouts',this)">Checkouts</button>
+        <button class="feed-filter" onclick="setFeedFilter('drills',this)">Drills</button>
+        <button class="feed-filter" onclick="setFeedFilter('milestones',this)">Milestones</button>
+      </div>
+
+      <!-- Feed -->
+      <div class="social-feed" id="social-feed">
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">Loading feed…</div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: Trending + Leaderboard -->
+    <div class="social-sidebar">
+      <!-- Leaderboard -->
+      <div class="panel">
+        <div class="panel-title">Weekly Leaders</div>
+        <div id="leaderboard-list"></div>
+      </div>
+
+      <!-- Trending tags -->
+      <div class="panel">
+        <div class="panel-title">Trending</div>
+        <div id="trending-list"></div>
+      </div>
+
+      <!-- Live now -->
+      <div class="panel">
+        <div class="panel-title">Live Now</div>
+        <div id="live-now-list" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -945,7 +1305,8 @@ function initVoice() {
 
   recognition.onstart = () => {
     voiceActive = true;
-    document.getElementById('voice-btn').classList.add('listening');
+    const btn = document.getElementById('voice-btn');
+    if (btn) btn.classList.add('listening');
     document.getElementById('input-display').classList.add('voice-active');
     setTranscript('Listening…', '');
   };
@@ -982,7 +1343,8 @@ function initVoice() {
 
   recognition.onerror = (e) => {
     voiceActive = false;
-    document.getElementById('voice-btn').classList.remove('listening');
+    const btn = document.getElementById('voice-btn');
+    if (btn) btn.classList.remove('listening');
     document.getElementById('input-display').classList.remove('voice-active');
     if (e.error !== 'no-speech' && e.error !== 'aborted') {
       setTranscript('Mic error — check browser permissions', 'heard');
@@ -993,7 +1355,8 @@ function initVoice() {
 
   recognition.onend = () => {
     voiceActive = false;
-    document.getElementById('voice-btn').classList.remove('listening');
+    const btn = document.getElementById('voice-btn');
+    if (btn) btn.classList.remove('listening');
     document.getElementById('input-display').classList.remove('voice-active');
   };
 
@@ -1043,6 +1406,7 @@ function showPage(name, btn) {
   if (name === 'stats') renderStats();
   if (name === 'analysis') renderAnalysis();
   if (name === 'drill') renderDrillPage();
+  if (name === 'social') renderSocialPage();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1721,6 +2085,390 @@ function renderDoubleBreakdown() {
 }
 
 // ═══════════════════════════════════════════════════
+//  DRILL VOICE RECOGNITION
+// ═══════════════════════════════════════════════════
+let drillRecognition = null;
+let drillVoiceActive = false;
+
+function initDrillVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return false;
+  drillRecognition = new SR();
+  drillRecognition.lang = 'en-GB';
+  drillRecognition.interimResults = true;
+  drillRecognition.maxAlternatives = 3;
+  drillRecognition.continuous = false;
+
+  drillRecognition.onstart = () => {
+    drillVoiceActive = true;
+    document.getElementById('drill-voice-btn').classList.add('listening');
+    document.getElementById('drill-voice-btn-label').textContent = 'Listening…';
+    setDrillTranscript('Listening…', '');
+  };
+
+  drillRecognition.onresult = (e) => {
+    const results = e.results[e.results.length - 1];
+    const interim = results[0].transcript;
+    setDrillTranscript(interim, 'heard');
+
+    if (results.isFinal) {
+      let parsed = null;
+      for (let i = 0; i < results.length; i++) {
+        parsed = parseDrillVoice(results[i].transcript);
+        if (parsed) break;
+      }
+
+      if (parsed) {
+        const label = parsed.result === 'hit' ? '✓ HIT' : `✗ MISS${parsed.dir ? ' · ' + parsed.dir : ''}`;
+        setDrillTranscript(`"${results[0].transcript}" → ${label}`, 'parsed');
+        if (parsed.dir) {
+          // find + click the miss direction button
+          const missMap = { left:'left', right:'right', high:'high', low:'low', top:'high', bottom:'low' };
+          const dir = missMap[parsed.dir];
+          if (dir) {
+            document.querySelectorAll('.miss-btn').forEach(b => {
+              if (b.textContent.toLowerCase().includes(dir)) b.click();
+            });
+          }
+        }
+        setTimeout(() => logDrill(parsed.result), 200);
+      } else {
+        setDrillTranscript(`Didn't understand — say "Hit" or "Miss left"`, 'heard');
+      }
+    }
+  };
+
+  drillRecognition.onerror = (e) => {
+    drillVoiceActive = false;
+    document.getElementById('drill-voice-btn').classList.remove('listening');
+    document.getElementById('drill-voice-btn-label').textContent = 'Tap to speak';
+    if (e.error !== 'no-speech' && e.error !== 'aborted') setDrillTranscript('Mic error', 'heard');
+    else setDrillTranscript('Say "Hit" or "Miss left / right / high / low"', '');
+  };
+
+  drillRecognition.onend = () => {
+    drillVoiceActive = false;
+    document.getElementById('drill-voice-btn').classList.remove('listening');
+    document.getElementById('drill-voice-btn-label').textContent = 'Tap to speak';
+  };
+
+  return true;
+}
+
+function parseDrillVoice(raw) {
+  const t = raw.toLowerCase().trim();
+  // Hit patterns
+  if (/\b(hit|yes|got it|in|nailed|scored)\b/.test(t)) return { result:'hit', dir:null };
+
+  // Miss patterns — extract optional direction
+  if (/\b(miss|missed|no|out|off)\b/.test(t)) {
+    const dirMatch = t.match(/\b(left|right|high|low|top|bottom|above|below)\b/);
+    return { result:'miss', dir: dirMatch ? dirMatch[1] : null };
+  }
+
+  return null;
+}
+
+function setDrillTranscript(text, cls) {
+  const el = document.getElementById('drill-transcript');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'drill-transcript' + (cls ? ' '+cls : '');
+}
+
+function toggleDrillVoice() {
+  if (!drillRecognition) {
+    const ok = initDrillVoice();
+    if (!ok) { toast('Voice not supported in this browser', true); return; }
+  }
+  if (drillVoiceActive) { drillRecognition.stop(); return; }
+  try {
+    drillRecognition.start();
+  } catch(e) {
+    drillRecognition = null;
+    initDrillVoice();
+    try { drillRecognition.start(); } catch(e2) { toast('Voice error — try again', true); }
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  SOCIAL TAB
+// ═══════════════════════════════════════════════════
+const SOCIAL_KEY = 'bullboard_social_v1';
+
+const DEMO_USERS = [
+  { handle:'PhilTaylor180', avg:58.2, color:'#e8ff3a', followers:1842 },
+  { handle:'ArrowsAnna',    avg:51.4, color:'#3affb8', followers:739  },
+  { handle:'SteelDave',     avg:44.7, color:'#a78bfa', followers:291  },
+  { handle:'FinishLine_K',  avg:62.1, color:'#ff4d4d', followers:3120 },
+  { handle:'BullseyeBex',   avg:47.9, color:'#ff9f43', followers:482  },
+  { handle:'DartsDominic',  avg:55.3, color:'#54a0ff', followers:1103 },
+];
+
+const DEMO_POSTS = [
+  {
+    id:'p1', user:'PhilTaylor180', color:'#e8ff3a', time:'2m ago',
+    type:'checkout', text:'Just hit a 141 checkout in practice — T20, T17, D6. Third time I\'ve landed it this week. Routing is clicking.',
+    stats:[{l:'Score',v:'141'},{l:'Route',v:'T20·T17·D6'}], likes:24, comments:5
+  },
+  {
+    id:'p2', user:'FinishLine_K', color:'#ff4d4d', time:'14m ago',
+    type:'session', text:'Morning session done. Feeling really good about my doubles today — 6 from 11 which is above my usual average.',
+    stats:[{l:'Avg',v:'63.4'},{l:'Legs',v:'8'},{l:'CO%',v:'55%'},{l:'Feel',v:'🔥'}], likes:31, comments:8
+  },
+  {
+    id:'p3', user:'ArrowsAnna', color:'#3affb8', time:'32m ago',
+    type:'drill', text:'30 minutes on D16 and D8. D16 up to 68% now after weeks of it being my weakest. The fix was raising my elbow slightly on release.',
+    stats:[{l:'D16',v:'68%'},{l:'D8',v:'71%'},{l:'Attempts',v:'90'}], likes:18, comments:12
+  },
+  {
+    id:'p4', user:'SteelDave', color:'#a78bfa', time:'1h ago',
+    type:'milestone', text:'🎯 Just crossed 500 legs logged on Bullboard. Started 18 months ago averaging 32 — sitting at 44.7 now. Slow grind but it adds up.',
+    stats:[{l:'Legs',v:'500'},{l:'Avg (now)',v:'44.7'},{l:'Avg (start)',v:'32.1'}], likes:89, comments:22
+  },
+  {
+    id:'p5', user:'DartsDominic', color:'#54a0ff', time:'2h ago',
+    type:'session', text:'Back at the board after a week off. Rustier than expected — took 4 legs to find my rhythm again. Anyone else find breaks wreck their release timing?',
+    stats:[{l:'Avg',v:'48.1'},{l:'Legs',v:'6'},{l:'Feel',v:'😕'}], likes:9, comments:14
+  },
+  {
+    id:'p6', user:'BullseyeBex', color:'#ff9f43', time:'3h ago',
+    type:'checkout', text:'Finally hit the D Bull finish I\'ve been chasing. 85 out on tops then bull. Will take it!',
+    stats:[{l:'Checkout',v:'85'},{l:'Route',v:'T15·Bull'}], likes:44, comments:7
+  },
+];
+
+let socialState = {
+  myHandle: '',
+  following: [],
+  feedFilter: 'all',
+  posts: [...DEMO_POSTS],
+  likes: {},
+};
+
+function loadSocialState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SOCIAL_KEY));
+    if (s) socialState = { ...socialState, ...s, posts: [...DEMO_POSTS, ...(s.myPosts||[])] };
+  } catch(e) {}
+}
+function saveSocialState() {
+  const toSave = { myHandle: socialState.myHandle, following: socialState.following, likes: socialState.likes, myPosts: socialState.posts.filter(p=>p.isOwn) };
+  localStorage.setItem(SOCIAL_KEY, JSON.stringify(toSave));
+}
+loadSocialState();
+
+function renderSocialPage() {
+  // Profile
+  const handle = socialState.myHandle || 'YOU';
+  const initials = handle.slice(0,2).toUpperCase();
+  document.getElementById('social-avatar').textContent = initials;
+  document.getElementById('composer-avatar').textContent = initials;
+  document.getElementById('social-handle').textContent = handle.toUpperCase();
+  document.getElementById('social-sub').textContent = `@${handle.toLowerCase()} · Bullboard`;
+  document.getElementById('social-name-input').value = socialState.myHandle;
+
+  // Profile stats from game data
+  const sessions = state.sessions;
+  const avg = sessions.length ? (sessions.reduce((s,ses)=>s+parseFloat(ses.avg),0)/sessions.length).toFixed(1) : '—';
+  document.getElementById('social-p-avg').textContent = avg;
+  document.getElementById('social-p-sessions').textContent = sessions.length;
+  document.getElementById('social-p-following').textContent = socialState.following.length;
+
+  renderFollowList();
+  renderFeed();
+  renderLeaderboard();
+  renderTrending();
+  renderLiveNow();
+}
+
+function setSocialProfile() {
+  const val = document.getElementById('social-name-input').value.trim().replace(/\s+/g,'_');
+  if (!val) return;
+  socialState.myHandle = val;
+  saveSocialState();
+  renderSocialPage();
+  toast('Profile updated');
+}
+
+function renderFollowList() {
+  const el = document.getElementById('follow-list');
+  const suggestions = DEMO_USERS.filter(u => !socialState.following.includes(u.handle)).slice(0,4);
+  el.innerHTML = suggestions.map(u => {
+    const init = u.handle.slice(0,2).toUpperCase();
+    return `<div class="follow-row">
+      <div class="follow-avatar" style="background:${u.color}">${init}</div>
+      <div class="follow-info">
+        <div class="follow-name">${u.handle}</div>
+        <div class="follow-avg">Avg ${u.avg} · ${u.followers.toLocaleString()} followers</div>
+      </div>
+      <button class="follow-btn" onclick="followUser('${u.handle}',this)">+ Follow</button>
+    </div>`;
+  }).join('') || '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted);padding:10px;">Following everyone!</div>';
+}
+
+function followUser(handle, btn) {
+  if (!socialState.following.includes(handle)) {
+    socialState.following.push(handle);
+    saveSocialState();
+    btn.textContent = '✓ Following';
+    btn.classList.add('following');
+    document.getElementById('social-p-following').textContent = socialState.following.length;
+    toast(`Following ${handle}`);
+    setTimeout(() => renderFollowList(), 800);
+  }
+}
+
+function setFeedFilter(filter, btn) {
+  socialState.feedFilter = filter;
+  document.querySelectorAll('.feed-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed();
+}
+
+function renderFeed() {
+  const el = document.getElementById('social-feed');
+  let posts = socialState.posts;
+
+  if (socialState.feedFilter !== 'all') {
+    const map = { sessions:'session', checkouts:'checkout', drills:'drill', milestones:'milestone' };
+    const t = map[socialState.feedFilter];
+    posts = posts.filter(p => p.type === t);
+  }
+
+  if (posts.length === 0) {
+    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">Nothing here yet in this category.</div>';
+    return;
+  }
+
+  el.innerHTML = posts.map(p => {
+    const init = p.user.slice(0,2).toUpperCase();
+    const isLiked = !!socialState.likes[p.id];
+    const likeCount = (p.likes||0) + (isLiked ? 1 : 0);
+    const stats = (p.stats||[]).map(s =>
+      `<div class="post-stat-chip"><label>${s.l}</label><span>${s.v}</span></div>`
+    ).join('');
+
+    // Highlight numbers in post body
+    const body = p.text
+      .replace(/\b(\d{3})\b/g, '<span class="highlight">$1</span>')
+      .replace(/\b([Dd]\d+)\b/g, '<span class="highlight2">$1</span>');
+
+    return `<div class="post-card" id="post-${p.id}">
+      <div class="post-header">
+        <div class="post-avatar" style="background:${p.color}">${init}</div>
+        <div class="post-meta">
+          <div class="post-handle">${p.user}</div>
+          <div class="post-time">${p.time}</div>
+        </div>
+        <div class="post-type-badge ${p.type}">${p.type}</div>
+      </div>
+      <div class="post-body">${body}</div>
+      ${stats ? `<div class="post-stats-row">${stats}</div>` : ''}
+      <div class="post-actions">
+        <button class="post-action-btn ${isLiked?'liked':''}" onclick="toggleLike('${p.id}',this)">
+          ${isLiked?'♥':'♡'} <span class="like-count">${likeCount}</span>
+        </button>
+        <button class="post-action-btn" onclick="toast('Comments coming soon!')">💬 ${p.comments||0}</button>
+        <button class="post-action-btn" onclick="toast('Shared!')">↗ Share</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleLike(postId, btn) {
+  socialState.likes[postId] = !socialState.likes[postId];
+  saveSocialState();
+  const isLiked = socialState.likes[postId];
+  const post = socialState.posts.find(p=>p.id===postId);
+  const likeCount = (post?.likes||0) + (isLiked?1:0);
+  btn.className = `post-action-btn ${isLiked?'liked':''}`;
+  btn.innerHTML = `${isLiked?'♥':'♡'} <span class="like-count">${likeCount}</span>`;
+}
+
+function submitPost() {
+  const text = document.getElementById('post-text').value.trim();
+  if (!text) { toast('Write something first!', true); return; }
+  const handle = socialState.myHandle || 'You';
+  const newPost = {
+    id: 'own_' + Date.now(),
+    user: handle,
+    color: '#e8ff3a',
+    time: 'just now',
+    type: 'session',
+    text,
+    stats: [],
+    likes: 0,
+    comments: 0,
+    isOwn: true,
+  };
+  socialState.posts.unshift(newPost);
+  saveSocialState();
+  document.getElementById('post-text').value = '';
+  renderFeed();
+  toast('Posted!');
+}
+
+function shareLastSession() {
+  const sessions = state.sessions;
+  if (!sessions.length) { toast('No sessions saved yet — end a session first', true); return; }
+  const s = sessions[sessions.length-1];
+  const feel = ['','😩','😕','😐','🙂','🔥'][s.feel] || '';
+  document.getElementById('post-text').value =
+    `Session done — avg ${s.avg}, ${s.legs} leg${s.legs!==1?'s':''}, ${s.checkoutPct}% checkout. ${feel}`;
+  toast('Session data added — edit and post!');
+}
+
+function renderLeaderboard() {
+  const el = document.getElementById('leaderboard-list');
+  const leaders = [...DEMO_USERS].sort((a,b) => b.avg - a.avg).slice(0,5);
+  el.innerHTML = leaders.map((u,i) => {
+    const init = u.handle.slice(0,2).toUpperCase();
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;">
+      <span style="font-size:14px;width:22px">${medal||'#'+(i+1)}</span>
+      <div class="follow-avatar" style="background:${u.color};width:28px;height:28px;font-size:11px;">${init}</div>
+      <div style="flex:1;font-size:12px;color:var(--text)">${u.handle}</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${u.color}">${u.avg}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTrending() {
+  const tags = [
+    ['#Checkout141','38 posts'], ['#DoubleTop','29 posts'], ['#Bullseye','21 posts'],
+    ['#DrillMode','17 posts'], ['#9Darter','14 posts'], ['#180Club','11 posts'],
+  ];
+  document.getElementById('trending-list').innerHTML = tags.map((t,i) =>
+    `<div class="trending-row">
+      <span class="trending-rank">${i+1}</span>
+      <span class="trending-tag">${t[0]}</span>
+      <span class="trending-count">${t[1]}</span>
+    </div>`
+  ).join('');
+}
+
+function renderLiveNow() {
+  const live = [
+    { handle:'FinishLine_K', color:'#ff4d4d', action:'Playing 501 · Leg 4' },
+    { handle:'ArrowsAnna',   color:'#3affb8', action:'Drilling D16' },
+  ];
+  document.getElementById('live-now-list').innerHTML = live.map(u => {
+    const init = u.handle.slice(0,2).toUpperCase();
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="position:relative">
+        <div class="follow-avatar" style="background:${u.color};width:30px;height:30px;font-size:12px;">${init}</div>
+        <div style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#3affb8;border:1px solid var(--bg);animation:dpulse 1.5s infinite"></div>
+      </div>
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text)">${u.handle}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${u.action}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
 //  TOAST
 // ═══════════════════════════════════════════════════
 function toast(msg, isError) {
@@ -1736,15 +2484,20 @@ function toast(msg, isError) {
 //  KEYBOARD
 // ═══════════════════════════════════════════════════
 document.addEventListener('keydown', e=>{
-  // Don't intercept if typing in an input
-  if (e.target.tagName === 'INPUT') return;
+  // Don't intercept if typing in an input or textarea
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
   if(e.key>='0'&&e.key<='9') numPress(parseInt(e.key));
   if(e.key==='Backspace') numDel();
   if(e.key==='Enter') submitScore();
   if(e.key==='b'||e.key==='B') bustScore();
-  if(e.key==='h'||e.key==='H') logDrill('hit');
-  if(e.key==='m'||e.key==='M') logDrill('miss');
-  if(e.key===' ') { e.preventDefault(); toggleVoice(); }
+  const onDrill = document.getElementById('page-drill').classList.contains('active');
+  if(e.key==='h'||e.key==='H') { if(onDrill) logDrill('hit'); }
+  if(e.key==='m'||e.key==='M') { if(onDrill) logDrill('miss'); }
+  if(e.key===' ') {
+    e.preventDefault();
+    if (onDrill) toggleDrillVoice();
+    else toggleVoice();
+  }
 });
 
 // init
