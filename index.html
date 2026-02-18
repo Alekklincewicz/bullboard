@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DARTBOARD — Practice Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #2a2a2a;
+    --accent: #e8ff3a;
+    --accent2: #ff4d4d;
+    --accent3: #3affb8;
+    --accent4: #a78bfa;
+    --text: #f0f0f0;
+    --muted: #666;
+    --dim: #333;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--accent);
+  }
+  .logo span { color: var(--muted); font-size: 14px; letter-spacing: 2px; margin-left: 12px; font-family: 'DM Mono', monospace; }
+
+  nav { display: flex; gap: 4px; }
+  nav button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  nav button.active, nav button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(232,255,58,0.05);
+  }
+
+  .page { display: none; padding: 32px; max-width: 1280px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+  }
+
+  .panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── SCOREBOARD ── */
+  .score-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 96px;
+    line-height: 1;
+    color: var(--accent);
+    text-align: center;
+    padding: 20px 0;
+    text-shadow: 0 0 60px rgba(232,255,58,0.2);
+    transition: color 0.2s;
+  }
+
+  .score-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-bottom: 20px;
+  }
+  .score-meta > div { background: var(--surface); padding: 14px; text-align: center; }
+  .score-meta label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .score-meta .val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--text); }
+
+  /* ── INPUT + NUMPAD ── */
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: stretch;
+  }
+  .input-display {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 32px;
+    text-align: right;
+    color: var(--text);
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    transition: border-color 0.2s;
+  }
+  .input-display.voice-active { border-color: var(--accent2); }
+  .input-display .cursor {
+    width: 2px; height: 36px;
+    background: var(--accent);
+    margin-left: 4px;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── VOICE BUTTON ── */
+  .voice-btn {
+    width: 64px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .voice-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .voice-btn.listening {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(255,77,77,0.1);
+    animation: voicePulse 1s infinite;
+  }
+  @keyframes voicePulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,77,0.4)} 50%{box-shadow:0 0 0 8px rgba(255,77,77,0)} }
+
+  /* ── VOICE TRANSCRIPT DISPLAY ── */
+  .voice-transcript {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    min-height: 18px;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-align: right;
+    transition: color 0.2s;
+    padding: 0 2px;
+  }
+  .voice-transcript.heard { color: var(--accent2); }
+  .voice-transcript.parsed { color: var(--accent3); }
+
+  .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .numpad button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.1s;
+    letter-spacing: 1px;
+  }
+  .numpad button:hover { background: var(--dim); border-color: var(--muted); }
+  .numpad button:active { transform: scale(0.96); }
+  .numpad button.zero { grid-column: span 2; }
+  .numpad button.del { color: var(--accent2); border-color: #2a1a1a; }
+
+  .btn-submit {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 8px;
+  }
+  .btn-submit:hover { background: #d4e82a; transform: translateY(-1px); }
+
+  .btn-bust {
+    width: 100%;
+    background: none;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 16px;
+  }
+  .btn-bust:hover { background: rgba(255,77,77,0.1); }
+
+  /* ── THROW HISTORY ── */
+  .throw-history { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+  .throw-history::-webkit-scrollbar { width: 4px; }
+  .throw-history::-webkit-scrollbar-thumb { background: var(--dim); }
+
+  .throw-row {
+    display: flex; align-items: center;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-left: 2px solid var(--dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; gap: 12px;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from { opacity:0; transform: translateX(-10px); } to { opacity:1; transform: none; } }
+  .throw-row.bust { border-left-color: var(--accent2); }
+  .throw-row.checkout { border-left-color: var(--accent3); }
+  .throw-num { color: var(--muted); width: 24px; }
+  .throw-score { color: var(--text); font-size: 18px; font-weight: 500; flex: 1; }
+  .throw-remaining { color: var(--muted); }
+  .throw-badge { font-size: 10px; padding: 2px 7px; letter-spacing: 1px; font-family: 'DM Mono', monospace; }
+  .throw-badge.bust { background: rgba(255,77,77,0.15); color: var(--accent2); border: 1px solid rgba(255,77,77,0.3); }
+  .throw-badge.checkout { background: rgba(58,255,184,0.15); color: var(--accent3); border: 1px solid rgba(58,255,184,0.3); }
+  .throw-badge.ton { background: rgba(232,255,58,0.15); color: var(--accent); border: 1px solid rgba(232,255,58,0.3); }
+  .throw-badge.voice { background: rgba(255,77,77,0.1); color: var(--accent2); border: 1px solid rgba(255,77,77,0.2); font-size:9px; }
+
+  /* ── SESSION SETUP ── */
+  .session-setup { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .setup-select {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 16px;
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    cursor: pointer; flex: 1; min-width: 120px;
+  }
+  .setup-select:focus { outline: 1px solid var(--accent); }
+
+  .btn-new-leg {
+    background: none; border: 1px solid var(--accent3); color: var(--accent3);
+    padding: 10px 20px; font-family: 'DM Mono', monospace; font-size: 12px;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.15s; text-transform: uppercase;
+  }
+  .btn-new-leg:hover { background: rgba(58,255,184,0.08); }
+
+  /* ── DRILL PAGE LAYOUT ── */
+  .drill-page-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+  }
+
+  /* ── DRILL TRACKER ── */
+  .dsec {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--muted);
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 7px; margin-top: 14px;
+  }
+  .dsec:first-child { margin-top: 0; }
+
+  .toggle-group { display: grid; gap: 4px; }
+  .toggle-group.g3 { grid-template-columns: repeat(3,1fr); }
+  .toggle-group.g2 { grid-template-columns: repeat(2,1fr); }
+
+  .toggle-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); padding: 9px 6px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.12s;
+    text-align: center; text-transform: uppercase;
+  }
+  .toggle-btn:hover { border-color: var(--muted); color: var(--text); }
+  .toggle-btn.sel-single { border-color: var(--text); color: var(--text); background: rgba(240,240,240,0.06); }
+  .toggle-btn.sel-double { border-color: var(--accent3); color: var(--accent3); background: rgba(58,255,184,0.06); }
+  .toggle-btn.sel-treble { border-color: var(--accent4); color: var(--accent4); background: rgba(167,139,250,0.06); }
+  .toggle-btn.sel-darts { border-color: var(--accent); color: var(--accent); background: rgba(232,255,58,0.06); }
+
+  .target-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin-bottom: 4px; }
+  .target-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); padding: 8px 4px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    cursor: pointer; transition: all 0.1s; text-align: center;
+  }
+  .target-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(232,255,58,0.08); }
+  .target-btn:hover { border-color: var(--muted); color: var(--text); }
+
+  .attempt-label {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    color: var(--muted); letter-spacing: 1px;
+    text-align: center; margin: 8px 0 6px;
+  }
+  .attempt-progress { display: flex; gap: 6px; justify-content: center; margin-bottom: 10px; }
+  .attempt-dot {
+    width: 11px; height: 11px; border-radius: 50%;
+    border: 1px solid var(--dim); background: var(--surface2);
+    transition: all 0.15s;
+  }
+  .attempt-dot.done-hit { background: var(--accent3); border-color: var(--accent3); box-shadow: 0 0 6px rgba(58,255,184,0.5); }
+  .attempt-dot.done-miss { background: var(--accent2); border-color: var(--accent2); box-shadow: 0 0 5px rgba(255,77,77,0.4); }
+  .attempt-dot.current { border-color: var(--accent); animation: dpulse 1s infinite; }
+  @keyframes dpulse { 0%,100%{box-shadow:0 0 0 0 rgba(232,255,58,0.4)} 50%{box-shadow:0 0 0 4px rgba(232,255,58,0)} }
+
+  .miss-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-bottom: 12px; }
+  .miss-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); padding: 8px;
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    cursor: pointer; text-transform: uppercase;
+    text-align: center; transition: all 0.1s; letter-spacing: 1px;
+  }
+  .miss-btn.selected { border-color: var(--accent2); color: var(--accent2); background: rgba(255,77,77,0.08); }
+  .miss-btn:hover { border-color: var(--muted); }
+
+  .drill-action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .drill-hit {
+    background: rgba(58,255,184,0.08); border: 1px solid var(--accent3); color: var(--accent3);
+    padding: 16px; font-family: 'Bebas Neue', sans-serif; font-size: 20px;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.12s;
+  }
+  .drill-hit:hover { background: rgba(58,255,184,0.15); }
+  .drill-miss {
+    background: rgba(255,77,77,0.08); border: 1px solid var(--accent2); color: var(--accent2);
+    padding: 16px; font-family: 'Bebas Neue', sans-serif; font-size: 20px;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.12s;
+  }
+  .drill-miss:hover { background: rgba(255,77,77,0.15); }
+
+  .drill-stats-panel {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 14px; font-family: 'DM Mono', monospace;
+    font-size: 12px; line-height: 1.9; color: var(--muted); min-height: 56px;
+  }
+
+  /* ── DRILL HISTORY (right side of drill page) ── */
+  .drill-history-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .drill-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+  .drill-summary-table th {
+    text-align: left; padding: 8px 12px;
+    font-size: 10px; letter-spacing: 2px;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+  .drill-summary-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .drill-summary-table tr:hover td { background: var(--surface2); }
+  .rate-great { color: var(--accent3); }
+  .rate-ok { color: var(--accent); }
+  .rate-bad { color: var(--accent2); }
+
+  /* ── STATS PAGE ── */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: 1px; background: var(--border); margin-bottom: 32px;
+  }
+  .stat-card { background: var(--surface); padding: 24px; }
+  .stat-card label {
+    display: block; font-family: 'DM Mono', monospace; font-size: 10px;
+    color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .stat-card .big-num { font-family: 'Bebas Neue', sans-serif; font-size: 52px; line-height: 1; color: var(--accent); }
+  .stat-card .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  .history-table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 12px; }
+  .history-table th {
+    text-align: left; padding: 10px 14px; font-size: 10px;
+    letter-spacing: 2px; color: var(--muted);
+    border-bottom: 1px solid var(--border); text-transform: uppercase;
+  }
+  .history-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+  .history-table tr:hover td { background: var(--surface2); }
+  .history-table .good { color: var(--accent3); }
+  .history-table .bad { color: var(--accent2); }
+  .history-table .med { color: var(--accent); }
+
+  .trend-chart { height: 160px; position: relative; overflow: hidden; }
+  canvas { width: 100%; height: 100%; }
+
+  .co-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 3px; margin-bottom: 16px; }
+  .co-cell {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 8px 4px; text-align: center;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+  }
+  .co-cell .co-num { color: var(--muted); font-size: 9px; letter-spacing: 1px; }
+  .co-cell .co-rate { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
+  .co-cell .co-count { font-size: 9px; color: var(--muted); }
+  .co-cell.great { border-color: rgba(58,255,184,0.4); background: rgba(58,255,184,0.05); }
+  .co-cell.great .co-rate { color: var(--accent3); }
+  .co-cell.ok .co-rate { color: var(--accent); }
+  .co-cell.bad { border-color: rgba(255,77,77,0.25); background: rgba(255,77,77,0.04); }
+  .co-cell.bad .co-rate { color: var(--accent2); }
+  .co-cell.empty .co-rate { color: var(--dim); }
+
+  .insight-box {
+    background: var(--surface2);
+    border-left: 2px solid var(--accent);
+    padding: 12px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; color: var(--text); line-height: 1.8;
+    margin-bottom: 8px;
+  }
+  .insight-box.warn { border-left-color: var(--accent2); }
+  .insight-box.good { border-left-color: var(--accent3); }
+
+  /* ── MISC ── */
+  .row { display: flex; gap: 16px; align-items: center; margin-bottom: 16px; }
+  .feel-btns { display: flex; gap: 6px; }
+  .feel-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    font-size: 18px; padding: 8px 12px; cursor: pointer; transition: all 0.1s;
+  }
+  .feel-btn.active { border-color: var(--accent); background: rgba(232,255,58,0.1); }
+
+  .tag-input {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 14px;
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    width: 100%; margin-bottom: 12px;
+  }
+  .tag-input::placeholder { color: var(--muted); }
+  .tag-input:focus { outline: 1px solid var(--accent); }
+
+  .toast {
+    position: fixed; bottom: 32px; right: 32px;
+    background: var(--surface); border: 1px solid var(--accent);
+    color: var(--accent); padding: 14px 20px;
+    font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 1px;
+    z-index: 999;
+    animation: toastIn 0.2s ease, toastOut 0.3s ease 2.5s forwards;
+    pointer-events: none;
+  }
+  .toast.error { border-color: var(--accent2); color: var(--accent2); }
+  @keyframes toastIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: none; } }
+  @keyframes toastOut { to { opacity:0; transform: translateY(10px); } }
+
+  .session-end-btn {
+    width: 100%; background: none; border: 1px solid var(--dim); color: var(--dim);
+    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px;
+    padding: 10px; cursor: pointer; text-transform: uppercase; transition: all 0.15s; margin-top: 16px;
+  }
+  .session-end-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .leg-counter { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: 1px; }
+
+  .weak-spots { display: flex; flex-direction: column; gap: 8px; }
+  .weak-spot-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface2); font-family: 'DM Mono', monospace; font-size: 12px; }
+  .weak-spot-num { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--accent2); width: 42px; }
+  .weak-spot-bar-wrap { flex: 1; background: var(--dim); height: 4px; }
+  .weak-spot-bar { height: 4px; background: var(--accent2); transition: width 0.5s; }
+  .weak-spot-pct { color: var(--muted); width: 40px; text-align: right; }
+  .weak-spot-tip { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+  .board-container { display: flex; flex-direction: column; align-items: center; }
+
+  /* voice help tooltip */
+  .voice-help {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.8;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: none;
+  }
+  .voice-help.visible { display: block; }
+  .voice-help span { color: var(--accent2); }
+
+  @media (max-width: 900px) {
+    .drill-page-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .co-grid { grid-template-columns: repeat(4,1fr); }
+    header { padding: 16px; }
+    .page { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Dartboard <span>// PRACTICE</span></div>
+  <nav>
+    <button class="active" onclick="showPage('practice',this)">Practice</button>
+    <button onclick="showPage('drill',this)">Drills</button>
+    <button onclick="showPage('stats',this)">Stats</button>
+    <button onclick="showPage('analysis',this)">Analysis</button>
+  </nav>
+</header>
+
+<!-- ═══════════════════ PRACTICE PAGE ═══════════════════ -->
+<div id="page-practice" class="page active">
+  <div class="session-setup">
+    <select class="setup-select" id="game-mode">
+      <option value="501">501</option>
+      <option value="301">301</option>
+    </select>
+    <select class="setup-select" id="out-mode">
+      <option value="double">Double Out</option>
+      <option value="single">Single Out</option>
+      <option value="master">Master Out</option>
+    </select>
+    <button class="btn-new-leg" onclick="newLeg()">+ New Leg</button>
+  </div>
+
+  <div class="leg-counter" id="leg-counter">LEG 1 · 501</div>
+  <div class="score-display" id="score-display">501</div>
+
+  <div class="score-meta">
+    <div><label>Round</label><span class="val" id="round-num">1</span></div>
+    <div><label>Avg / 3</label><span class="val" id="avg-display">—</span></div>
+    <div><label>Darts</label><span class="val" id="dart-count">0</span></div>
+  </div>
+
+  <!-- Voice transcript -->
+  <div class="voice-transcript" id="voice-transcript"></div>
+
+  <!-- Input row with mic -->
+  <div class="input-row">
+    <div class="input-display" id="input-display"><span class="cursor"></span></div>
+    <button class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="Voice input — say a score">🎙</button>
+  </div>
+
+  <!-- Voice help text -->
+  <div class="voice-help" id="voice-help">
+    Say the <span>total</span> (e.g. "one forty") · or dart-by-dart: <span>"treble 20 single 5 double 16"</span><br>
+    Supports: <span>double / treble / triple</span> + number. Say <span>"bust"</span> to bust.
+  </div>
+
+  <div class="numpad">
+    <button onclick="numPress(1)">1</button><button onclick="numPress(2)">2</button><button onclick="numPress(3)">3</button>
+    <button onclick="numPress(4)">4</button><button onclick="numPress(5)">5</button><button onclick="numPress(6)">6</button>
+    <button onclick="numPress(7)">7</button><button onclick="numPress(8)">8</button><button onclick="numPress(9)">9</button>
+    <button class="zero" onclick="numPress(0)">0</button>
+    <button class="del" onclick="numDel()">⌫</button>
+  </div>
+
+  <button class="btn-submit" onclick="submitScore()">SUBMIT SCORE</button>
+  <button class="btn-bust" onclick="bustScore()">BUST</button>
+
+  <div class="throw-history" id="throw-history"></div>
+
+  <div class="row" style="margin-top:16px">
+    <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;">FEEL</span>
+    <div class="feel-btns">
+      <button class="feel-btn" onclick="setFeel(1,this)">😩</button>
+      <button class="feel-btn" onclick="setFeel(2,this)">😕</button>
+      <button class="feel-btn active" onclick="setFeel(3,this)">😐</button>
+      <button class="feel-btn" onclick="setFeel(4,this)">🙂</button>
+      <button class="feel-btn" onclick="setFeel(5,this)">🔥</button>
+    </div>
+  </div>
+
+  <input class="tag-input" id="session-notes" placeholder="Session notes... (e.g. 'elbow dropping on high numbers')" />
+  <button class="session-end-btn" onclick="endSession()">End Session & Save</button>
+</div>
+
+<!-- ═══════════════════ DRILL PAGE ═══════════════════ -->
+<div id="page-drill" class="page">
+  <div class="drill-page-grid">
+
+    <!-- LEFT: CONTROLS -->
+    <div class="panel">
+      <div class="panel-title">Drill Tracker</div>
+
+      <div class="dsec">Bed Type</div>
+      <div class="toggle-group g3" id="bed-toggle">
+        <button class="toggle-btn sel-single" onclick="selectBedType('single',this)">Single</button>
+        <button class="toggle-btn" onclick="selectBedType('double',this)">Double</button>
+        <button class="toggle-btn" onclick="selectBedType('treble',this)">Treble</button>
+      </div>
+
+      <div class="dsec">Darts Per Attempt</div>
+      <div class="toggle-group g2" id="darts-toggle">
+        <button class="toggle-btn" onclick="selectDartCount(1,this)">1 Dart</button>
+        <button class="toggle-btn sel-darts" onclick="selectDartCount(3,this)">3 Darts</button>
+      </div>
+
+      <div class="dsec">Target</div>
+      <div class="target-grid" id="target-grid"></div>
+
+      <div class="attempt-label" id="attempt-label">Select a target to begin</div>
+      <div class="attempt-progress" id="attempt-progress"></div>
+
+      <div class="dsec">Miss Direction (optional)</div>
+      <div class="miss-grid">
+        <button class="miss-btn" onclick="selectMiss('left',this)">← Left</button>
+        <button class="miss-btn" onclick="selectMiss('high',this)">↑ High</button>
+        <button class="miss-btn" onclick="selectMiss('low',this)">↓ Low</button>
+        <button class="miss-btn" onclick="selectMiss('right',this)">→ Right</button>
+      </div>
+
+      <div class="drill-action-btns">
+        <button class="drill-hit" onclick="logDrill('hit')">HIT ✓</button>
+        <button class="drill-miss" onclick="logDrill('miss')">MISS ✗</button>
+      </div>
+
+      <div class="drill-stats-panel" id="drill-stats-display">Select a target and start throwing.</div>
+    </div>
+
+    <!-- RIGHT: SESSION SUMMARY -->
+    <div class="drill-history-grid">
+      <div class="panel">
+        <div class="panel-title">This Session</div>
+        <div id="drill-session-log" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">No throws logged yet.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">All-Time by Bed Type</div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;" id="drill-bed-filter">
+          <button class="toggle-btn sel-single" style="flex:1" onclick="selectDrillView('single',this)">Single</button>
+          <button class="toggle-btn" style="flex:1" onclick="selectDrillView('double',this)">Double</button>
+          <button class="toggle-btn" style="flex:1" onclick="selectDrillView('treble',this)">Treble</button>
+        </div>
+        <table class="drill-summary-table" id="drill-alltime-table">
+          <thead><tr><th>Target</th><th>Attempts</th><th>Hits</th><th>Rate</th><th>Top Miss</th></tr></thead>
+          <tbody id="drill-alltime-tbody"></tbody>
+        </table>
+        <div id="drill-no-data" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:16px;text-align:center;">No data yet for this bed type.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════ STATS PAGE ═══════════════════ -->
+<div id="page-stats" class="page">
+  <div class="stats-grid">
+    <div class="stat-card"><label>Career Average</label><div class="big-num" id="stat-avg">—</div><div class="sub">per 3 darts</div></div>
+    <div class="stat-card"><label>Checkout %</label><div class="big-num" id="stat-checkout">—</div><div class="sub">of attempts</div></div>
+    <div class="stat-card"><label>Total Legs</label><div class="big-num" id="stat-legs">0</div><div class="sub">played</div></div>
+    <div class="stat-card"><label>Sessions</label><div class="big-num" id="stat-sessions">0</div><div class="sub">logged</div></div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:24px;">
+    <div class="panel">
+      <div class="panel-title">Score Trend</div>
+      <div class="trend-chart"><canvas id="trend-canvas"></canvas></div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:8px;letter-spacing:1px;">3-DART AVERAGE PER SESSION</div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Session Log</div>
+      <table class="history-table">
+        <thead><tr><th>Date</th><th>Legs</th><th>Avg</th><th>CO%</th><th>Feel</th></tr></thead>
+        <tbody id="session-tbody"></tbody>
+      </table>
+      <div id="no-sessions" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:20px;text-align:center;display:none;">No sessions yet.</div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:24px;">
+    <div class="panel-title">Checkout Performance by Double</div>
+    <div class="co-grid" id="co-doubles-grid"></div>
+    <div id="co-insights"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Checkout % Trend</div>
+    <div id="co-trend-bars"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ ANALYSIS PAGE ═══════════════════ -->
+<div id="page-analysis" class="page">
+  <div class="two-col" style="margin-bottom:24px;">
+    <div class="panel">
+      <div class="panel-title">Target Heat Map</div>
+      <div class="board-container">
+        <canvas id="heatmap-canvas" width="280" height="280"></canvas>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:10px;letter-spacing:1px;text-align:center;">DRILL HIT RATE — BRIGHTER = BETTER</div>
+        <div class="toggle-group g3" style="margin-top:10px;width:260px;" id="heatmap-bed-toggle">
+          <button class="toggle-btn sel-single" onclick="selectHeatmapBed('single',this)">Single</button>
+          <button class="toggle-btn" onclick="selectHeatmapBed('double',this)">Double</button>
+          <button class="toggle-btn" onclick="selectHeatmapBed('treble',this)">Treble</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Weak Spots</div>
+      <div class="weak-spots" id="weak-spots-container">
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:20px;">Log 5+ throws per target to see weak spots.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:24px;">
+    <div class="panel">
+      <div class="panel-title">Miss Direction Analysis</div>
+      <div id="miss-analysis" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);line-height:2;">No miss data yet.</div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Checkout Pressure</div>
+      <div id="checkout-pressure" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);line-height:2;">No checkout data yet.</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Double Drill Breakdown</div>
+    <div id="double-breakdown" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:12px;">Log double drills to see breakdown.</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+const DB_KEY = 'dartboard_v2';
+
+function defaultState() {
+  return {
+    sessions: [],
+    drillData: { single:{}, double:{}, treble:{} },
+  };
+}
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(DB_KEY));
+    if (!s) return defaultState();
+    if (!s.drillData || !s.drillData.single) {
+      s.drillData = { single: s.drillData || {}, double:{}, treble:{} };
+    }
+    return s;
+  } catch(e) { return defaultState(); }
+}
+
+function saveState() { localStorage.setItem(DB_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+// ═══════════════════════════════════════════════════
+//  LEG STATE
+// ═══════════════════════════════════════════════════
+let currentLeg = { score:501, startScore:501, throws:[], round:1, totalDarts:0, checkoutAttempts:0, checkouts:0, mode:'501', outMode:'double', feel:3 };
+let inputVal = '';
+let sessionLegs = [];
+
+// ═══════════════════════════════════════════════════
+//  DRILL STATE
+// ═══════════════════════════════════════════════════
+let drillBedType = 'single';
+let drillDartCount = 3;
+let selectedTarget = null;
+let selectedMiss = null;
+let currentAttemptResults = [];
+let heatmapBedType = 'single';
+let drillViewBed = 'single';
+let drillSessionLog = []; // { target, bed, dartCount, result:'hit'|'miss', miss:dir|null }
+
+const targets = ['20','19','18','17','16','15','14','13','12','11','10','9','8','7','6','5','4','3','2','1','Bull'];
+document.getElementById('target-grid').innerHTML = targets.map(t =>
+  `<button class="target-btn" onclick="selectTarget('${t}',this)">${t}</button>`
+).join('');
+
+// ═══════════════════════════════════════════════════
+//  VOICE INPUT
+// ═══════════════════════════════════════════════════
+let recognition = null;
+let voiceActive = false;
+let voiceHelpVisible = false;
+
+// Number word map
+const wordNums = {
+  'zero':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,
+  'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,'fifteen':15,'sixteen':16,
+  'seventeen':17,'eighteen':18,'nineteen':19,'twenty':20,'twenty-one':21,'twenty one':21,
+  'twenty-five':25,'twenty five':25,'thirty':30,'forty':40,'fifty':50,'sixty':60,
+  'seventy':70,'eighty':80,'ninety':90,'hundred':100,'a hundred':100,'one hundred':100,
+  'hundred and eighty':180,'one hundred and eighty':180,'one eighty':180,'one-eighty':180,
+  'one forty':140,'one-forty':140,'one hundred and forty':140,
+  'one hundred and sixty':160,'one sixty':160,'one-sixty':160,
+  'one hundred and twenty':120,'one twenty':120,'one-twenty':120,
+  'one hundred and forty one':141,'one forty one':141,
+};
+
+// Convert a word/phrase token into a number, or null
+function tokenToNum(tok) {
+  tok = tok.trim().toLowerCase();
+  if (/^\d+$/.test(tok)) return parseInt(tok);
+  if (wordNums[tok] !== undefined) return wordNums[tok];
+  // Try "twenty X" patterns
+  const m = tok.match(/^(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)[- ](\w+)$/);
+  if (m) {
+    const tens = wordNums[m[1]] || 0;
+    const ones = wordNums[m[2]];
+    if (ones !== undefined && ones < 10) return tens + ones;
+  }
+  return null;
+}
+
+function parseVoiceScore(raw) {
+  let text = raw.toLowerCase().trim();
+
+  // Explicit bust
+  if (/\bbust\b/.test(text)) return { action:'bust' };
+
+  // Normalise "triple" → "treble"
+  text = text.replace(/\btriple\b/g, 'treble');
+
+  // Try to parse dart-by-dart: "treble 20 single 5 double 16"
+  // Also handles "twenty treble" ordering (spoken naturally)
+  const dartByDart = parseDartByDart(text);
+  if (dartByDart !== null) return { action:'score', score: dartByDart };
+
+  // Fall back: try to read the whole thing as a number
+  const total = parseTotal(text);
+  if (total !== null && total >= 0 && total <= 180) return { action:'score', score: total };
+
+  return null;
+}
+
+function parseDartByDart(text) {
+  // Find multiplier+number pairs, e.g. "treble 20", "double 16", "single 5", "bull", "25"
+  // Pattern: optional (single|double|treble) + number-word-or-digit
+  // OR number + optional multiplier (e.g. "20 treble")
+  const multipliers = { single:1, double:2, treble:3 };
+
+  // Replace known number words with digits for easier parsing
+  let t = text;
+  // multi-word numbers first
+  Object.keys(wordNums).sort((a,b)=>b.length-a.length).forEach(w => {
+    t = t.replace(new RegExp('\\b'+w.replace(/ /g,'[ -]')+'\\b','g'), wordNums[w]);
+  });
+  t = t.replace(/\bone\b/g,'1').replace(/\btwo\b/g,'2').replace(/\bthree\b/g,'3');
+
+  // Patterns that suggest dart-by-dart input
+  const hasMult = /\b(single|double|treble)\b/.test(t);
+  if (!hasMult && (t.match(/\d+/g)||[]).length < 2) return null; // single number = total input
+
+  let total = 0;
+  let matched = 0;
+
+  // Match: (multiplier)? number | bull | bullseye | 25
+  const re = /\b(single|double|treble)?\s*(\d+|bull(?:seye)?)\b|\b(bull(?:seye)?)\b/g;
+  let m;
+  while ((m = re.exec(t)) !== null) {
+    let mult = m[1] ? multipliers[m[1]] : 1;
+    let numStr = m[2] || m[3];
+    let num;
+    if (/bull/.test(numStr)) {
+      num = mult === 2 ? 50 : 25;
+      mult = 1;
+    } else {
+      num = parseInt(numStr);
+    }
+    if (isNaN(num) || num < 0 || num > 20) continue;
+    total += num * mult;
+    matched++;
+  }
+
+  if (matched === 0) return null;
+  if (total < 0 || total > 180) return null;
+  return total;
+}
+
+function parseTotal(text) {
+  // Remove filler words
+  let t = text.replace(/\b(and|a|the|score|is|of|plus|uh|um|er)\b/g,' ').trim();
+
+  // Check compound number words first (longest match)
+  const sorted = Object.keys(wordNums).sort((a,b)=>b.length-a.length);
+  for (const w of sorted) {
+    if (t.replace(/\s+/g,' ').includes(w)) return wordNums[w];
+  }
+
+  // Check digit sequences
+  const digits = t.match(/\d+/g);
+  if (digits) {
+    // If single number
+    if (digits.length === 1) return parseInt(digits[0]);
+    // If two numbers like "1 4 0" = 140... concatenate if it forms a valid score
+    const joined = parseInt(digits.join(''));
+    if (joined <= 180) return joined;
+    // Sum them
+    const sum = digits.reduce((s,d)=>s+parseInt(d),0);
+    if (sum <= 180) return sum;
+  }
+
+  return null;
+}
+
+function initVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return false;
+
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-GB';
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 3;
+  recognition.continuous = false;
+
+  recognition.onstart = () => {
+    voiceActive = true;
+    document.getElementById('voice-btn').classList.add('listening');
+    document.getElementById('input-display').classList.add('voice-active');
+    setTranscript('Listening…', '');
+  };
+
+  recognition.onresult = (e) => {
+    const results = e.results[e.results.length - 1];
+    const interim = results[0].transcript;
+    setTranscript(interim, 'heard');
+
+    if (results.isFinal) {
+      // Try all alternatives
+      let parsed = null;
+      for (let i = 0; i < results.length; i++) {
+        const raw = results[i].transcript;
+        parsed = parseVoiceScore(raw);
+        if (parsed) break;
+      }
+
+      if (parsed) {
+        setTranscript(`"${results[0].transcript}" → ${parsed.action === 'bust' ? 'BUST' : parsed.score}`, 'parsed');
+        if (parsed.action === 'bust') {
+          bustScore(true);
+        } else {
+          inputVal = String(parsed.score);
+          updateInputDisplay();
+          setTimeout(() => submitScore(true), 300);
+        }
+      } else {
+        setTranscript(`Didn't catch that — try again`, 'heard');
+        toast(`Didn't understand: "${results[0].transcript}"`, true);
+      }
+    }
+  };
+
+  recognition.onerror = (e) => {
+    voiceActive = false;
+    document.getElementById('voice-btn').classList.remove('listening');
+    document.getElementById('input-display').classList.remove('voice-active');
+    if (e.error !== 'no-speech' && e.error !== 'aborted') {
+      setTranscript('Mic error — check browser permissions', 'heard');
+    } else {
+      setTranscript('', '');
+    }
+  };
+
+  recognition.onend = () => {
+    voiceActive = false;
+    document.getElementById('voice-btn').classList.remove('listening');
+    document.getElementById('input-display').classList.remove('voice-active');
+  };
+
+  return true;
+}
+
+function setTranscript(text, cls) {
+  const el = document.getElementById('voice-transcript');
+  el.textContent = text;
+  el.className = 'voice-transcript' + (cls ? ' '+cls : '');
+}
+
+function toggleVoice() {
+  if (!recognition) {
+    const ok = initVoice();
+    if (!ok) { toast('Voice not supported in this browser', true); return; }
+  }
+
+  if (voiceActive) {
+    recognition.stop();
+    return;
+  }
+
+  // Toggle help text on first click
+  if (!voiceHelpVisible) {
+    voiceHelpVisible = true;
+    document.getElementById('voice-help').classList.add('visible');
+  }
+
+  try {
+    recognition.start();
+  } catch(e) {
+    recognition = null;
+    initVoice();
+    try { recognition.start(); } catch(e2) { toast('Voice error — try again', true); }
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════════
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'stats') renderStats();
+  if (name === 'analysis') renderAnalysis();
+  if (name === 'drill') renderDrillPage();
+}
+
+// ═══════════════════════════════════════════════════
+//  SCORING
+// ═══════════════════════════════════════════════════
+function numPress(n) { if (inputVal.length >= 3) return; inputVal += n; updateInputDisplay(); }
+function numDel() { inputVal = inputVal.slice(0,-1); updateInputDisplay(); }
+function updateInputDisplay() {
+  document.getElementById('input-display').innerHTML = `${inputVal || ''}<span class="cursor"></span>`;
+}
+
+function submitScore(fromVoice) {
+  const val = parseInt(inputVal);
+  if (isNaN(val) || val < 0 || val > 180) { toast('Invalid score (0–180)', true); return; }
+  processThrow(val, false, fromVoice);
+}
+function bustScore(fromVoice) { processThrow(parseInt(inputVal)||0, true, fromVoice); }
+
+function processThrow(score, bust, fromVoice) {
+  const remaining = currentLeg.score - score;
+
+  if (bust || remaining < 0 || (remaining === 1 && currentLeg.outMode === 'double')) {
+    addThrowRow(score, currentLeg.score, true, false, fromVoice);
+    toast('BUST — score unchanged');
+  } else if (remaining === 0) {
+    currentLeg.checkoutAttempts++;
+    currentLeg.checkouts++;
+    currentLeg.score = 0;
+    currentLeg.totalDarts += 3;
+    currentLeg.throws.push({ score, remaining:0, bust:false, checkout:true });
+    addThrowRow(score, 0, false, true, fromVoice);
+    document.getElementById('score-display').textContent = '0';
+    toast('🎯 CHECKOUT! Leg complete');
+    setTimeout(() => completeLeg(), 800);
+  } else {
+    currentLeg.score = remaining;
+    currentLeg.totalDarts += 3;
+    currentLeg.round++;
+    currentLeg.throws.push({ score, remaining, bust:false });
+    addThrowRow(score, remaining, false, false, fromVoice);
+    document.getElementById('score-display').textContent = remaining;
+    updateMeta();
+  }
+  inputVal = ''; updateInputDisplay();
+  if (!fromVoice) setTranscript('', '');
+}
+
+function addThrowRow(score, remaining, bust, checkout, fromVoice) {
+  const hist = document.getElementById('throw-history');
+  const idx = currentLeg.throws.length + 1;
+  const isTon = score >= 100;
+  let badge = '';
+  if (bust) badge = '<span class="throw-badge bust">BUST</span>';
+  else if (checkout) badge = '<span class="throw-badge checkout">CHECKOUT</span>';
+  else if (isTon) badge = '<span class="throw-badge ton">TON</span>';
+  if (fromVoice) badge += '<span class="throw-badge voice">🎙</span>';
+
+  const row = document.createElement('div');
+  row.className = `throw-row ${bust?'bust':''} ${checkout?'checkout':''}`;
+  row.innerHTML = `<span class="throw-num">${idx}</span><span class="throw-score">${score}</span><span class="throw-remaining">${bust?'—':remaining+' left'}</span>${badge}`;
+  hist.insertBefore(row, hist.firstChild);
+}
+
+function updateMeta() {
+  const scored = currentLeg.startScore - currentLeg.score;
+  const avg = currentLeg.totalDarts > 0 ? ((scored/currentLeg.totalDarts)*3).toFixed(1) : '—';
+  document.getElementById('round-num').textContent = currentLeg.round;
+  document.getElementById('avg-display').textContent = avg;
+  document.getElementById('dart-count').textContent = currentLeg.totalDarts;
+  document.getElementById('leg-counter').textContent = `LEG ${sessionLegs.length+1} · ${currentLeg.mode}`;
+}
+
+function completeLeg() {
+  const scored = currentLeg.startScore - currentLeg.score;
+  const avg = currentLeg.totalDarts > 0 ? (scored/currentLeg.totalDarts)*3 : 0;
+  sessionLegs.push({ score:currentLeg.startScore, darts:currentLeg.totalDarts, avg:avg.toFixed(1), checkouts:currentLeg.checkouts, checkoutAttempts:currentLeg.checkoutAttempts, throws:[...currentLeg.throws], timestamp:Date.now() });
+  newLeg();
+}
+
+function newLeg() {
+  const mode = document.getElementById('game-mode').value;
+  const startScore = mode==='501'?501:301;
+  currentLeg = { score:startScore, startScore, throws:[], round:1, totalDarts:0, checkoutAttempts:0, checkouts:0, mode, outMode:document.getElementById('out-mode').value, feel:currentLeg.feel||3 };
+  document.getElementById('score-display').textContent = startScore;
+  document.getElementById('throw-history').innerHTML = '';
+  inputVal = ''; updateInputDisplay(); updateMeta();
+  toast(`New leg — ${mode}`);
+}
+
+function setFeel(n, btn) {
+  currentLeg.feel = n;
+  document.querySelectorAll('.feel-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function endSession() {
+  if (sessionLegs.length === 0) { toast('No legs completed yet!', true); return; }
+  const totalAvg = sessionLegs.reduce((s,l)=>s+parseFloat(l.avg),0) / sessionLegs.length;
+  const totalCO = sessionLegs.reduce((s,l)=>s+l.checkouts,0);
+  const totalCOAtt = sessionLegs.reduce((s,l)=>s+l.checkoutAttempts,0);
+  state.sessions.push({
+    date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),
+    timestamp: Date.now(),
+    legs: sessionLegs.length,
+    avg: totalAvg.toFixed(1),
+    checkoutPct: totalCOAtt>0 ? ((totalCO/totalCOAtt)*100).toFixed(0) : 0,
+    feel: currentLeg.feel,
+    notes: document.getElementById('session-notes').value,
+  });
+  saveState();
+  sessionLegs = [];
+  newLeg();
+  toast('✓ Session saved!');
+}
+
+// ═══════════════════════════════════════════════════
+//  DRILL TRACKER
+// ═══════════════════════════════════════════════════
+function selectBedType(type, btn) {
+  drillBedType = type;
+  document.querySelectorAll('#bed-toggle .toggle-btn').forEach(b => b.className = 'toggle-btn');
+  btn.className = `toggle-btn sel-${type}`;
+  resetAttemptRound();
+  updateDrillStats();
+}
+
+function selectDartCount(n, btn) {
+  drillDartCount = n;
+  document.querySelectorAll('#darts-toggle .toggle-btn').forEach(b => b.className = 'toggle-btn');
+  btn.className = 'toggle-btn sel-darts';
+  resetAttemptRound();
+  updateAttemptDots();
+}
+
+function selectTarget(t, btn) {
+  selectedTarget = t;
+  document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  resetAttemptRound();
+  updateDrillStats();
+}
+
+function selectMiss(dir, btn) {
+  selectedMiss = selectedMiss === dir ? null : dir;
+  document.querySelectorAll('.miss-btn').forEach(b => b.classList.remove('selected'));
+  if (selectedMiss) btn.classList.add('selected');
+}
+
+function resetAttemptRound() {
+  currentAttemptResults = [];
+  updateAttemptDots();
+}
+
+function updateAttemptDots() {
+  const prog = document.getElementById('attempt-progress');
+  const label = document.getElementById('attempt-label');
+
+  if (!selectedTarget) {
+    label.textContent = 'Select a target to begin';
+    prog.innerHTML = '';
+    return;
+  }
+
+  const prefix = drillBedType==='double'?'D':drillBedType==='treble'?'T':'';
+  const done = currentAttemptResults.length;
+  const total = drillDartCount;
+  const dartWord = total===1?'1-dart':'3-dart';
+  label.textContent = `${prefix}${selectedTarget} · ${dartWord} · ${done}/${total}`;
+
+  prog.innerHTML = Array.from({length:total}, (_,i) => {
+    let cls = 'attempt-dot';
+    if (i < done) cls += currentAttemptResults[i]==='hit' ? ' done-hit' : ' done-miss';
+    else if (i === done) cls += ' current';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+}
+
+function logDrill(result) {
+  if (!selectedTarget) { toast('Select a target first', true); return; }
+
+  if (!state.drillData[drillBedType][selectedTarget]) {
+    state.drillData[drillBedType][selectedTarget] = { hits:0, attempts:0, misses:{left:0,right:0,high:0,low:0} };
+  }
+
+  const d = state.drillData[drillBedType][selectedTarget];
+  d.attempts++;
+  if (result==='hit') d.hits++;
+  else if (selectedMiss) d.misses[selectedMiss]++;
+
+  // Log to session
+  drillSessionLog.push({ target:selectedTarget, bed:drillBedType, result, miss: result==='miss'?selectedMiss:null });
+
+  currentAttemptResults.push(result);
+  selectedMiss = null;
+  document.querySelectorAll('.miss-btn').forEach(b => b.classList.remove('selected'));
+
+  updateAttemptDots();
+  saveState();
+  updateDrillStats();
+  renderDrillSessionLog();
+
+  const prefix = drillBedType==='double'?'D':drillBedType==='treble'?'T':'';
+  toast(result==='hit' ? `✓ Hit ${prefix}${selectedTarget}` : `✗ Miss ${prefix}${selectedTarget}`);
+
+  if (currentAttemptResults.length >= drillDartCount) {
+    setTimeout(() => advanceTarget(), 350);
+  }
+}
+
+function advanceTarget() {
+  const idx = targets.indexOf(selectedTarget);
+  if (idx === -1 || idx >= targets.length-1) { resetAttemptRound(); return; }
+  const nextTarget = targets[idx+1];
+  document.querySelectorAll('.target-btn').forEach(b => {
+    if (b.textContent === nextTarget) b.click();
+  });
+}
+
+function updateDrillStats() {
+  const el = document.getElementById('drill-stats-display');
+  if (!selectedTarget) { el.innerHTML = 'Select a target and start throwing.'; return; }
+
+  const prefix = drillBedType==='double'?'D':drillBedType==='treble'?'T':'';
+  const d = state.drillData[drillBedType][selectedTarget];
+
+  if (!d || d.attempts===0) {
+    el.innerHTML = `<span style="color:var(--text)">${prefix}${selectedTarget}</span> — No data yet`;
+    return;
+  }
+
+  const pct = ((d.hits/d.attempts)*100).toFixed(0);
+  const col = parseInt(pct)>=60?'var(--accent3)':parseInt(pct)>=35?'var(--accent)':'var(--accent2)';
+  const missE = Object.entries(d.misses).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${v}`).join(' · ');
+
+  el.innerHTML = `
+    <span style="color:var(--accent);font-size:15px;font-family:'Bebas Neue',sans-serif;letter-spacing:2px">${prefix}${selectedTarget}</span>
+    &nbsp;—&nbsp;Hit: <span style="color:${col};font-size:15px">${pct}%</span>
+    <span style="color:var(--muted)">(${d.hits}/${d.attempts})</span>
+    ${missE ? `<br>Misses: <span style="color:var(--accent2)">${missE}</span>` : ''}
+  `;
+}
+
+// ── DRILL PAGE RENDERS ──
+function renderDrillPage() {
+  renderDrillSessionLog();
+  renderDrillAlltimeTable();
+}
+
+function renderDrillSessionLog() {
+  const el = document.getElementById('drill-session-log');
+  if (drillSessionLog.length === 0) {
+    el.innerHTML = '<span style="color:var(--muted)">No throws logged yet.</span>';
+    return;
+  }
+
+  // Group by target+bed and tally
+  const groups = {};
+  drillSessionLog.forEach(e => {
+    const key = `${e.bed}:${e.target}`;
+    if (!groups[key]) groups[key] = { bed:e.bed, target:e.target, hits:0, total:0 };
+    groups[key].total++;
+    if (e.result==='hit') groups[key].hits++;
+  });
+
+  el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;">
+    ${Object.values(groups).map(g=>{
+      const prefix=g.bed==='double'?'D':g.bed==='treble'?'T':'';
+      const pct=Math.round(g.hits/g.total*100);
+      const col=pct>=60?'var(--accent3)':pct>=35?'var(--accent)':'var(--accent2)';
+      return `<div style="background:var(--surface2);border:1px solid var(--border);padding:8px 12px;font-family:'DM Mono',monospace;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${col}">${prefix}${g.target}</div>
+        <div style="font-size:11px;color:${col}">${pct}%</div>
+        <div style="font-size:10px;color:var(--muted)">${g.hits}/${g.total}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function selectDrillView(bed, btn) {
+  drillViewBed = bed;
+  document.querySelectorAll('#drill-bed-filter .toggle-btn').forEach(b => b.className = 'toggle-btn');
+  btn.className = `toggle-btn sel-${bed}`;
+  renderDrillAlltimeTable();
+}
+
+function renderDrillAlltimeTable() {
+  const tbody = document.getElementById('drill-alltime-tbody');
+  const noData = document.getElementById('drill-no-data');
+  const data = state.drillData[drillViewBed];
+
+  const rows = Object.entries(data)
+    .filter(([,d]) => d.attempts > 0)
+    .sort((a,b) => {
+      // Sort by target number (natural order)
+      const ai = targets.indexOf(a[0]);
+      const bi = targets.indexOf(b[0]);
+      return ai - bi;
+    });
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    noData.style.display = 'block';
+    return;
+  }
+
+  noData.style.display = 'none';
+  const prefix = drillViewBed==='double'?'D':drillViewBed==='treble'?'T':'';
+
+  tbody.innerHTML = rows.map(([t, d]) => {
+    const pct = Math.round(d.hits/d.attempts*100);
+    const cls = pct>=60?'rate-great':pct>=35?'rate-ok':'rate-bad';
+    const topMiss = Object.entries(d.misses).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])[0];
+    const missStr = topMiss ? `${topMiss[0]} (${topMiss[1]})` : '—';
+    return `<tr>
+      <td style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px">${prefix}${t}</td>
+      <td>${d.attempts}</td>
+      <td>${d.hits}</td>
+      <td class="${cls}">${pct}%</td>
+      <td style="color:var(--muted)">${missStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  STATS PAGE
+// ═══════════════════════════════════════════════════
+function renderStats() {
+  const sessions = state.sessions;
+
+  if (sessions.length===0) {
+    document.getElementById('no-sessions').style.display='block';
+    document.getElementById('session-tbody').innerHTML='';
+    document.getElementById('stat-avg').textContent='—';
+    document.getElementById('stat-checkout').textContent='—';
+    document.getElementById('stat-legs').textContent='0';
+    document.getElementById('stat-sessions').textContent='0';
+    renderTrendChart([]);
+    renderCheckoutDoubles();
+    renderCheckoutTrend();
+    return;
+  }
+
+  document.getElementById('no-sessions').style.display='none';
+  const totalLegs = sessions.reduce((s,ses)=>s+ses.legs,0);
+  const avgAvg = (sessions.reduce((s,ses)=>s+parseFloat(ses.avg),0)/sessions.length).toFixed(1);
+  const avgCO = (sessions.reduce((s,ses)=>s+parseFloat(ses.checkoutPct),0)/sessions.length).toFixed(0);
+
+  document.getElementById('stat-avg').textContent=avgAvg;
+  document.getElementById('stat-checkout').textContent=avgCO+'%';
+  document.getElementById('stat-legs').textContent=totalLegs;
+  document.getElementById('stat-sessions').textContent=sessions.length;
+
+  document.getElementById('session-tbody').innerHTML=[...sessions].reverse().map(s=>{
+    const co=parseInt(s.checkoutPct);
+    return `<tr>
+      <td>${s.date}</td><td>${s.legs}</td>
+      <td class="${parseFloat(s.avg)>=55?'good':''}">${s.avg}</td>
+      <td class="${co>=50?'good':co>=30?'med':'bad'}">${s.checkoutPct}%</td>
+      <td>${['','😩','😕','😐','🙂','🔥'][s.feel]}</td>
+    </tr>`;
+  }).join('');
+
+  renderTrendChart(sessions.map(s=>parseFloat(s.avg)));
+  renderCheckoutDoubles();
+  renderCheckoutTrend();
+}
+
+function renderCheckoutDoubles() {
+  const doubleNums=['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','Bull'];
+  const grid=document.getElementById('co-doubles-grid');
+  const insightsEl=document.getElementById('co-insights');
+
+  const cells=doubleNums.map(t=>{
+    const d=state.drillData.double[t];
+    if (!d||d.attempts===0) return {t,rate:null,hits:0,att:0,misses:{}};
+    return {t,rate:d.hits/d.attempts,hits:d.hits,att:d.attempts,misses:d.misses};
+  });
+
+  grid.innerHTML=cells.map(c=>{
+    if(c.rate===null) return `<div class="co-cell empty"><div class="co-num">D${c.t}</div><div class="co-rate">—</div><div class="co-count">no data</div></div>`;
+    const pct=Math.round(c.rate*100);
+    const cls=pct>=60?'great':pct>=35?'ok':'bad';
+    return `<div class="co-cell ${cls}"><div class="co-num">D${c.t}</div><div class="co-rate">${pct}%</div><div class="co-count">${c.hits}/${c.att}</div></div>`;
+  }).join('');
+
+  const withData=cells.filter(c=>c.rate!==null&&c.att>=5);
+  if(withData.length===0){
+    insightsEl.innerHTML=`<div class="insight-box">Log double drills (5+ attempts per double) to unlock checkout routing insights.</div>`;
+    return;
+  }
+
+  const sorted=[...withData].sort((a,b)=>b.rate-a.rate);
+  const best3=sorted.slice(0,3), worst3=sorted.slice(-3).reverse();
+  let html='';
+  html+=`<div class="insight-box good">🎯 <strong>Strongest:</strong> ${best3.map(c=>`D${c.t} (${Math.round(c.rate*100)}%)`).join(', ')} — route through these.</div>`;
+  html+=`<div class="insight-box warn">⚠ <strong>Weakest:</strong> ${worst3.map(c=>`D${c.t} (${Math.round(c.rate*100)}%)`).join(', ')} — drill more or route around.</div>`;
+
+  const d16=cells.find(c=>c.t==='16'), d8=cells.find(c=>c.t==='8');
+  if(d16?.rate!==null&&d8?.rate!==null){
+    const pref=d16.rate>=d8.rate?'D16':'D8';
+    html+=`<div class="insight-box">💡 <strong>Even chain:</strong> Prefer ${pref} for even finishes (D16:${Math.round((d16.rate)*100)}% / D8:${Math.round((d8.rate)*100)}%).</div>`;
+  }
+  insightsEl.innerHTML=html;
+}
+
+function renderCheckoutTrend() {
+  const el=document.getElementById('co-trend-bars');
+  const sessions=state.sessions;
+  if(sessions.length===0){el.innerHTML=`<div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);padding:12px;">No sessions yet.</div>`;return;}
+
+  const total=sessions.reduce((s,ses)=>s+ses.checkouts,0);
+  const totalAtt=sessions.reduce((s,ses)=>s+ses.checkoutAttempts,0);
+  el.innerHTML=`
+    <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:14px;">
+      Career: <span style="color:var(--accent3)">${total} checkouts</span> / ${totalAtt} attempts
+      &nbsp;·&nbsp; <span style="color:var(--accent)">${totalAtt>0?((total/totalAtt)*100).toFixed(1):0}%</span>
+    </div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;">LAST 10 SESSIONS</div>
+    <div style="display:flex;flex-direction:column;gap:5px;">
+      ${[...sessions].slice(-10).map(s=>{
+        const co=parseInt(s.checkoutPct);
+        const col=co>=50?'var(--accent3)':co>=30?'var(--accent)':'var(--accent2)';
+        return `<div style="display:flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;">
+          <span style="color:var(--muted);width:60px">${s.date}</span>
+          <div style="flex:1;background:var(--dim);height:5px;"><div style="height:5px;background:${col};width:${Math.min(co,100)}%;transition:width 0.4s"></div></div>
+          <span style="color:${col};width:36px;text-align:right">${s.checkoutPct}%</span>
+          <span style="color:var(--muted)">${['','😩','😕','😐','🙂','🔥'][s.feel]}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function renderTrendChart(data) {
+  const canvas=document.getElementById('trend-canvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth*2; canvas.height=canvas.offsetHeight*2;
+  ctx.scale(2,2);
+  const W=canvas.offsetWidth/2, H=canvas.offsetHeight/2;
+  ctx.clearRect(0,0,W,H);
+
+  if(data.length<2){
+    ctx.fillStyle='#444'; ctx.font="12px 'DM Mono'"; ctx.textAlign='center';
+    ctx.fillText('Need 2+ sessions',W/2,H/2); return;
+  }
+
+  const min=Math.min(...data)*0.9, max=Math.max(...data)*1.1;
+  const pad={left:32,right:10,top:10,bottom:20};
+  const cW=W-pad.left-pad.right, cH=H-pad.top-pad.bottom;
+  const px=i=>pad.left+(i/(data.length-1))*cW;
+  const py=v=>pad.top+cH-((v-min)/(max-min))*cH;
+
+  ctx.strokeStyle='#222'; ctx.lineWidth=0.5;
+  [0.25,0.5,0.75,1].forEach(t=>{
+    const y=pad.top+cH*t;
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(pad.left+cW,y); ctx.stroke();
+    ctx.fillStyle='#555'; ctx.font="9px 'DM Mono'"; ctx.textAlign='right';
+    ctx.fillText((max-(max-min)*t).toFixed(0),pad.left-4,y+3);
+  });
+
+  const grad=ctx.createLinearGradient(0,pad.top,0,H);
+  grad.addColorStop(0,'rgba(232,255,58,0.25)'); grad.addColorStop(1,'rgba(232,255,58,0)');
+  ctx.beginPath(); ctx.moveTo(px(0),cH+pad.top);
+  data.forEach((v,i)=>ctx.lineTo(px(i),py(v)));
+  ctx.lineTo(px(data.length-1),cH+pad.top); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+
+  ctx.beginPath(); ctx.strokeStyle='#e8ff3a'; ctx.lineWidth=1.5; ctx.lineJoin='round';
+  data.forEach((v,i)=>{ i===0?ctx.moveTo(px(i),py(v)):ctx.lineTo(px(i),py(v)); });
+  ctx.stroke();
+
+  data.forEach((v,i)=>{
+    ctx.beginPath(); ctx.arc(px(i),py(v),3,0,Math.PI*2);
+    ctx.fillStyle='#e8ff3a'; ctx.fill();
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  ANALYSIS PAGE
+// ═══════════════════════════════════════════════════
+function renderAnalysis() {
+  renderHeatmap();
+  renderWeakSpots();
+  renderMissAnalysis();
+  renderCheckoutPressure();
+  renderDoubleBreakdown();
+}
+
+function selectHeatmapBed(type, btn) {
+  heatmapBedType=type;
+  document.querySelectorAll('#heatmap-bed-toggle .toggle-btn').forEach(b=>b.className='toggle-btn');
+  btn.className=`toggle-btn sel-${type}`;
+  renderHeatmap();
+}
+
+function renderHeatmap() {
+  const canvas=document.getElementById('heatmap-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=280,H=280,cx=W/2,cy=H/2;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0f0f0f'; ctx.fillRect(0,0,W,H);
+
+  const seq=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+  const r={bull:8,bull2:20,inner:80,triple1:90,outer:115,triple2:126,edge:130};
+  const ac=heatmapBedType==='double'?[58,255,184]:heatmapBedType==='treble'?[167,139,250]:[232,255,58];
+
+  seq.forEach((num,i)=>{
+    const sa=(i/20*2*Math.PI)-Math.PI/2-Math.PI/20;
+    const ea=sa+(2*Math.PI/20);
+    const d=state.drillData[heatmapBedType][String(num)];
+    const hr=(d&&d.attempts>0)?d.hits/d.attempts:0;
+    const hot=`rgba(${ac[0]},${ac[1]},${ac[2]},${hr*0.75})`;
+
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r.edge,sa,ea); ctx.closePath();
+    ctx.fillStyle=i%2===0?'#181818':'#1e1e1e'; ctx.fill();
+    ctx.fillStyle=hot; ctx.fill();
+
+    ctx.beginPath(); ctx.arc(cx,cy,r.triple2,sa,ea); ctx.arc(cx,cy,r.triple1,ea,sa,true); ctx.closePath();
+    ctx.fillStyle=i%2===0?'#2a1a1a':'#1a2a1a'; ctx.fill();
+    ctx.fillStyle=`rgba(${ac[0]},${ac[1]},${ac[2]},${hr})`; ctx.fill();
+
+    const midA=sa+Math.PI/20;
+    const lx=cx+Math.cos(midA)*(r.edge+10), ly=cy+Math.sin(midA)*(r.edge+10);
+    ctx.fillStyle=hr>0?`rgba(${ac[0]},${ac[1]},${ac[2]},${0.4+hr*0.6})`:'#333';
+    ctx.font="bold 9px 'DM Mono'"; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(num,lx,ly);
+  });
+
+  const bd=state.drillData[heatmapBedType]['Bull'];
+  const br=(bd&&bd.attempts>0)?bd.hits/bd.attempts:0;
+  ctx.beginPath(); ctx.arc(cx,cy,r.bull2,0,Math.PI*2); ctx.fillStyle='#2a4020'; ctx.fill();
+  ctx.fillStyle=`rgba(${ac[0]},${ac[1]},${ac[2]},${br*0.8})`; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx,cy,r.bull,0,Math.PI*2); ctx.fillStyle='#402020'; ctx.fill();
+  ctx.fillStyle=`rgba(${ac[0]},${ac[1]},${ac[2]},${br})`; ctx.fill();
+
+  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=0.5;
+  seq.forEach((_,i)=>{
+    const a=(i/20*2*Math.PI)-Math.PI/2-Math.PI/20;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*r.bull2,cy+Math.sin(a)*r.bull2);
+    ctx.lineTo(cx+Math.cos(a)*r.edge,cy+Math.sin(a)*r.edge); ctx.stroke();
+  });
+  [r.inner,r.triple1,r.triple2,r.edge].forEach(rad=>{
+    ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.stroke();
+  });
+}
+
+function renderWeakSpots() {
+  const entries=[];
+  ['single','double','treble'].forEach(bed=>{
+    Object.entries(state.drillData[bed]).forEach(([t,d])=>{
+      if(d.attempts>=5){
+        const prefix=bed==='double'?'D':bed==='treble'?'T':'';
+        entries.push({label:prefix+t,rate:d.hits/d.attempts,attempts:d.attempts,misses:d.misses,bed});
+      }
+    });
+  });
+  entries.sort((a,b)=>a.rate-b.rate);
+  const worst=entries.slice(0,6);
+  const container=document.getElementById('weak-spots-container');
+
+  if(worst.length===0){
+    container.innerHTML='<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted);text-align:center;padding:20px;">Log 5+ throws per target to see weak spots.</div>';
+    return;
+  }
+
+  container.innerHTML=worst.map(e=>{
+    const pct=(e.rate*100).toFixed(0);
+    const topMiss=Object.entries(e.misses).sort((a,b)=>b[1]-a[1])[0];
+    const tip=topMiss&&topMiss[1]>0?`Most misses: ${topMiss[0]}`:'No directional data';
+    const bedLabel=e.bed==='double'?'DOUBLE':e.bed==='treble'?'TREBLE':'SINGLE';
+    return `<div class="weak-spot-row">
+      <div class="weak-spot-num">${e.label}</div>
+      <div style="flex:1">
+        <div class="weak-spot-bar-wrap"><div class="weak-spot-bar" style="width:${pct}%"></div></div>
+        <div class="weak-spot-tip">${bedLabel} · ${tip}</div>
+      </div>
+      <div class="weak-spot-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMissAnalysis() {
+  const totals={left:0,right:0,high:0,low:0};
+  let totalMisses=0;
+  ['single','double','treble'].forEach(bed=>{
+    Object.values(state.drillData[bed]).forEach(d=>{
+      Object.entries(d.misses).forEach(([k,v])=>{totals[k]+=v; totalMisses+=v;});
+    });
+  });
+
+  if(totalMisses===0){document.getElementById('miss-analysis').innerHTML='No miss data yet.';return;}
+
+  const insight=[];
+  if(totals.left>totals.right*1.5) insight.push('Pulling <span style="color:var(--accent2)">left</span> — try releasing slightly later');
+  if(totals.right>totals.left*1.5) insight.push('Pushing <span style="color:var(--accent2)">right</span> — try releasing slightly earlier');
+  if(totals.high>totals.low*1.5) insight.push('Throwing <span style="color:var(--accent2)">high</span> — check elbow height and follow-through');
+  if(totals.low>totals.high*1.5) insight.push('Throwing <span style="color:var(--accent2)">low</span> — arm may be dropping before release');
+  if(insight.length===0) insight.push('<span style="color:var(--accent3)">Balanced pattern</span> — no dominant drift detected');
+
+  document.getElementById('miss-analysis').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">
+      ${['left','right','high','low'].map(d=>`
+        <div style="text-align:center;padding:14px;background:var(--surface2);border:1px solid var(--border)">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">${d.toUpperCase()}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:${totals[d]>5?'var(--accent2)':'var(--text)'}">${totals[d]}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="color:var(--text);line-height:2.2;">${insight.map(i=>'→ '+i).join('<br>')}</div>
+  `;
+}
+
+function renderCheckoutPressure() {
+  const el=document.getElementById('checkout-pressure');
+  const sessions=state.sessions;
+  if(sessions.length<2){el.innerHTML='Need 2+ sessions to analyse pressure patterns.';return;}
+
+  const totalCO=sessions.reduce((s,ses)=>s+ses.checkouts,0);
+  const totalAtt=sessions.reduce((s,ses)=>s+ses.checkoutAttempts,0);
+  if(totalAtt===0){el.innerHTML='No checkout attempts logged yet.';return;}
+
+  const overallRate=totalCO/totalAtt;
+  const feelGroups={};
+  sessions.forEach(s=>{
+    if(!feelGroups[s.feel]) feelGroups[s.feel]={co:0,att:0,count:0};
+    feelGroups[s.feel].co+=s.checkouts;
+    feelGroups[s.feel].att+=s.checkoutAttempts;
+    feelGroups[s.feel].count++;
+  });
+
+  const feelRows=Object.entries(feelGroups).filter(([,v])=>v.att>0).sort((a,b)=>parseInt(a[0])-parseInt(b[0])).map(([feel,v])=>{
+    const rate=((v.co/v.att)*100).toFixed(0);
+    const emoji=['','😩','😕','😐','🙂','🔥'][feel];
+    const col=parseInt(rate)>=50?'var(--accent3)':parseInt(rate)>=30?'var(--accent)':'var(--accent2)';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:16px;width:24px">${emoji}</span>
+      <div style="flex:1;background:var(--dim);height:4px;"><div style="height:4px;background:${col};width:${Math.min(parseInt(rate),100)}%"></div></div>
+      <span style="color:${col};width:36px;text-align:right">${rate}%</span>
+      <span style="color:var(--muted);font-size:10px">${v.count}s</span>
+    </div>`;
+  });
+
+  const note=overallRate<0.33?'→ <span style="color:var(--accent2)">Below 33%</span> — prioritise double practice':overallRate<0.5?'→ <span style="color:var(--accent)">33–50%</span> — push for consistency':'→ <span style="color:var(--accent3)">50%+</span> — world class is ~55%+';
+
+  el.innerHTML=`
+    <div style="margin-bottom:12px;color:var(--muted);">Overall: <span style="color:var(--accent)">${(overallRate*100).toFixed(1)}%</span></div>
+    <div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;">CO% BY FEEL</div>
+    ${feelRows.join('')}
+    <div style="margin-top:14px;font-size:11px;line-height:1.8;">${note}</div>
+  `;
+}
+
+function renderDoubleBreakdown() {
+  const el=document.getElementById('double-breakdown');
+  const doubleNums=['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','Bull'];
+  const withData=doubleNums.filter(t=>{const d=state.drillData.double[t];return d&&d.attempts>=3;});
+
+  if(withData.length===0){el.innerHTML='Log double drills (3+ attempts per double) to see breakdown.';return;}
+
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;">
+    ${withData.map(t=>{
+      const d=state.drillData.double[t];
+      const pct=Math.round(d.hits/d.attempts*100);
+      const col=pct>=60?'var(--accent3)':pct>=35?'var(--accent)':'var(--accent2)';
+      const topMiss=Object.entries(d.misses).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])[0];
+      const missHint=topMiss?`→ ${topMiss[0]}`:'—';
+      return `<div style="background:var(--surface2);border:1px solid var(--border);padding:12px;font-family:'DM Mono',monospace;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${col};letter-spacing:1px">D${t}</div>
+        <div style="font-size:20px;color:${col};font-family:'Bebas Neue',sans-serif">${pct}%</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${d.hits}/${d.attempts}</div>
+        <div style="font-size:10px;color:var(--muted)">${missHint}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════
+function toast(msg, isError) {
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const el=document.createElement('div');
+  el.className='toast'+(isError?' error':'');
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+
+// ═══════════════════════════════════════════════════
+//  KEYBOARD
+// ═══════════════════════════════════════════════════
+document.addEventListener('keydown', e=>{
+  // Don't intercept if typing in an input
+  if (e.target.tagName === 'INPUT') return;
+  if(e.key>='0'&&e.key<='9') numPress(parseInt(e.key));
+  if(e.key==='Backspace') numDel();
+  if(e.key==='Enter') submitScore();
+  if(e.key==='b'||e.key==='B') bustScore();
+  if(e.key==='h'||e.key==='H') logDrill('hit');
+  if(e.key==='m'||e.key==='M') logDrill('miss');
+  if(e.key===' ') { e.preventDefault(); toggleVoice(); }
+});
+
+// init
+updateMeta();
+updateAttemptDots();
+</script>
+</body>
+</html>
