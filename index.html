@@ -1988,33 +1988,106 @@ let voiceActive = false;
 let voiceHelpVisible = false;
 
 // Number word map
-const wordNums = {
-  'zero':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,'eight':8,'nine':9,
-  'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,'fifteen':15,'sixteen':16,
-  'seventeen':17,'eighteen':18,'nineteen':19,'twenty':20,'twenty-one':21,'twenty one':21,
-  'twenty-five':25,'twenty five':25,'thirty':30,'forty':40,'fifty':50,'sixty':60,
-  'seventy':70,'eighty':80,'ninety':90,'hundred':100,'a hundred':100,'one hundred':100,
-  'hundred and eighty':180,'one hundred and eighty':180,'one eighty':180,'one-eighty':180,
-  'one forty':140,'one-forty':140,'one hundred and forty':140,
-  'one hundred and sixty':160,'one sixty':160,'one-sixty':160,
-  'one hundred and twenty':120,'one twenty':120,'one-twenty':120,
-  'one hundred and forty one':141,'one forty one':141,
+// ─── Voice parsing — strict number-first approach ───────────────────
+// Maps spoken number words to digits
+const SPOKEN_NUMS = {
+  'oh':0,'zero':0,'naught':0,
+  'one':1,'two':2,'three':3,'four':4,'five':5,
+  'six':6,'seven':7,'eight':8,'nine':9,
+  'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,
+  'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,
+  'twenty':20,'thirty':30,'forty':40,'fifty':50,
+  'sixty':60,'seventy':70,'eighty':80,'ninety':90,
 };
 
-// Convert a word/phrase token into a number, or null
-function tokenToNum(tok) {
-  tok = tok.trim().toLowerCase();
-  if (/^\d+$/.test(tok)) return parseInt(tok);
-  if (wordNums[tok] !== undefined) return wordNums[tok];
-  // Try "twenty X" patterns
-  const m = tok.match(/^(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)[- ](\w+)$/);
-  if (m) {
-    const tens = wordNums[m[1]] || 0;
-    const ones = wordNums[m[2]];
-    if (ones !== undefined && ones < 10) return tens + ones;
+// Full phrases → exact totals (checked first, longest match wins)
+const SPOKEN_TOTALS = {
+  'one hundred and eighty':180,'hundred and eighty':180,
+  'one eighty':180,'one-eighty':180,
+  'one hundred and forty':140,'one forty':140,'one-forty':140,
+  'one hundred and sixty':160,'one sixty':160,'one-sixty':160,
+  'one hundred and twenty':120,'one twenty':120,'one-twenty':120,
+  'one hundred':100,'a hundred':100,
+  'one hundred and twenty five':125,'one twenty five':125,
+  'one hundred and thirty':130,'one thirty':130,
+  'one hundred and fifty':150,'one fifty':150,
+  'one hundred and seventy':170,'one seventy':170,
+};
+
+// Parse a spoken string to a dart score total, or null
+function parseSpokenScore(raw) {
+  let t = raw.toLowerCase().trim();
+
+  // Bust
+  if (/\bbust\b/.test(t)) return { action:'bust' };
+
+  // Normalise triple → treble, and common mishearings
+  t = t.replace(/\btriple\b/g, 'treble');
+  t = t.replace(/\bdouble bull\b/g, 'bullseye');
+  t = t.replace(/\btreble bull\b/g, 'bullseye');
+
+  // ── Multiplier mode: spoken "double X" or "treble X" ──
+  // Pattern: (double|treble) + (number)
+  const multMatch = t.match(/\b(double|treble)\s+((?:twenty|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)|\d+)/);
+  if (multMatch) {
+    const mult = multMatch[1] === 'double' ? 2 : 3;
+    const numWord = multMatch[2].trim();
+    let num = /^\d+$/.test(numWord) ? parseInt(numWord) : SPOKEN_NUMS[numWord];
+    if (num !== undefined && num >= 1 && num <= 20) {
+      const score = num * mult;
+      if (score <= 60) return { action:'score', score };
+    }
   }
+
+  // Bull / bullseye
+  if (/\b(bullseye|bull(?:'s[ -]eye)?)\b/.test(t)) return { action:'score', score: 50 };
+  if (/\b(outer bull|twenty[ -]five|25)\b/.test(t)) return { action:'score', score: 25 };
+
+  // ── Total score mode ──
+  // Check full-phrase totals first (longest match)
+  const sortedPhrases = Object.keys(SPOKEN_TOTALS).sort((a,b) => b.length - a.length);
+  for (const phrase of sortedPhrases) {
+    if (t.includes(phrase)) return { action:'score', score: SPOKEN_TOTALS[phrase] };
+  }
+
+  // Plain digits: "140", "1 4 0", "one forty"
+  // Try to extract a number 0–180 from the spoken text
+  const digitOnly = t.replace(/[^0-9 ]/g, ' ').trim();
+  const digits = digitOnly.match(/\d+/g);
+  if (digits) {
+    // Single number
+    if (digits.length === 1) {
+      const n = parseInt(digits[0]);
+      if (n >= 0 && n <= 180) return { action:'score', score: n };
+    }
+    // Sequence of single digits like "1 8 0" → concatenate
+    if (digits.every(d => d.length === 1)) {
+      const n = parseInt(digits.join(''));
+      if (n >= 0 && n <= 180) return { action:'score', score: n };
+    }
+    // Two numbers like "one" "forty" expressed separately — sum them if valid
+    if (digits.length === 2) {
+      const a = parseInt(digits[0]), b = parseInt(digits[1]);
+      if (a + b <= 180) return { action:'score', score: a + b };
+    }
+  }
+
+  // "twenty" → 20, "sixty" → 60 etc — bare tens word
+  for (const [word, val] of Object.entries(SPOKEN_NUMS)) {
+    // Only accept clean matches of tens/teens (avoid single-digit words like "one", "two" as noise)
+    if (val >= 10 && val <= 180) {
+      const re = new RegExp('^' + word + '$');
+      if (re.test(t.trim())) return { action:'score', score: val };
+    }
+  }
+
   return null;
 }
+
+// Keep old names pointing to new function for compatibility
+function parseVoiceScore(raw) { return parseSpokenScore(raw); }
+function parseDartByDart(text) { return null; } // deprecated, replaced by parseSpokenScore
+function parseTotal(text) { return null; }       // deprecated
 
 function parseVoiceScore(raw) {
   let text = raw.toLowerCase().trim();
@@ -4603,26 +4676,31 @@ function updateCheckoutRoute(score) {
 function updateScoreDisplays(yourScore) {
   const botLvl = parseInt(document.getElementById('bot-level').value) || 0;
 
+  // Always keep the hidden solo score-display in sync (voice + submit logic reads it)
+  const sd = document.getElementById('score-display');
+  if (sd) sd.textContent = yourScore;
+
   if (botLvl > 0) {
     // ── Dual score mode ──
     document.getElementById('score-hero-solo').style.display = 'none';
     document.getElementById('score-hero-bot').style.display = 'grid';
     document.getElementById('bot-voice-row').style.display = 'block';
 
-    // Your score number
+    // YOUR score — always write
     const youNumEl = document.getElementById('score-display-you');
     if (youNumEl) youNumEl.textContent = yourScore;
 
-    // Bot score number — always update from state
-    const botScore = currentLeg && currentLeg._botScore != null ? currentLeg._botScore : currentLeg.startScore;
+    // BOT score — always read from leg state
+    const botScore = (currentLeg && currentLeg._botScore != null)
+      ? currentLeg._botScore
+      : (currentLeg ? currentLeg.startScore : 501);
     const botNumEl = document.getElementById('score-display-bot');
     if (botNumEl) { botNumEl.textContent = botScore; botNumEl.style.color = ''; }
 
-    // Sub-labels
+    // Sub-label: checkout range hint
     const youSub = document.getElementById('score-vs-sub-you');
     if (youSub) {
       youSub.textContent = yourScore <= 170 && yourScore > 1 ? '🎯 CHECKOUT RANGE' : '';
-      youSub.style.color = 'var(--accent3)';
     }
 
     // Bot name
@@ -4632,11 +4710,9 @@ function updateScoreDisplays(yourScore) {
 
   } else {
     // ── Solo mode ──
-    document.getElementById('score-hero-solo').style.display = 'flex';
+    document.getElementById('score-hero-solo').style.display = '';
     document.getElementById('score-hero-bot').style.display = 'none';
     document.getElementById('bot-voice-row').style.display = 'none';
-    const sd = document.getElementById('score-display');
-    if (sd) sd.textContent = yourScore;
   }
 
   updateCheckoutRoute(yourScore);
