@@ -525,6 +525,123 @@
     box-shadow: 0 0 24px rgba(232,255,58,0.2), inset 0 0 20px rgba(232,255,58,0.06);
   }
   .leg-counter { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: 1px; }
+  /* ── DUAL SCORE (player vs bot) ── */
+  .score-vs-layout {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 0;
+    margin-bottom: 4px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .score-vs-divider {
+    background: var(--border);
+    width: 1px;
+    align-self: stretch;
+  }
+  .score-vs-side {
+    background: var(--surface);
+    padding: 16px 20px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .score-vs-side.you {
+    border-top: 3px solid var(--accent);
+    border-left: 3px solid var(--accent);
+    border-bottom: 3px solid var(--accent);
+  }
+  .score-vs-side.bot {
+    border-top: 3px solid var(--accent4);
+    border-right: 3px solid var(--accent4);
+    border-bottom: 3px solid var(--accent4);
+  }
+  .score-vs-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .score-vs-side.you .score-vs-label { color: var(--accent); }
+  .score-vs-side.bot .score-vs-label { color: var(--accent4); }
+  .score-vs-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 88px;
+    line-height: 1;
+    transition: color 0.3s, text-shadow 0.3s;
+  }
+  .score-vs-side.you .score-vs-num {
+    color: var(--accent);
+    text-shadow: 0 0 50px rgba(232,255,58,0.25);
+  }
+  .score-vs-side.bot .score-vs-num {
+    color: var(--accent4);
+    text-shadow: 0 0 50px rgba(167,139,250,0.25);
+  }
+  .score-vs-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    margin-top: 6px;
+    min-height: 14px;
+    text-align: center;
+  }
+
+  /* ── CHECKOUT ROUTE PANEL ── */
+  .checkout-route {
+    background: linear-gradient(135deg, rgba(58,255,184,0.04), transparent);
+    border: 1px solid rgba(58,255,184,0.25);
+    border-left: 3px solid var(--accent3);
+    padding: 10px 14px 12px;
+    margin-bottom: 10px;
+    font-family: 'DM Mono', monospace;
+    display: none;
+  }
+  .checkout-route.visible { display: block; }
+  .checkout-route-header {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--accent3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .checkout-routes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .checkout-route-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .checkout-route-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    color: var(--dim);
+    width: 12px;
+    flex-shrink: 0;
+  }
+  .checkout-dart {
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+  }
+  .checkout-dart.double { border-color: rgba(58,255,184,0.6); color: var(--accent3); background: rgba(58,255,184,0.08); }
+  .checkout-dart.treble { border-color: rgba(167,139,250,0.6); color: var(--accent4); background: rgba(167,139,250,0.08); }
+  .checkout-dart.bull   { border-color: rgba(255,200,0,0.6);  color: #ffc800; background: rgba(255,200,0,0.08); }
+  .checkout-dart.single { border-color: rgba(200,200,200,0.2); color: var(--muted); }
+  .checkout-arrow { color: var(--dim); font-size: 9px; flex-shrink: 0; }
+
+
 
   .weak-spots { display: flex; flex-direction: column; gap: 8px; }
   .weak-spot-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface2); font-family: 'DM Mono', monospace; font-size: 12px; }
@@ -1307,11 +1424,43 @@
   <div class="leg-counter" id="leg-counter">LEG 1 · 501</div>
 
   <!-- Score + big mic hero row -->
-  <div class="score-hero">
+  <!-- Solo mode: single score display -->
+  <div class="score-hero" id="score-hero-solo">
     <div class="score-display" id="score-display">501</div>
     <button class="voice-btn-hero" id="voice-btn" onclick="toggleVoice()" title="Voice score input (or press Spacebar)">
       <span class="mic-icon">🎙</span>
-      <span class="mic-label">SPACE</span>
+      <span class="mic-label">CALL IT</span>
+    </button>
+  </div>
+
+  <!-- Bot mode: side-by-side scores (hidden when no bot) -->
+  <div class="score-vs-layout" id="score-hero-bot" style="display:none">
+    <div class="score-vs-side you">
+      <div class="score-vs-label">You</div>
+      <div class="score-vs-num" id="score-display-you">501</div>
+      <div class="score-vs-sub" id="score-vs-sub-you"></div>
+    </div>
+    <div class="score-vs-divider"></div>
+    <div class="score-vs-side bot">
+      <div class="score-vs-label" id="score-vs-bot-name">Bot</div>
+      <div class="score-vs-num" id="score-display-bot">501</div>
+      <div class="score-vs-sub" id="score-vs-sub-bot"></div>
+    </div>
+  </div>
+
+  <!-- Checkout route hint (shown when player ≤ 170) -->
+  <div class="checkout-route" id="checkout-route-panel">
+    <div class="checkout-route-header">🎯 Checkout Route</div>
+    <div class="checkout-routes-list" id="checkout-routes-list"></div>
+  </div>
+
+  <!-- Voice in bot mode (below dual score) -->
+  <div id="bot-voice-row" style="display:none;margin-bottom:4px;">
+    <button class="voice-btn-hero" id="voice-btn-bot" onclick="toggleVoice()"
+      style="width:100%;min-height:52px;flex-direction:row;gap:10px;"
+      title="Voice score input">
+      <span class="mic-icon" style="font-size:22px">🎙</span>
+      <span class="mic-label">CALL IT / TAP TO SPEAK</span>
     </button>
   </div>
 
@@ -1378,9 +1527,6 @@
 
   <!-- Standard 01 UI (hidden for Cricket) -->
   <div id="standard-ui">
-
-  <!-- Bot status bar (shown when bot active) -->
-  <div id="bot-status-bar" style="display:none;background:var(--surface2);border:1px solid var(--accent4);border-left:3px solid var(--accent4);padding:10px 14px;margin-bottom:10px;font-family:'DM Mono',monospace;font-size:12px;color:var(--accent4);letter-spacing:0.5px;"></div>
 
   <!-- Input row -->
   <div class="input-row">
@@ -2111,7 +2257,7 @@ function processThrow(score, bust, fromVoice) {
   if (bust || remaining < 0 || (remaining === 1 && currentLeg.outMode === 'double')) {
     addThrowRow(score, currentLeg.score, true, false, fromVoice);
     toast('BUST — score unchanged');
-    // Bot still takes its turn even when you bust
+    updateScoreDisplays(currentLeg.score);
     scheduleBotTurn01();
   } else if (remaining === 0) {
     currentLeg.checkoutAttempts++;
@@ -2163,14 +2309,16 @@ function runBot01Turn(botLvl, numpad, submitArea) {
 
   currentLeg._botScore = result.remaining;
 
-  let msg = p.name + '  ';
+  let msg = '';
   if (result.bust) {
-    msg += 'scored ' + result.score + '  —  BUST  ·  still on ' + currentLeg._botScore;
+    msg = 'BUST — still on ' + currentLeg._botScore;
   } else if (result.checkout) {
-    msg += 'scored ' + result.score + '  —  CHECKOUT! 🎯  Bot wins this leg!';
+    msg = 'CHECKOUT! 🎯 — Bot wins!';
     showBotStatus(msg);
     restoreInput(numpad, submitArea);
-    // Bot won — end leg (don't count as player checkout)
+    // Briefly flash 0 on bot score
+    const botNumEl = document.getElementById('score-display-bot');
+    if (botNumEl) { botNumEl.textContent = '0'; botNumEl.style.color = 'var(--accent3)'; }
     setTimeout(function() {
       toast(p.name + ' checked out! New leg starting…');
       hideBotStatus();
@@ -2179,7 +2327,7 @@ function runBot01Turn(botLvl, numpad, submitArea) {
     }, 1800);
     return;
   } else {
-    msg += 'scored ' + result.score + '  ·  ' + result.remaining + ' remaining';
+    msg = 'threw ' + result.score + ' · ' + result.remaining + ' left';
   }
 
   showBotStatus(msg);
@@ -2187,12 +2335,30 @@ function runBot01Turn(botLvl, numpad, submitArea) {
 }
 
 function showBotStatus(msg) {
-  const el = document.getElementById('bot-status-bar');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
+  // Update the bot score number and last-throw sub-label in the dual display
+  const botScore = currentLeg && currentLeg._botScore != null ? currentLeg._botScore : (currentLeg ? currentLeg.startScore : 501);
+  const botNumEl = document.getElementById('score-display-bot');
+  if (botNumEl) botNumEl.textContent = botScore;
+  const botSub = document.getElementById('score-vs-sub-bot');
+  if (botSub) {
+    // Show last throw info (strip name prefix for brevity)
+    const info = msg.replace(/^[^·\-]+(·|—)\s*/, '').split('·')[0].trim();
+    botSub.textContent = info.length > 30 ? info.slice(0, 30) + '…' : info;
+    botSub.style.color = msg.includes('CHECKOUT') ? 'var(--accent3)' : msg.includes('BUST') ? 'var(--accent2)' : 'var(--dim)';
+  }
+  const botSubLabel = document.getElementById('score-vs-sub-bot');
+  if (botNumEl && botScore <= 170 && botScore > 1) {
+    botNumEl.style.color = 'rgba(167,139,250,0.6)';  // dim slightly when in range
+  } else if (botNumEl) {
+    botNumEl.style.color = '';
+  }
 }
 function hideBotStatus() {
-  const el = document.getElementById('bot-status-bar');
-  if (el) el.style.display = 'none';
+  // Reset bot sub-label on new leg
+  const sub = document.getElementById('score-vs-sub-bot');
+  if (sub) { sub.textContent = ''; sub.style.color = ''; }
+  const botNumEl = document.getElementById('score-display-bot');
+  if (botNumEl) botNumEl.style.color = '';
 }
 function restoreInput(numpad, submitArea) {
   if (numpad) numpad.style.opacity = '';
@@ -2245,10 +2411,10 @@ function newLeg() {
   } else {
     hideBotStatus();
   }
-  document.getElementById('score-display').textContent = startScore;
   document.getElementById('throw-history').innerHTML = '';
   inputVal = ''; updateInputDisplay(); updateMeta();
   document.getElementById('leg-counter').textContent = 'LEG ' + (sessionLegs.length+1) + ' · ' + mode;
+  updateScoreDisplays(startScore);
   toast('New leg — ' + mode);
 }
 
@@ -3572,12 +3738,12 @@ function closeMenu() {
 // Bot accuracy profile per level: { hitRate, checkoutRate, avgThrow }
 const BOT_PROFILES = [
   null, // index 0 unused
-  { name:'Child',        avgThrow: 14, checkoutRate: 0.05, hitRate: 0.30 }, // L1
-  { name:'Casual',       avgThrow: 20, checkoutRate: 0.08, hitRate: 0.38 }, // L2
-  { name:'Regular',      avgThrow: 28, checkoutRate: 0.12, hitRate: 0.45 }, // L3
-  { name:'Improving',    avgThrow: 36, checkoutRate: 0.18, hitRate: 0.52 }, // L4
-  { name:'Club',         avgThrow: 45, checkoutRate: 0.25, hitRate: 0.60 }, // L5
-  { name:'Good Club',    avgThrow: 54, checkoutRate: 0.33, hitRate: 0.68 }, // L6
+  { name:'Little Child',        avgThrow: 14, checkoutRate: 0.05, hitRate: 0.30 }, // L1
+  { name:'Exceptional Child',       avgThrow: 20, checkoutRate: 0.08, hitRate: 0.38 }, // L2
+  { name:'Grandma-ma',      avgThrow: 28, checkoutRate: 0.12, hitRate: 0.45 }, // L3
+  { name:'Pub Drunk',    avgThrow: 36, checkoutRate: 0.18, hitRate: 0.52 }, // L4
+  { name:'Regular Bloke',         avgThrow: 45, checkoutRate: 0.25, hitRate: 0.60 }, // L5
+  { name:'Exceptional Pub Drunk',    avgThrow: 54, checkoutRate: 0.33, hitRate: 0.68 }, // L6
   { name:'County',       avgThrow: 64, checkoutRate: 0.42, hitRate: 0.76 }, // L7
   { name:'Semi-Pro',     avgThrow: 74, checkoutRate: 0.52, hitRate: 0.84 }, // L8
   { name:'Pro',          avgThrow: 85, checkoutRate: 0.64, hitRate: 0.90 }, // L9
@@ -4207,6 +4373,276 @@ function applyCricketVoiceThrow(parsed) {
     if (!CRICKET_NUMS.map(String).includes(parsed.key)) return;
     applyMarks('you', parsed.key, parsed.mult);
   }
+}
+
+
+// ═══════════════════════════════════════════════════
+//  CHECKOUT ROUTES  (standard double-out routes)
+// ═══════════════════════════════════════════════════
+// Format: score → array of routes, each route = array of dart labels
+// Labels: T=treble, D=double, B=bullseye (50), OB=outer bull (25), S=single
+const CHECKOUT_ROUTES = {
+  170: [['T20','T20','Bull']],
+  167: [['T20','T19','Bull']],
+  164: [['T20','T18','Bull'],['T19','T19','Bull']],
+  161: [['T20','T17','Bull'],['T19','T18','Bull']],
+  160: [['T20','T20','D20']],
+  158: [['T20','T20','D19']],
+  157: [['T20','T19','D20']],
+  156: [['T20','T20','D18']],
+  155: [['T20','T19','D19'],['T20','T15','Bull']],
+  154: [['T20','T18','D20'],['T20','T20','D17']],
+  153: [['T20','T19','D18'],['T20','T17','D20']],
+  152: [['T20','T20','D16'],['T20','T18','D19']],
+  151: [['T20','T17','D20'],['T20','T19','D17']],
+  150: [['T20','T18','D18'],['T20','T20','D15'],['Bull','T20','D20']],
+  149: [['T20','T19','D16'],['T20','T17','D19']],
+  148: [['T20','T16','D20'],['T20','T20','D14']],
+  147: [['T20','T17','D18'],['T19','T18','D18']],
+  146: [['T20','T18','D16'],['T20','T14','D20']],
+  145: [['T20','T19','D14'],['T20','T15','D20'],['T20','T17','D17']],
+  144: [['T20','T20','D12'],['T20','T16','D18']],
+  143: [['T20','T17','D16'],['T19','T18','D16']],
+  142: [['T20','T14','D20'],['T20','T18','D16']],
+  141: [['T20','T19','D12'],['T20','T15','D18']],
+  140: [['T20','T20','D10'],['T20','T16','D16']],
+  139: [['T20','T13','D20'],['T19','T14','D20']],
+  138: [['T20','T18','D12'],['T20','T14','D18']],
+  137: [['T20','T19','D10'],['T20','T15','D16']],
+  136: [['T20','T20','D8'],['T20','T16','D14']],
+  135: [['T20','T17','D12'],['Bull','T15','D20'],['T20','T13','D18']],
+  134: [['T20','T14','D16'],['T20','T18','D10']],
+  133: [['T20','T19','D8'],['T20','T11','D20']],
+  132: [['T20','T16','D12'],['Bull','T14','D20']],
+  131: [['T20','T13','D16'],['T20','T17','D10']],
+  130: [['T20','T18','D8'],['T20','T20','D5'],['Bull','T20','D10']],
+  129: [['T19','T16','D12'],['T20','T11','D18']],
+  128: [['T18','T14','D20'],['T20','T20','D4']],
+  127: [['T20','T17','D8'],['T20','T11','D17']],
+  126: [['T19','T19','D6'],['T20','T14','D12']],
+  125: [['T20','T15','D10'],['Bull','T15','D20'],['T20','T11','D16']],
+  124: [['T20','T16','D8'],['T20','T14','D11']],
+  123: [['T19','T16','D9'],['T20','T13','D12']],
+  122: [['T18','T18','D7'],['T20','T10','D16']],
+  121: [['T20','T11','D14'],['T17','T18','D10']],
+  120: [['T20','S20','D20'],['T20','T20','D0'],['T17','T19','D6']],  // T20 S20 D20 is standard
+  119: [['T19','T12','D13'],['T20','S19','D20']],
+  118: [['T20','S18','D20'],['T20','T12','D11']],
+  117: [['T20','S17','D20'],['T19','T16','D6']],
+  116: [['T20','S16','D20'],['T19','T19','D0'],['T20','T12','D10']],
+  115: [['T20','S15','D20'],['T19','T18','D0'],['T20','T11','D11']],
+  114: [['T20','S14','D20'],['T20','T14','D8']],
+  113: [['T20','S13','D20'],['T20','T11','D10']],
+  112: [['T20','S12','D20'],['T20','T12','D8']],
+  111: [['T20','S11','D20'],['T20','T11','D9']],
+  110: [['T20','S10','D20'],['T20','Bull','D5']],
+  109: [['T20','S9','D20'],['T19','T12','D8']],
+  108: [['T20','S8','D20'],['T20','T12','D6']],
+  107: [['T19','S10','D20'],['T20','S7','D20']],
+  106: [['T20','S6','D20'],['T20','T10','D8']],
+  105: [['T20','S5','D20'],['T19','S16','D16']],
+  104: [['T18','S18','D16'],['T20','S4','D20']],
+  103: [['T20','S3','D20'],['T19','S6','D20']],
+  102: [['T20','S2','D20'],['T20','T10','D6']],
+  101: [['T17','S10','D20'],['T20','S1','D20']],
+  100: [['T20','D20'],['T18','S16','D16']],     // 2-dart
+  99:  [['T19','S18','D16'],['T19','D21']],       // T19+D21 invalid, use standard
+  99:  [['T19','S10','D16'],['T17','S18','D16']],
+  98:  [['T20','D19'],['T18','D16']],
+  97:  [['T19','D20'],['T20','S17','D16']],
+  96:  [['T20','D18'],['T24','..'],['T20','D18']],
+  96:  [['T20','D18'],['T16','D24']],
+  95:  [['T19','D19'],['T20','S15','D10']],
+  94:  [['T18','D20'],['T20','D17']],
+  93:  [['T19','D18'],['T17','D21']],
+  93:  [['T19','D18'],['T17','S18','D9']],
+  92:  [['T20','D16'],['T16','D22']],
+  91:  [['T17','D20'],['T19','D17']],
+  90:  [['T18','D18'],['T20','D15'],['T14','D24']],
+  89:  [['T19','D16'],['T17','D19']],
+  88:  [['T20','D14'],['T16','D20']],
+  87:  [['T17','D18'],['T15','D21']],
+  87:  [['T17','D18'],['T13','D24']],
+  86:  [['T18','D16'],['T14','D22']],
+  85:  [['T15','D20'],['T19','D14']],
+  84:  [['T20','D12'],['T16','D18']],
+  83:  [['T17','D16'],['T19','D13']],
+  82:  [['T14','D20'],['T18','D14']],
+  81:  [['T19','D12'],['T15','D18'],['T17','D15']],
+  80:  [['T16','D16'],['T20','D10']],
+  79:  [['T13','D20'],['T19','D11'],['T17','D14']],
+  78:  [['T18','D12'],['T14','D18']],
+  77:  [['T19','D10'],['T15','D16'],['T13','D19']],
+  76:  [['T20','D8'],['T16','D14']],
+  75:  [['T17','D12'],['T15','D15'],['T13','D18']],
+  74:  [['T14','D16'],['T18','D10']],
+  73:  [['T19','D8'],['T13','D16'],['T11','D20']],
+  72:  [['T16','D12'],['T12','D18']],
+  71:  [['T13','D16'],['T17','D10']],
+  70:  [['T10','D20'],['T18','D8']],
+  69:  [['T19','D6'],['T11','D18'],['T15','D12']],
+  68:  [['T20','D4'],['T16','D10']],
+  67:  [['T17','D8'],['T9','D20']],
+  66:  [['T10','D18'],['T14','D12']],
+  65:  [['T19','D4'],['T11','D16'],['Bull','D15']],
+  64:  [['T16','D8'],['T14','D11']],
+  63:  [['T13','D12'],['T9','D18'],['T17','D6']],
+  62:  [['T10','D16'],['T12','D13']],
+  61:  [['T15','D8'],['T7','D20'],['T11','D14']],
+  60:  [['S20','D20'],['T12','D12'],['T20','D0']],
+  59:  [['S19','D20'],['T13','D10']],
+  58:  [['S18','D20'],['T10','D14']],
+  57:  [['S17','D20'],['T19','D0'],['T7','D18']],
+  56:  [['T16','D4'],['S16','D20']],
+  55:  [['S15','D20'],['T7','D17'],['T13','D8']],
+  54:  [['S14','D20'],['T18','D0'],['T14','D6']],
+  53:  [['S13','D20'],['T11','D10']],
+  52:  [['S12','D20'],['T12','D8']],
+  51:  [['S11','D20'],['T17','D0'],['T9','D12']],
+  50:  [['Bull'],['S10','D20'],['T10','D10']],
+  49:  [['S9','D20'],['T11','D8'],['T7','D14']],
+  48:  [['S16','D16'],['T8','D12'],['S8','D20']],
+  47:  [['S15','D16'],['S7','D20'],['T9','D10']],
+  46:  [['S6','D20'],['S14','D16']],
+  45:  [['S13','D16'],['S5','D20'],['S9','D18']],
+  44:  [['S12','D16'],['S4','D20']],
+  43:  [['S11','D16'],['S3','D20'],['S7','D18']],
+  42:  [['S10','D16'],['S2','D20']],
+  41:  [['S9','D16'],['S1','D20'],['S5','D18']],
+  40:  [['D20']],
+  39:  [['S7','D16'],['S3','D18']],
+  38:  [['D19'],['S6','D16']],
+  37:  [['S5','D16'],['S1','D18']],
+  36:  [['D18']],
+  35:  [['S3','D16'],['S1','D17']],
+  34:  [['D17'],['S2','D16']],
+  33:  [['S1','D16'],['S5','D14'],['S9','D12']],
+  32:  [['D16']],
+  31:  [['S7','D12'],['S1','D15']],
+  30:  [['D15'],['S10','D10']],
+  29:  [['S1','D14'],['S3','D13']],
+  28:  [['D14'],['S12','D8']],
+  27:  [['S3','D12'],['S7','D10']],
+  26:  [['D13'],['S10','D8'],['S6','D10']],
+  25:  [['S9','D8'],['S1','D12']],
+  24:  [['D12'],['S8','D8']],
+  23:  [['S7','D8'],['S1','D11']],
+  22:  [['D11'],['S6','D8']],
+  21:  [['S5','D8'],['S1','D10']],
+  20:  [['D10'],['S4','D8']],
+  18:  [['D9'],['S2','D8']],
+  16:  [['D8'],['S8','D4']],
+  14:  [['D7'],['S6','D4']],
+  12:  [['D6'],['S4','D4']],
+  10:  [['D5'],['S2','D4']],
+  8:   [['D4'],['S8','D0']],
+  6:   [['D3'],['S2','D2']],
+  4:   [['D2']],
+  2:   [['D1']],
+};
+
+function getCheckoutRoutes(score) {
+  if (score < 2 || score > 170) return [];
+  // Try exact match first
+  let routes = CHECKOUT_ROUTES[score];
+  if (routes && routes.length > 0) return routes.slice(0, 3);
+  // For odd scores not in table, find nearest standard route
+  return [];
+}
+
+function dartClass(dart) {
+  if (!dart) return 'single';
+  if (dart.startsWith('T')) return 'treble';
+  if (dart.startsWith('D')) return 'double';
+  if (dart === 'Bull') return 'bull';
+  if (dart === 'OB') return 'bull';
+  return 'single';
+}
+
+function dartLabel(dart) {
+  if (!dart) return '';
+  if (dart === 'Bull') return 'BULL';
+  if (dart === 'OB') return '25';
+  if (dart.startsWith('T')) return 'T' + dart.slice(1);
+  if (dart.startsWith('D')) return 'D' + dart.slice(1);
+  if (dart.startsWith('S')) return dart.slice(1);
+  return dart;
+}
+
+function updateCheckoutRoute(score) {
+  const panel = document.getElementById('checkout-route-panel');
+  const list = document.getElementById('checkout-routes-list');
+  if (!panel || !list) return;
+
+  // Show panel for ≤170
+  if (score > 170 || score <= 1) {
+    panel.classList.remove('visible');
+    return;
+  }
+
+  const routes = getCheckoutRoutes(score);
+  if (!routes || routes.length === 0) {
+    panel.classList.remove('visible');
+    return;
+  }
+
+  panel.classList.add('visible');
+  list.innerHTML = routes.map(function(route, idx) {
+    const darts = route.map(function(d) {
+      return '<span class="checkout-dart ' + dartClass(d) + '">' + dartLabel(d) + '</span>';
+    }).join('<span class="checkout-arrow">→</span>');
+    return '<div class="checkout-route-row">'
+      + '<span class="checkout-route-rank">' + (idx + 1) + '</span>'
+      + darts
+      + '</div>';
+  }).join('');
+}
+
+// ── Score display helpers (solo vs bot mode) ──
+function updateScoreDisplays(yourScore) {
+  const botLvl = parseInt(document.getElementById('bot-level').value) || 0;
+
+  if (botLvl > 0) {
+    // ── Dual score mode ──
+    document.getElementById('score-hero-solo').style.display = 'none';
+    document.getElementById('score-hero-bot').style.display = 'grid';
+    document.getElementById('bot-voice-row').style.display = 'block';
+
+    // Your score number
+    const youNumEl = document.getElementById('score-display-you');
+    if (youNumEl) {
+      youNumEl.textContent = yourScore;
+      // Pulse green when in checkout range
+      youNumEl.style.color = yourScore <= 170 && yourScore > 1 ? 'var(--accent)' : '';
+    }
+
+    // Bot score number (may already have been updated by showBotStatus)
+    const botScore = currentLeg && currentLeg._botScore != null ? currentLeg._botScore : currentLeg.startScore;
+    const botNumEl = document.getElementById('score-display-bot');
+    if (botNumEl && !botNumEl.style.color) botNumEl.textContent = botScore;
+
+    // Sub-labels
+    const youSub = document.getElementById('score-vs-sub-you');
+    if (youSub) {
+      youSub.textContent = yourScore <= 170 && yourScore > 1 ? '🎯 CHECKOUT RANGE' : '';
+      youSub.style.color = 'var(--accent3)';
+    }
+
+    // Bot name
+    const p = BOT_PROFILES[botLvl];
+    const nameEl = document.getElementById('score-vs-bot-name');
+    if (nameEl && p) nameEl.textContent = p.name.toUpperCase();
+
+  } else {
+    // ── Solo mode ──
+    document.getElementById('score-hero-solo').style.display = 'flex';
+    document.getElementById('score-hero-bot').style.display = 'none';
+    document.getElementById('bot-voice-row').style.display = 'none';
+    const sd = document.getElementById('score-display');
+    if (sd) sd.textContent = yourScore;
+  }
+
+  updateCheckoutRoute(yourScore);
 }
 
 // ═══════════════════════════════════════════════════
