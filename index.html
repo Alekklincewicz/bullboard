@@ -1030,7 +1030,7 @@
     align-items: start;
   }
   .social-sidebar { display: flex; flex-direction: column; gap: 16px; }
-  .social-feed { display: flex; flex-direction: column; gap: 12px; }
+  .social-feed { display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto; padding-right: 4px; scroll-behavior: smooth; }
 
   /* Profile card */
   .profile-card {
@@ -4091,6 +4091,7 @@ function saveSocialState() {
     photoURL: socialState.photoURL,
     following: socialState.following,
     likes: socialState.likes,
+    // Only persist own posts locally as a write-back cache
     posts: socialState.posts.filter(p => p.isOwn),
     autoPost: socialState.autoPost,
   }));
@@ -4100,10 +4101,15 @@ restoreSocialSettingsUI();
 // Show auth bar on initial load (home page, not yet signed in)
 document.addEventListener('DOMContentLoaded', function() {
   if (typeof updateAuthBar === 'function') updateAuthBar();
+  // Load feed immediately for all visitors
+  if (typeof window.loadPostsFromFirebase === 'function') window.loadPostsFromFirebase();
 });
 // Fallback if DOMContentLoaded already fired
 if (document.readyState !== 'loading') {
-  setTimeout(function() { if (typeof updateAuthBar === 'function') updateAuthBar(); }, 0);
+  setTimeout(function() {
+    if (typeof updateAuthBar === 'function') updateAuthBar();
+    if (typeof window.loadPostsFromFirebase === 'function') window.loadPostsFromFirebase();
+  }, 0);
 }
 
 // ── Gate: show/hide based on auth state ──
@@ -4347,7 +4353,10 @@ function setFeedFilter(filter, btn) {
 
 function renderFeed() {
   const el = document.getElementById('social-feed');
-  let posts = socialState.posts.slice().reverse();
+  if (!el) return;
+
+  // posts are already sorted newest-first by loadPostsFromFirebase
+  let posts = socialState.posts.slice();
 
   if (socialState.feedFilter !== 'all') {
     const map = { sessions:'session', checkouts:'checkout', drills:'drill', milestones:'milestone' };
@@ -4356,10 +4365,11 @@ function renderFeed() {
   }
 
   if (posts.length === 0) {
-    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">No posts yet — share your first session!</div>';
+    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted);text-align:center;padding:40px;">Loading feed…</div>';
     return;
   }
 
+  const scrollTop = el.scrollTop; // preserve scroll position on refresh
   el.innerHTML = posts.map(function(p) {
     const handle = p.user || 'Anonymous';
     const init = handle.slice(0,2).toUpperCase();
@@ -4372,13 +4382,16 @@ function renderFeed() {
     const body = (p.text||'')
       .replace(/\b(\d{3})\b/g, '<span class="highlight">$1</span>')
       .replace(/\b([Dd]\d+)\b/g, '<span class="highlight2">$1</span>');
+    const avatarHtml = p.photoURL
+      ? '<img src="' + p.photoURL + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />'
+      : init;
 
     return '<div class="post-card" id="post-' + p.id + '">'
       + '<div class="post-header">'
-      + '<div class="post-avatar" style="background:' + color + '">' + init + '</div>'
+      + '<div class="post-avatar" style="background:' + (p.photoURL ? 'transparent' : color) + ';overflow:hidden;">' + avatarHtml + '</div>'
       + '<div class="post-meta">'
-      + '<div class="post-handle">' + handle + '</div>'
-      + '<div class="post-time">' + (p.time||'just now') + '</div>'
+      + '<div class="post-handle">' + handle + (p.isGuest ? ' <span style="font-size:9px;color:var(--dim);letter-spacing:1px;">GUEST</span>' : '') + '</div>'
+      + '<div class="post-time">' + (p.time||'') + '</div>'
       + '</div>'
       + '<div class="post-type-badge ' + (p.type||'session') + '">' + (p.type||'session') + '</div>'
       + '</div>'
@@ -4392,6 +4405,7 @@ function renderFeed() {
       + '</div>'
       + '</div>';
   }).join('');
+  el.scrollTop = scrollTop;
 }
 
 function toggleLike(postId, btn) {
@@ -4416,12 +4430,15 @@ function publishPost(type, text, stats, extraColor) {
   const emailPrefix = window._currentUser && window._currentUser.email ? window._currentUser.email.split('@')[0] : 'You';
   const handle = isGuest ? (window._guestHandle || 'Guest') : (socialState.myHandle || emailPrefix);
   const now = new Date();
+  const savedAt = now.toISOString();
   const timeStr = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ' · ' + now.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
   const post = {
     id: 'p_' + Date.now(),
     user: handle,
+    photoURL: isGuest ? null : (socialState.photoURL || null),
     color: extraColor || (isGuest ? '#aaa' : '#e8ff3a'),
     time: timeStr,
+    savedAt: savedAt,
     type: type,
     text: text,
     stats: stats || [],
@@ -4431,7 +4448,7 @@ function publishPost(type, text, stats, extraColor) {
     isGuest: isGuest,
     timestamp: Date.now(),
   };
-  socialState.posts.push(post);
+  socialState.posts.unshift(post); // add to front for immediate display
   saveSocialState();
   // Save post to Firestore (both signed-in and guest users)
   if (typeof window.savePostToFirebase === 'function') {
@@ -6009,43 +6026,70 @@ updateAttemptDots();
   // ── Save post to Firestore (works for both signed-in and guest users) ──
   window.savePostToFirebase = async (post) => {
     try {
-      await addDoc(collection(db, 'posts'), {
+      const now = new Date().toISOString();
+      const docRef = await addDoc(collection(db, 'posts'), {
         ...post,
-        isOwn: false, // when read by others it's not their own
-        savedAt: new Date().toISOString(),
+        isOwn: false,
+        savedAt: post.savedAt || now,
         userId: window._currentUser ? window._currentUser.uid : 'guest_' + (window._guestHandle || 'unknown'),
         isGuest: !!window._isGuest,
       });
+      // Backfill the Firestore doc id into the post if it didn't have one
+      if (!post.id) {
+        post.id = docRef.id;
+      }
     } catch (e) {
       console.warn('Post save error:', e.message);
     }
   };
 
-  // ── Load all posts from Firestore into the feed (all users, no filter) ──
+  // ── Load all posts from Firestore — Firestore is the source of truth ──
   window.loadPostsFromFirebase = async () => {
+    const feedEl = document.getElementById('social-feed');
+    if (feedEl && feedEl.dataset.loading) return; // prevent concurrent fetches
+    if (feedEl) feedEl.dataset.loading = '1';
     try {
       const myUid = window._currentUser ? window._currentUser.uid : null;
-      const myHandle = window._isGuest ? window._guestHandle : (window.socialState ? window.socialState.myHandle : null);
-      const snap = await getDocs(query(collection(db, 'posts'), orderBy('savedAt', 'desc'), limit(100)));
+      const myHandle = window._isGuest ? window._guestHandle
+        : (window.socialState ? window.socialState.myHandle : null);
+
+      const snap = await getDocs(
+        query(collection(db, 'posts'), orderBy('savedAt', 'desc'), limit(200))
+      );
+
       const cloudPosts = [];
       snap.forEach(d => {
         const data = d.data();
+        const docId = d.id;
         cloudPosts.push({
           ...data,
-          id: data.id || d.id,
-          // Mark as own if it belongs to current user or current guest handle
-          isOwn: (myUid && data.userId === myUid) || (data.user && myHandle && data.user === myHandle),
+          id: data.id || docId,       // prefer stored id, fall back to doc id
+          isOwn: !!(
+            (myUid && data.userId === myUid) ||
+            (myHandle && data.user && data.user.toLowerCase() === myHandle.toLowerCase())
+          ),
         });
       });
-      // Merge: cloud posts replace any with matching id, local-only posts kept
+
+      // Replace feed entirely with cloud data (Firestore is source of truth)
+      // Keep local-only posts that haven't synced yet (no savedAt means still pending)
       const cloudIds = new Set(cloudPosts.map(p => p.id));
-      const localOnly = (window.socialState.posts || []).filter(p => !cloudIds.has(p.id));
-      window.socialState.posts = [...localOnly, ...cloudPosts]
-        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-      window.saveSocialState();
+      const pendingLocal = (window.socialState.posts || []).filter(
+        p => p.isOwn && !cloudIds.has(p.id)
+      );
+      window.socialState.posts = [...pendingLocal, ...cloudPosts]
+        .sort((a, b) => {
+          // Sort by savedAt ISO string desc (most recent first)
+          const ta = a.savedAt || '';
+          const tb = b.savedAt || '';
+          return tb.localeCompare(ta);
+        });
+
       if (typeof renderFeed === 'function') renderFeed();
     } catch (e) {
       console.warn('Feed load error:', e.message);
+    } finally {
+      if (feedEl) delete feedEl.dataset.loading;
     }
   };
 
