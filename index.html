@@ -2157,7 +2157,7 @@
   <div id="social-gate" class="hidden"></div>
 
   <!-- MAIN SOCIAL CONTENT (shown when logged in or guest) -->
-  <div id="social-content" class="social-layout hidden">
+  <div id="social-content" class="social-layout">
 
     <!-- Guest banner (only shown in guest mode) -->
     <div id="guest-banner" class="guest-banner" style="display:none;grid-column:1/-1;">
@@ -2790,8 +2790,8 @@ function updateAuthBar(page) {
   const bar = document.getElementById('auth-bar');
   if (!bar) return;
   const onHome = (page || getCurrentPage()) === 'home';
-  const authed = !!window._currentUser || !!window._isGuest;
-  if (onHome && !authed) {
+  const fullySignedIn = !!window._currentUser && !window._isGuest;
+  if (onHome && !fullySignedIn) {
     bar.classList.add('visible');
   } else {
     bar.classList.remove('visible');
@@ -4110,40 +4110,38 @@ if (document.readyState !== 'loading') {
 function updateSocialGate(isSignedIn, email) {
   const gate = document.getElementById('social-gate');
   const socialContent = document.getElementById('social-content');
-  if (!gate || !socialContent) return;
+  if (gate) gate.classList.add('hidden');
+  if (socialContent) socialContent.classList.remove('hidden');
+
   const isGuest = window._isGuest;
-  if (isSignedIn || isGuest) {
-    gate.classList.add('hidden');
-    socialContent.classList.remove('hidden');
-    // Guest banner visibility
-    const banner = document.getElementById('guest-banner');
-    const handleDisplay = document.getElementById('guest-handle-display');
-    if (banner) banner.style.display = isGuest ? 'flex' : 'none';
-    if (handleDisplay && isGuest) handleDisplay.textContent = window._guestHandle || '';
-    // Profile sign-out button
-    const signOutBtn = document.getElementById('profileSignOutButton');
-    if (signOutBtn) {
-      signOutBtn.style.display = 'block';
-      signOutBtn.textContent = isGuest ? 'EXIT GUEST MODE' : 'SIGN OUT';
-    }
-    // Apply whatever handle/avatar we already have cached locally
-    const handle = isGuest ? window._guestHandle : (socialState.myHandle || (email ? email.split('@')[0] : ''));
-    applyAvatar(handle, isGuest ? null : socialState.photoURL);
-    const handleEl = document.getElementById('social-handle');
-    if (handleEl) handleEl.textContent = (handle || 'YOUR HANDLE').toUpperCase();
-    const subEl = document.getElementById('social-sub');
-    if (subEl && handle) subEl.textContent = '@' + handle.toLowerCase() + (isGuest ? ' · Guest' : ' · Bullboard');
-    if (!isGuest) {
-      const nameInput = document.getElementById('social-name-input');
-      if (nameInput && socialState.myHandle) nameInput.value = socialState.myHandle;
-    }
-  } else {
-    gate.classList.remove('hidden');
-    socialContent.classList.add('hidden');
-    // Hide profile sign-out
-    const signOutBtn = document.getElementById('profileSignOutButton');
-    if (signOutBtn) signOutBtn.style.display = 'none';
+  // Guest banner
+  const banner = document.getElementById('guest-banner');
+  const handleDisplay = document.getElementById('guest-handle-display');
+  if (banner) banner.style.display = isGuest ? 'flex' : 'none';
+  if (handleDisplay && isGuest) handleDisplay.textContent = window._guestHandle || '';
+
+  // Profile sign-out button
+  const signOutBtn = document.getElementById('profileSignOutButton');
+  if (signOutBtn) {
+    signOutBtn.style.display = (isSignedIn || isGuest) ? 'block' : 'none';
+    signOutBtn.textContent = isGuest ? 'EXIT GUEST MODE' : 'SIGN OUT';
   }
+
+  // Handle/avatar
+  const handle = isGuest ? window._guestHandle : (isSignedIn ? (socialState.myHandle || (email ? email.split('@')[0] : '')) : null);
+  applyAvatar(handle, isGuest ? null : socialState.photoURL);
+  const handleEl = document.getElementById('social-handle');
+  if (handleEl) handleEl.textContent = handle ? handle.toUpperCase() : (isSignedIn || isGuest ? 'YOUR HANDLE' : 'BULLBOARD COMMUNITY');
+  const subEl = document.getElementById('social-sub');
+  if (subEl) subEl.textContent = isGuest ? '@' + (handle||'').toLowerCase() + ' · Guest'
+    : isSignedIn ? '@' + (handle||'').toLowerCase() + ' · Bullboard'
+    : 'Sign in to post & track stats';
+
+  if (isSignedIn && !isGuest) {
+    const nameInput = document.getElementById('social-name-input');
+    if (nameInput && socialState.myHandle) nameInput.value = socialState.myHandle;
+  }
+
   // Keep auth bar in sync
   if (typeof updateAuthBar === 'function') updateAuthBar();
 }
@@ -4180,27 +4178,26 @@ function renderSocialPage() {
   const isGuest = window._isGuest;
   updateSocialGate(isSignedIn, window._currentUser ? window._currentUser.email : null);
 
-  // Always restore settings fields (handle input, autopost toggles) — auth not required
-  if (!isGuest) restoreSocialSettingsUI();
+  if (isSignedIn && !isGuest) restoreSocialSettingsUI();
 
-  if (!isSignedIn && !isGuest) return;
-
-  const emailPrefix = window._currentUser && window._currentUser.email ? window._currentUser.email.split('@')[0] : 'You';
-  const handle = isGuest ? window._guestHandle : (socialState.myHandle || emailPrefix);
-  applyAvatar(handle, isGuest ? null : socialState.photoURL);
-  document.getElementById('social-handle').textContent = handle.toUpperCase();
-  document.getElementById('social-sub').textContent = '@' + handle.toLowerCase() + (isGuest ? ' · Guest' : ' · Bullboard');
-  if (!isGuest && document.getElementById('social-name-input')) {
-    document.getElementById('social-name-input').value = socialState.myHandle;
+  const emailPrefix = window._currentUser && window._currentUser.email ? window._currentUser.email.split('@')[0] : '';
+  const handle = isGuest ? window._guestHandle : (isSignedIn ? (socialState.myHandle || emailPrefix) : null);
+  if (handle) {
+    applyAvatar(handle, isGuest ? null : socialState.photoURL);
+    document.getElementById('social-handle').textContent = handle.toUpperCase();
+    document.getElementById('social-sub').textContent = '@' + handle.toLowerCase() + (isGuest ? ' · Guest' : ' · Bullboard');
+    if (!isGuest && document.getElementById('social-name-input')) {
+      document.getElementById('social-name-input').value = socialState.myHandle || '';
+    }
   }
 
   const sessions = state.sessions;
   const avg = sessions.length ? (sessions.reduce((s,ses)=>s+parseFloat(ses.avg),0)/sessions.length).toFixed(1) : '—';
-  document.getElementById('social-p-avg').textContent = avg;
-  document.getElementById('social-p-sessions').textContent = sessions.length;
-  document.getElementById('social-p-following').textContent = isGuest ? '—' : socialState.following.length;
+  document.getElementById('social-p-avg').textContent = (isSignedIn || isGuest) ? avg : '—';
+  document.getElementById('social-p-sessions').textContent = (isSignedIn || isGuest) ? sessions.length : '—';
+  document.getElementById('social-p-following').textContent = isGuest ? '—' : (isSignedIn ? socialState.following.length : '—');
 
-  if (!isGuest) {
+  if (isSignedIn && !isGuest) {
     Object.keys(socialState.autoPost).forEach(function(key) {
       const el = document.getElementById('ap-' + key);
       if (el) { if (socialState.autoPost[key]) el.classList.add('on'); else el.classList.remove('on'); }
@@ -4210,7 +4207,7 @@ function renderSocialPage() {
 
   renderFeed();
   renderLeaderboard();
-  // Load all community posts from Firestore (signed-in and guest alike)
+  // Load all community posts from Firestore (everyone sees the feed)
   if (typeof window.loadPostsFromFirebase === 'function') window.loadPostsFromFirebase();
 }
 
