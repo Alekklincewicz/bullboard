@@ -849,13 +849,59 @@
     padding: 20px;
   }
   .profile-avatar {
-    width: 56px; height: 56px; border-radius: 50%;
+    width: 72px; height: 72px; border-radius: 50%;
     background: var(--accent);
     display: flex; align-items: center; justify-content: center;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 26px; color: #000;
+    font-size: 28px; color: #000;
     margin-bottom: 12px;
+    position: relative; cursor: pointer;
+    overflow: hidden; flex-shrink: 0;
   }
+  .profile-avatar img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+    position: absolute; inset: 0;
+  }
+  .profile-avatar .avatar-edit-hint {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgba(0,0,0,0.5); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px;
+    opacity: 0; transition: opacity 0.15s; text-transform: uppercase;
+  }
+  .profile-avatar:hover .avatar-edit-hint { opacity: 1; }
+  #avatar-file-input { display: none; }
+  /* Onboarding modal */
+  .onboard-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 300;
+  }
+  .onboard-box {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 32px; max-width: 400px; width: 90%; text-align: center;
+  }
+  .onboard-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+    letter-spacing: 3px; color: var(--accent); margin-bottom: 8px;
+  }
+  .onboard-sub {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--muted); margin-bottom: 24px; line-height: 1.7;
+  }
+  .onboard-input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+    text-align: center; padding: 12px; letter-spacing: 2px; outline: none;
+    margin-bottom: 14px; box-sizing: border-box;
+  }
+  .onboard-input:focus { border-color: var(--accent); }
+  .onboard-btn {
+    width: 100%; padding: 14px; background: var(--accent); color: #000;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+    letter-spacing: 2px; border: none; cursor: pointer;
+  }
+  .onboard-btn:hover { opacity: 0.85; }
   .profile-handle {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 20px; letter-spacing: 2px; color: var(--text);
@@ -1891,7 +1937,12 @@
     <div class="social-sidebar">
       <!-- Your profile card -->
       <div class="profile-card">
-        <div class="profile-avatar" id="social-avatar">?</div>
+        <input type="file" id="avatar-file-input" accept="image/*" onchange="handleAvatarUpload(this)" />
+        <div class="profile-avatar" id="social-avatar" onclick="document.getElementById('avatar-file-input').click()" title="Click to change photo">
+          <span id="social-avatar-initials">?</span>
+          <img id="social-avatar-img" src="" alt="" style="display:none" />
+          <div class="avatar-edit-hint">Change</div>
+        </div>
         <div class="profile-handle" id="social-handle">YOUR HANDLE</div>
         <div class="profile-sub" id="social-sub">Set up your profile</div>
         <div style="display:flex;gap:6px;margin-top:10px;">
@@ -3619,6 +3670,7 @@ const SOCIAL_KEY = 'bullboard_social_v2';
 
 let socialState = {
   myHandle: '',
+  photoURL: '',       // base64 or URL, stored locally + Firestore
   following: [],
   feedFilter: 'all',
   posts: [],
@@ -3638,9 +3690,28 @@ function loadSocialState() {
     }
   } catch(e) {}
 }
+
+// Apply avatar image or initials to all avatar elements on the page
+function applyAvatar(handle, photoURL) {
+  const initials = (handle || '?').slice(0, 2).toUpperCase();
+  const imgEl = document.getElementById('social-avatar-img');
+  const initialsEl = document.getElementById('social-avatar-initials');
+  const composerEl = document.getElementById('composer-avatar');
+  // Profile card avatar
+  if (photoURL) {
+    if (imgEl) { imgEl.src = photoURL; imgEl.style.display = 'block'; }
+    if (initialsEl) initialsEl.style.display = 'none';
+  } else {
+    if (imgEl) imgEl.style.display = 'none';
+    if (initialsEl) { initialsEl.textContent = initials; initialsEl.style.display = ''; }
+  }
+  // Composer avatar (text initials always)
+  if (composerEl) composerEl.textContent = initials;
+}
 function saveSocialState() {
   localStorage.setItem(SOCIAL_KEY, JSON.stringify({
     myHandle: socialState.myHandle,
+    photoURL: socialState.photoURL,
     following: socialState.following,
     likes: socialState.likes,
     posts: socialState.posts.filter(p => p.isOwn),
@@ -3653,18 +3724,23 @@ restoreSocialSettingsUI();
 // ── Gate: show/hide based on auth state ──
 function updateSocialGate(isSignedIn, email) {
   const gate = document.getElementById('social-gate');
-  const content = document.getElementById('social-content');
-  if (!gate || !content) return;
+  const socialContent = document.getElementById('social-content');
+  if (!gate || !socialContent) return;
   if (isSignedIn) {
     gate.classList.add('hidden');
-    content.classList.remove('hidden');
-    if (!socialState.myHandle && email) {
-      socialState.myHandle = email.split('@')[0];
-      saveSocialState();
-    }
+    socialContent.classList.remove('hidden');
+    // Apply whatever handle/avatar we already have cached locally
+    applyAvatar(socialState.myHandle, socialState.photoURL);
+    const handle = socialState.myHandle || (email ? email.split('@')[0] : '');
+    const handleEl = document.getElementById('social-handle');
+    if (handleEl) handleEl.textContent = (handle || 'YOUR HANDLE').toUpperCase();
+    const subEl = document.getElementById('social-sub');
+    if (subEl && handle) subEl.textContent = '@' + handle.toLowerCase() + ' · Bullboard';
+    const nameInput = document.getElementById('social-name-input');
+    if (nameInput && socialState.myHandle) nameInput.value = socialState.myHandle;
   } else {
     gate.classList.remove('hidden');
-    content.classList.add('hidden');
+    socialContent.classList.add('hidden');
   }
 }
 
@@ -3673,6 +3749,17 @@ function restoreSocialSettingsUI() {
   // Handle input
   const nameInput = document.getElementById('social-name-input');
   if (nameInput && socialState.myHandle) nameInput.value = socialState.myHandle;
+
+  // Avatar
+  applyAvatar(socialState.myHandle, socialState.photoURL);
+
+  // Handle display
+  if (socialState.myHandle) {
+    const handleEl = document.getElementById('social-handle');
+    if (handleEl) handleEl.textContent = socialState.myHandle.toUpperCase();
+    const subEl = document.getElementById('social-sub');
+    if (subEl) subEl.textContent = '@' + socialState.myHandle.toLowerCase() + ' · Bullboard';
+  }
 
   // Autopost toggles
   Object.keys(socialState.autoPost).forEach(function(key) {
@@ -3695,9 +3782,7 @@ function renderSocialPage() {
 
   const emailPrefix = window._currentUser && window._currentUser.email ? window._currentUser.email.split('@')[0] : 'You';
   const handle = socialState.myHandle || emailPrefix;
-  const initials = handle.slice(0,2).toUpperCase();
-  document.getElementById('social-avatar').textContent = initials;
-  document.getElementById('composer-avatar').textContent = initials;
+  applyAvatar(handle, socialState.photoURL);
   document.getElementById('social-handle').textContent = handle.toUpperCase();
   document.getElementById('social-sub').textContent = '@' + handle.toLowerCase() + ' · Bullboard';
   document.getElementById('social-name-input').value = socialState.myHandle;
@@ -3727,17 +3812,87 @@ function toggleAutoPost(key, el) {
 
 function setSocialProfile() {
   const val = document.getElementById('social-name-input').value.trim().replace(/[\s@#]+/g,'_');
-  if (!val) return;
+  if (!val) { toast('Enter a handle first', true); return; }
   socialState.myHandle = val;
   saveSocialState();
-  // Update displayed handle elements if visible
+  applyAvatar(val, socialState.photoURL);
   const handleEl = document.getElementById('social-handle');
   if (handleEl) handleEl.textContent = val.toUpperCase();
   const subEl = document.getElementById('social-sub');
   if (subEl) subEl.textContent = '@' + val.toLowerCase() + ' · Bullboard';
-  const avatarEls = [document.getElementById('social-avatar'), document.getElementById('composer-avatar')];
-  avatarEls.forEach(function(el) { if (el) el.textContent = val.slice(0,2).toUpperCase(); });
+  // Push to Firestore if signed in
+  if (typeof window.saveUserProfileToFirebase === 'function') {
+    window.saveUserProfileToFirebase({ handle: val, photoURL: socialState.photoURL });
+  }
   toast('Handle saved: @' + val);
+}
+
+function handleAvatarUpload(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 600 * 1024) { toast('Image too large — max 600 KB', true); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // Resize to max 200×200 via canvas to keep storage small
+    const img = new Image();
+    img.onload = function() {
+      const MAX = 200;
+      const scale = Math.min(MAX / img.width, MAX / img.height, 1);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataURL = canvas.toDataURL('image/jpeg', 0.82);
+      socialState.photoURL = dataURL;
+      saveSocialState();
+      applyAvatar(socialState.myHandle, dataURL);
+      if (typeof window.saveUserProfileToFirebase === 'function') {
+        window.saveUserProfileToFirebase({ handle: socialState.myHandle, photoURL: dataURL });
+      }
+      toast('Profile photo updated');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = ''; // reset so same file can be re-selected
+}
+
+// ── Handle onboarding modal ──
+function openOnboardModal() {
+  const modal = document.getElementById('onboard-modal');
+  if (!modal) return;
+  const input = document.getElementById('onboard-handle-input');
+  // Pre-fill: prefer Google display name, then email prefix
+  if (input && !input.value && window._currentUser) {
+    const u = window._currentUser;
+    const base = u.displayName
+      ? u.displayName.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
+      : (u.email ? u.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_') : '');
+    input.value = base.slice(0, 24);
+  }
+  modal.style.display = 'flex';
+  setTimeout(() => { if (input) { input.focus(); input.select(); } }, 80);
+}
+
+function confirmOnboardHandle() {
+  const input = document.getElementById('onboard-handle-input');
+  const val = (input ? input.value : '').trim().replace(/[\s@#]+/g, '_');
+  if (!val || val.length < 2) { toast('Handle must be at least 2 characters', true); return; }
+  socialState.myHandle = val;
+  saveSocialState();
+  document.getElementById('onboard-modal').style.display = 'none';
+  // Update social name input
+  const nameInput = document.getElementById('social-name-input');
+  if (nameInput) nameInput.value = val;
+  applyAvatar(val, socialState.photoURL);
+  const handleEl = document.getElementById('social-handle');
+  if (handleEl) handleEl.textContent = val.toUpperCase();
+  const subEl = document.getElementById('social-sub');
+  if (subEl) subEl.textContent = '@' + val.toLowerCase() + ' · Bullboard';
+  if (typeof window.saveUserProfileToFirebase === 'function') {
+    window.saveUserProfileToFirebase({ handle: val, photoURL: socialState.photoURL });
+  }
+  toast('Welcome, @' + val + '! 🎯');
 }
 
 function renderFollowList() {
@@ -5166,7 +5321,7 @@ updateAttemptDots();
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
   import {
-    getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc
+    getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc
   } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
   import {
     getAuth,
@@ -5241,47 +5396,133 @@ updateAttemptDots();
     try { await signOut(auth); } catch (e) { alert('Sign out error: ' + e.message); }
   });
 
-  // ── Load sessions from Firestore into local state ──
+  // ── Load user profile (handle, photo) — fast single-doc fetch ──
+  async function loadUserProfile(uid) {
+    try {
+      const snap = await getDoc(doc(db, 'users', uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        let changed = false;
+        if (data.handle && data.handle !== window.socialState.myHandle) {
+          window.socialState.myHandle = data.handle;
+          changed = true;
+        }
+        if (data.photoURL && data.photoURL !== window.socialState.photoURL) {
+          window.socialState.photoURL = data.photoURL;
+          changed = true;
+        }
+        if (data.autoPost) {
+          window.socialState.autoPost = { ...window.socialState.autoPost, ...data.autoPost };
+          changed = true;
+        }
+        if (data.following && Array.isArray(data.following)) {
+          // Merge following lists
+          const merged = [...new Set([...window.socialState.following, ...data.following])];
+          if (merged.length !== window.socialState.following.length) {
+            window.socialState.following = merged;
+            changed = true;
+          }
+        }
+        if (changed) {
+          window.saveSocialState();
+          // Only update profile display fields — don't re-render feed/leaderboard
+          if (typeof window.restoreSocialSettingsUI === 'function') window.restoreSocialSettingsUI();
+          // If on the home page, also update the stats row
+          const homePage = document.getElementById('page-home');
+          if (homePage && homePage.classList.contains('active') && window._currentUser) {
+            const sessions = window.state ? window.state.sessions : [];
+            const avg = sessions.length ? (sessions.reduce((s,ses)=>s+parseFloat(ses.avg||0),0)/sessions.length).toFixed(1) : '—';
+            const avgEl = document.getElementById('social-p-avg');
+            const sessEl = document.getElementById('social-p-sessions');
+            const followEl = document.getElementById('social-p-following');
+            if (avgEl) avgEl.textContent = avg;
+            if (sessEl) sessEl.textContent = sessions.length;
+            if (followEl) followEl.textContent = window.socialState.following.length;
+          }
+        }
+      }
+      // If no profile exists yet (new user), trigger onboarding
+      if (!window.socialState.myHandle) {
+        setTimeout(() => {
+          if (typeof window.openOnboardModal === 'function') window.openOnboardModal();
+        }, 400);
+      }
+    } catch (e) {
+      console.warn('Profile load error:', e.message);
+      // Still show onboarding if no handle
+      if (!window.socialState.myHandle) {
+        setTimeout(() => {
+          if (typeof window.openOnboardModal === 'function') window.openOnboardModal();
+        }, 400);
+      }
+    }
+  }
+
+  // ── Save user profile to Firestore ──
+  window.saveUserProfileToFirebase = async (profile) => {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        email: user.email,
+        handle: profile.handle || window.socialState.myHandle || '',
+        photoURL: profile.photoURL || window.socialState.photoURL || '',
+        autoPost: window.socialState.autoPost,
+        following: window.socialState.following,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+      console.log('Profile saved to Firestore');
+    } catch (e) {
+      console.warn('Profile save error:', e.message);
+    }
+  };
+
+  // ── Load sessions + drills in parallel (background, non-blocking) ──
   async function loadUserData(uid) {
     try {
-      // Load practice sessions
-      const sessSnap = await getDocs(query(collection(db, 'sessions'), where('userId', '==', uid)));
+      const [sessSnap, drillSnap] = await Promise.all([
+        getDocs(query(collection(db, 'sessions'), where('userId', '==', uid))),
+        getDocs(query(collection(db, 'drillData'), where('userId', '==', uid))),
+      ]);
+
+      // Merge sessions
       const cloudSessions = [];
       sessSnap.forEach(d => cloudSessions.push(d.data()));
       if (cloudSessions.length > 0) {
-        // Merge cloud sessions with local, deduplicate by timestamp
         const localTs = new Set(window.state.sessions.map(s => s.timestamp));
         cloudSessions.forEach(s => { if (!localTs.has(s.timestamp)) window.state.sessions.push(s); });
         window.state.sessions.sort((a,b) => a.timestamp - b.timestamp);
         window.saveState();
-        console.log(`Loaded ${cloudSessions.length} session(s) from cloud`);
       }
 
-      // Load drill data snapshot (we store per-user drill totals as one doc)
-      const drillSnap = await getDocs(query(collection(db, 'drillData'), where('userId', '==', uid)));
+      // Merge drill data
       if (!drillSnap.empty) {
         const cloudDrill = drillSnap.docs[0].data().drillData;
-        // Deep-merge: add cloud counts to local, keeping whichever is higher per target
         if (cloudDrill) {
           ['single','double','treble'].forEach(bed => {
             if (!cloudDrill[bed]) return;
             Object.entries(cloudDrill[bed]).forEach(([target, cd]) => {
               const ld = window.state.drillData[bed][target];
-              if (!ld) {
+              if (!ld || cd.attempts > ld.attempts) {
                 window.state.drillData[bed][target] = cd;
-              } else {
-                // Use the record with more attempts (cloud is source of truth if larger)
-                if (cd.attempts > ld.attempts) window.state.drillData[bed][target] = cd;
               }
             });
           });
           window.saveState();
-          console.log('Drill data synced from cloud');
         }
       }
 
-      // Refresh UI after load
+      // Refresh UI once both are done (background load complete)
       if (typeof window.renderStats === 'function') window.renderStats();
+      if (typeof window.renderHistoryPage === 'function' && document.getElementById('page-history')?.classList.contains('active')) {
+        window.renderHistoryPage();
+      }
+      // If on Home page, refresh feed/leaderboard stats now that data is loaded
+      const homePage = document.getElementById('page-home');
+      if (homePage && homePage.classList.contains('active') && typeof window.renderSocialPage === 'function') {
+        window.renderSocialPage();
+      }
     } catch (e) {
       console.error('Error loading user data:', e.message);
     }
@@ -5371,6 +5612,7 @@ updateAttemptDots();
   onAuthStateChanged(auth, (user) => {
     window._currentUser = user || null;
     if (user) {
+      // Show sign-out, hide sign-in UI
       userStatus.textContent = (user.displayName ? user.displayName + ' · ' : '') + user.email;
       signOutButton.style.display = 'inline-block';
       emailInput.style.display = 'none';
@@ -5378,10 +5620,15 @@ updateAttemptDots();
       signUpButton.style.display = 'none';
       signInButton.style.display = 'none';
       googleSignInButton.style.display = 'none';
-      // Load their cloud data and merge
-      loadUserData(user.uid);
-      // Update social gate + profile defaults
+
+      // Open social content gate immediately (uses locally cached handle)
       if (typeof updateSocialGate === 'function') updateSocialGate(true, user.email);
+
+      // 1. Load profile doc first — fast, single doc, shows handle/photo immediately
+      loadUserProfile(user.uid);
+
+      // 2. Load sessions + drills in background (parallel, non-blocking)
+      loadUserData(user.uid);
     } else {
       userStatus.textContent = 'Not signed in';
       signOutButton.style.display = 'none';
@@ -5407,6 +5654,18 @@ updateAttemptDots();
       <button class="edit-confirm-btn cancel" onclick="closeEditThrow()">CANCEL</button>
       <button class="edit-confirm-btn confirm" onclick="confirmEditThrow()">CONFIRM</button>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ HANDLE ONBOARDING MODAL ═══════════════════════ -->
+<div id="onboard-modal" class="onboard-overlay" style="display:none">
+  <div class="onboard-box">
+    <div class="onboard-title">Welcome to Bullboard</div>
+    <div class="onboard-sub">Choose a handle — this is how other players will see you.<br>You can change it anytime from your profile.</div>
+    <input class="onboard-input" id="onboard-handle-input" type="text" maxlength="24"
+      placeholder="YourHandle"
+      onkeydown="if(event.key==='Enter')confirmOnboardHandle()" />
+    <button class="onboard-btn" onclick="confirmOnboardHandle()">LET'S GO →</button>
   </div>
 </div>
 </body>
