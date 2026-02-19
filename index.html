@@ -2266,7 +2266,7 @@ function processThrow(score, bust, fromVoice) {
     currentLeg.totalDarts += 3;
     currentLeg.throws.push({ score, remaining:0, bust:false, checkout:true });
     addThrowRow(score, 0, false, true, fromVoice);
-    document.getElementById('score-display').textContent = '0';
+    updateScoreDisplays(0);
     toast('🎯 CHECKOUT! Leg complete — YOU WIN!');
     if (typeof maybeAutoPostCheckout === 'function') maybeAutoPostCheckout(score);
     hideBotStatus();
@@ -2277,7 +2277,7 @@ function processThrow(score, bust, fromVoice) {
     currentLeg.round++;
     currentLeg.throws.push({ score, remaining, bust:false });
     addThrowRow(score, remaining, false, false, fromVoice);
-    document.getElementById('score-display').textContent = remaining;
+    updateScoreDisplays(remaining);
     updateMeta();
     if (typeof maybeAutoPostTon === 'function') maybeAutoPostTon(score);
     scheduleBotTurn01();
@@ -3750,6 +3750,7 @@ const BOT_PROFILES = [
   { name:'World Class',  avgThrow: 96, checkoutRate: 0.78, hitRate: 0.96 }, // L10
 ];
 
+
 let botState = { score: 501, totalDarts: 0, throws: [], checkouts: 0, checkoutAttempts: 0 };
 
 function resetBot(startScore) {
@@ -4610,16 +4611,12 @@ function updateScoreDisplays(yourScore) {
 
     // Your score number
     const youNumEl = document.getElementById('score-display-you');
-    if (youNumEl) {
-      youNumEl.textContent = yourScore;
-      // Pulse green when in checkout range
-      youNumEl.style.color = yourScore <= 170 && yourScore > 1 ? 'var(--accent)' : '';
-    }
+    if (youNumEl) youNumEl.textContent = yourScore;
 
-    // Bot score number (may already have been updated by showBotStatus)
+    // Bot score number — always update from state
     const botScore = currentLeg && currentLeg._botScore != null ? currentLeg._botScore : currentLeg.startScore;
     const botNumEl = document.getElementById('score-display-bot');
-    if (botNumEl && !botNumEl.style.color) botNumEl.textContent = botScore;
+    if (botNumEl) { botNumEl.textContent = botScore; botNumEl.style.color = ''; }
 
     // Sub-labels
     const youSub = document.getElementById('score-vs-sub-you');
