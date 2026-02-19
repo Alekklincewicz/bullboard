@@ -268,6 +268,48 @@
   .throw-badge.checkout { background: rgba(58,255,184,0.15); color: var(--accent3); border: 1px solid rgba(58,255,184,0.3); }
   .throw-badge.ton { background: rgba(232,255,58,0.15); color: var(--accent); border: 1px solid rgba(232,255,58,0.3); }
   .throw-badge.voice { background: rgba(255,77,77,0.1); color: var(--accent2); border: 1px solid rgba(255,77,77,0.2); font-size:9px; }
+  .throw-edit-btn {
+    margin-left: auto; background: none; border: 1px solid transparent;
+    color: var(--dim); font-family: 'DM Mono', monospace; font-size: 10px;
+    padding: 2px 7px; cursor: pointer; letter-spacing: 0.5px; opacity: 0;
+    transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .throw-row:hover .throw-edit-btn { opacity: 1; }
+  .throw-edit-btn:hover { border-color: var(--accent); color: var(--accent); }
+  /* Edit confirm modal */
+  .edit-confirm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  .edit-confirm-box {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 24px 28px; min-width: 300px; max-width: 380px; width: 90%;
+  }
+  .edit-confirm-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px;
+    letter-spacing: 2px; color: var(--text); margin-bottom: 6px;
+  }
+  .edit-confirm-sub {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--muted); margin-bottom: 18px; line-height: 1.5;
+  }
+  .edit-confirm-input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: 'Bebas Neue', sans-serif; font-size: 36px;
+    text-align: center; padding: 12px; letter-spacing: 2px; outline: none;
+    margin-bottom: 14px; box-sizing: border-box;
+  }
+  .edit-confirm-input:focus { border-color: var(--accent); }
+  .edit-confirm-row { display: flex; gap: 8px; }
+  .edit-confirm-btn {
+    flex: 1; padding: 12px; font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 2px; border: none; cursor: pointer;
+  }
+  .edit-confirm-btn.cancel { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+  .edit-confirm-btn.cancel:hover { color: var(--text); }
+  .edit-confirm-btn.confirm { background: var(--accent); color: #000; }
+  .edit-confirm-btn.confirm:hover { opacity: 0.85; }
 
   /* ── SESSION SETUP ── */
   .session-setup { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
@@ -1469,8 +1511,10 @@
 
   <!-- Voice help text (shown after first tap) -->
   <div class="voice-help" id="voice-help">
-    Say the <span>total</span> (e.g. "one forty") · or dart-by-dart: <span>"treble 20 single 5 double 16"</span><br>
-    Supports: <span>double / treble / triple</span> + number · Say <span>"bust"</span> to bust · Press <span>Spacebar</span> to activate
+    <strong>Total:</strong> <span>"one forty"</span> · <span>"eighty one"</span> · <span>"140"</span><br>
+    <strong>1 dart:</strong> <span>"treble twenty"</span> · <span>"double 16"</span> · <span>"double top"</span><br>
+    <strong>3 darts:</strong> <span>"treble 20 single 5 double 16"</span> · order flexible<br>
+    <strong>Also:</strong> <span>"bull"</span> · <span>"bullseye"</span> · <span>"bust"</span> · <span>Spacebar</span> to activate
   </div>
 
   <div class="score-meta">
@@ -1988,98 +2032,224 @@ let voiceActive = false;
 let voiceHelpVisible = false;
 
 // Number word map
-// ─── Voice parsing — strict number-first approach ───────────────────
-// Maps spoken number words to digits
-const SPOKEN_NUMS = {
-  'oh':0,'zero':0,'naught':0,
-  'one':1,'two':2,'three':3,'four':4,'five':5,
-  'six':6,'seven':7,'eight':8,'nine':9,
-  'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,
-  'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,
-  'twenty':20,'thirty':30,'forty':40,'fifty':50,
-  'sixty':60,'seventy':70,'eighty':80,'ninety':90,
+// ─── Voice score parser ────────────────────────────────────────────
+// Converts spoken darts scores to numbers robustly.
+// Handles: plain numbers ("140"), number words ("one forty"),
+//          multipliers ("double 20", "treble 18"), bull, bust.
+
+const _W = { // word → digit value
+  oh:0, zero:0, nought:0, naught:0,
+  one:1, two:2, three:3, four:4, five:5,
+  six:6, seven:7, eight:8, nine:9,
+  ten:10, eleven:11, twelve:12, thirteen:13, fourteen:14,
+  fifteen:15, sixteen:16, seventeen:17, eighteen:18, nineteen:19,
+  twenty:20, thirty:30, forty:40, fifty:50,
+  sixty:60, seventy:70, eighty:80, ninety:90,
+  hundred:100,
 };
 
-// Full phrases → exact totals (checked first, longest match wins)
-const SPOKEN_TOTALS = {
-  'one hundred and eighty':180,'hundred and eighty':180,
-  'one eighty':180,'one-eighty':180,
-  'one hundred and forty':140,'one forty':140,'one-forty':140,
-  'one hundred and sixty':160,'one sixty':160,'one-sixty':160,
-  'one hundred and twenty':120,'one twenty':120,'one-twenty':120,
-  'one hundred':100,'a hundred':100,
-  'one hundred and twenty five':125,'one twenty five':125,
-  'one hundred and thirty':130,'one thirty':130,
-  'one hundred and fifty':150,'one fifty':150,
-  'one hundred and seventy':170,'one seventy':170,
+// Converts a string of mixed words/digits into a number, or null.
+// e.g. "eighty one" → 81, "one forty" → 140, "180" → 180
+// ─── Number word tables ──────────────────────────────────────────────
+const _ONES = {
+  zero:0, oh:0, nought:0, naught:0,
+  one:1, two:2, three:3, four:4, five:5,
+  six:6, seven:7, eight:8, nine:9,
+  ten:10, eleven:11, twelve:12, thirteen:13, fourteen:14,
+  fifteen:15, sixteen:16, seventeen:17, eighteen:18, nineteen:19
 };
+const _TENS = { twenty:20, thirty:30, forty:40, fifty:50, sixty:60, seventy:70, eighty:80, ninety:90 };
+// All recognised number words (for whitelist validation)
+const _ALL_NUM_WORDS = new Set([...Object.keys(_ONES), ...Object.keys(_TENS), 'hundred', 'and', 'a']);
 
-// Parse a spoken string to a dart score total, or null
+// Converts a word string like "eighty one", "one forty", "one hundred and forty" into a number.
+// Returns null if anything unrecognised is encountered.
+function wordsToNum(s) {
+  s = s.trim().toLowerCase().replace(/[–-]/g, ' ').replace(/\s+/g, ' ');
+
+  // Pure digit string (with optional spaces like "1 8 0")
+  const noSpace = s.replace(/\s+/g, '');
+  if (/^\d+$/.test(noSpace)) {
+    const n = parseInt(noSpace);
+    return (n >= 0 && n <= 180) ? n : null;
+  }
+
+  // ── Darts shorthand: "one X" where X is a tens word → 100 + tens ──
+  // e.g. "one forty" → 140, "one eighty" → 180, "one sixty" → 160
+  const oneShorthand = s.match(/^one\s+(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(\s+(one|two|three|four|five|six|seven|eight|nine))?$/);
+  if (oneShorthand) {
+    const tens = _TENS[oneShorthand[1]];
+    const ones = oneShorthand[3] ? (_ONES[oneShorthand[3]] || 0) : 0;
+    const r = 100 + tens + ones;
+    return (r <= 180) ? r : null;
+  }
+
+  // Reject anything containing a non-word-number token (e.g. "e1", "abc", "double")
+  const tokens = s.split(/\s+/).filter(Boolean);
+  for (const tok of tokens) {
+    if (/^\d+$/.test(tok)) continue; // pure digit ok
+    if (!_ALL_NUM_WORDS.has(tok)) return null; // unrecognised word → bail
+  }
+
+  // Parse: accumulate hundreds and tens+ones groups
+  let h = 0; // hundreds
+  let t2 = 0; // tens
+  let o = 0;  // ones
+
+  for (const tok of tokens) {
+    if (tok === 'and' || tok === 'a') continue;
+    if (/^\d+$/.test(tok)) {
+      const d = parseInt(tok);
+      if (d === 100) { h = (h || 1) * 100; }
+      else if (d >= 10) { t2 = d; }
+      else { o = d; }
+      continue;
+    }
+    if (tok === 'hundred') { h = (h || t2 || o || 1) * 100; t2 = 0; o = 0; }
+    else if (_TENS[tok] !== undefined) { t2 = _TENS[tok]; }
+    else if (_ONES[tok] !== undefined) { o = _ONES[tok]; }
+  }
+
+  const result = h + t2 + o;
+  return (result >= 0 && result <= 180) ? result : null;
+}
+
+// ─── Main voice score parser ─────────────────────────────────────────
+// Accepts: "140", "one forty", "double 20", "treble eighteen", "bull", "bust"
+// Rejects: "e1", "abc", anything with unrecognised non-number tokens
+// Parse a single dart token like "treble twenty", "double 16", "single 5",
+// "bull", "25". Returns the score value or null.
+function parseSingleDart(tok) {
+  tok = tok.trim().toLowerCase().replace(/\btriple\b/g, 'treble');
+
+  // Bull variants
+  if (/\b(bullseye|bulls?\s*eye|double\s*bull|inner\s*bull)\b/.test(tok)) return 50;
+  if (/\b(outer\s*bull|single\s*bull|twenty[\s-]five)\b/.test(tok)) return 25;
+  if (/\bbull\b/.test(tok) && !/\b(single)\b/.test(tok)) return 50;
+
+  // "miss" or "no score" → 0
+  if (/\b(miss|missed|no\s*score)\b/.test(tok)) return 0;
+
+  // Multiplier + number: "treble twenty", "double 16", "single five", "double top"
+  const mRe = /\b(single|double|treble)\s+(\w+)/;
+  const m = tok.match(mRe);
+  if (m) {
+    const mult = m[1] === 'single' ? 1 : m[1] === 'double' ? 2 : 3;
+    const word = m[2] === 'top' ? '20' : m[2];
+    let num = null;
+    if (/^\d+$/.test(word)) num = parseInt(word);
+    else if (_ONES[word] !== undefined) num = _ONES[word];
+    else if (_TENS[word] !== undefined) num = _TENS[word];
+    if (num !== null && num >= 1 && num <= 25) {
+      // Bull with double/treble
+      if (num === 25) return mult === 2 ? 50 : 25;
+      if (num <= 20) return num * mult;
+    }
+  }
+
+  // Bare number word or digit (treated as single dart, no multiplier)
+  const num = wordsToNum(tok);
+  if (num !== null && num >= 0 && num <= 20) return num;
+
+  return null;
+}
+
+// Try to parse as a three-dart sequence like:
+// "treble twenty single five double sixteen"
+// "twenty treble five single sixteen double"
+// Returns total score or null if it doesn't look like 3-dart input.
+function parseThreeDart(t) {
+  // Must contain at least one multiplier word to be treated as 3-dart input
+  if (!/\b(single|double|treble|triple)\b/.test(t)) return null;
+
+  t = t.replace(/\btriple\b/g, 'treble');
+
+  // Split on common separators / conjunctions
+  // Segment the string into dart chunks by splitting on "and", comma, then
+  // trying to identify contiguous (multiplier + number) or (number + multiplier) groups.
+  // Strategy: tokenise and greedily consume dart tokens.
+  const tokens = t.split(/\s+/);
+  const darts = [];
+  let i = 0;
+
+  while (i < tokens.length && darts.length < 3) {
+    const tok = tokens[i];
+
+    // Skip filler
+    if (/^(and|a|the|then|with|plus)$/.test(tok)) { i++; continue; }
+
+    // Bull shorthand
+    if (/^(bull|bullseye|bulls?eye)$/.test(tok)) { darts.push(50); i++; continue; }
+    if (/^(miss|missed)$/.test(tok)) { darts.push(0); i++; continue; }
+
+    // "double bull" / "treble bull"
+    if (/^(double|treble)$/.test(tok) && tokens[i+1] && /^(bull|bullseye)/.test(tokens[i+1])) {
+      darts.push(tok === 'double' ? 50 : 25);
+      i += 2; continue;
+    }
+
+    // multiplier + number
+    if (/^(single|double|treble)$/.test(tok) && tokens[i+1]) {
+      const mult = tok === 'single' ? 1 : tok === 'double' ? 2 : 3;
+      const word = tokens[i+1] === 'top' ? '20' : tokens[i+1];
+      let num = /^\d+$/.test(word) ? parseInt(word) : (_ONES[word] !== undefined ? _ONES[word] : (_TENS[word] !== undefined ? _TENS[word] : null));
+      if (num !== null && num >= 1 && num <= 20) {
+        darts.push(num * mult); i += 2; continue;
+      }
+    }
+
+    // number + multiplier (reversed order, e.g. "twenty treble")
+    if (i + 1 < tokens.length && /^(single|double|treble)$/.test(tokens[i+1])) {
+      const word = tok === 'top' ? '20' : tok;
+      let num = /^\d+$/.test(word) ? parseInt(word) : (_ONES[word] !== undefined ? _ONES[word] : (_TENS[word] !== undefined ? _TENS[word] : null));
+      if (num !== null && num >= 1 && num <= 20) {
+        const mult = tokens[i+1] === 'single' ? 1 : tokens[i+1] === 'double' ? 2 : 3;
+        darts.push(num * mult); i += 2; continue;
+      }
+    }
+
+    // Bare number (single dart, no multiplier)
+    const word = tok === 'top' ? '20' : tok;
+    let num = /^\d+$/.test(word) ? parseInt(word) : (_ONES[word] !== undefined ? _ONES[word] : null);
+    if (num !== null && num >= 0 && num <= 20) { darts.push(num); i++; continue; }
+
+    // Unknown token — skip
+    i++;
+  }
+
+  if (darts.length === 0) return null;
+  const total = darts.reduce((s, v) => s + v, 0);
+  return (total >= 0 && total <= 180) ? total : null;
+}
+
 function parseSpokenScore(raw) {
+  if (!raw) return null;
   let t = raw.toLowerCase().trim();
 
-  // Bust
-  if (/\bbust\b/.test(t)) return { action:'bust' };
+  // ── Bust ──
+  if (/\bbust\b/.test(t)) return { action: 'bust' };
 
-  // Normalise triple → treble, and common mishearings
+  // ── Normalise ──
   t = t.replace(/\btriple\b/g, 'treble');
-  t = t.replace(/\bdouble bull\b/g, 'bullseye');
-  t = t.replace(/\btreble bull\b/g, 'bullseye');
 
-  // ── Multiplier mode: spoken "double X" or "treble X" ──
-  // Pattern: (double|treble) + (number)
-  const multMatch = t.match(/\b(double|treble)\s+((?:twenty|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)|\d+)/);
-  if (multMatch) {
-    const mult = multMatch[1] === 'double' ? 2 : 3;
-    const numWord = multMatch[2].trim();
-    let num = /^\d+$/.test(numWord) ? parseInt(numWord) : SPOKEN_NUMS[numWord];
-    if (num !== undefined && num >= 1 && num <= 20) {
-      const score = num * mult;
-      if (score <= 60) return { action:'score', score };
-    }
+  // ── Bull alone ──
+  if (/^(bull|bullseye|bulls?eye)$/.test(t)) return { action: 'score', score: 50 };
+
+  // ── Three-dart input (contains single/double/treble) ──
+  // Try this FIRST when multiplier words are present — it handles both
+  // single-dart ("treble twenty") and full 3-dart ("treble twenty single five double sixteen")
+  if (/\b(single|double|treble)\b/.test(t)) {
+    const threeDartTotal = parseThreeDart(t);
+    if (threeDartTotal !== null) return { action: 'score', score: threeDartTotal };
   }
 
-  // Bull / bullseye
-  if (/\b(bullseye|bull(?:'s[ -]eye)?)\b/.test(t)) return { action:'score', score: 50 };
-  if (/\b(outer bull|twenty[ -]five|25)\b/.test(t)) return { action:'score', score: 25 };
+  // ── Total score as words or digits ──
+  const clean = t
+    .replace(/\b(score|is|of|plus|point|points|uh|um|er|ah|right|ok|okay|so|i|got|scored|hit)\b/g, ' ')
+    .replace(/\s+/g, ' ').trim();
 
-  // ── Total score mode ──
-  // Check full-phrase totals first (longest match)
-  const sortedPhrases = Object.keys(SPOKEN_TOTALS).sort((a,b) => b.length - a.length);
-  for (const phrase of sortedPhrases) {
-    if (t.includes(phrase)) return { action:'score', score: SPOKEN_TOTALS[phrase] };
-  }
-
-  // Plain digits: "140", "1 4 0", "one forty"
-  // Try to extract a number 0–180 from the spoken text
-  const digitOnly = t.replace(/[^0-9 ]/g, ' ').trim();
-  const digits = digitOnly.match(/\d+/g);
-  if (digits) {
-    // Single number
-    if (digits.length === 1) {
-      const n = parseInt(digits[0]);
-      if (n >= 0 && n <= 180) return { action:'score', score: n };
-    }
-    // Sequence of single digits like "1 8 0" → concatenate
-    if (digits.every(d => d.length === 1)) {
-      const n = parseInt(digits.join(''));
-      if (n >= 0 && n <= 180) return { action:'score', score: n };
-    }
-    // Two numbers like "one" "forty" expressed separately — sum them if valid
-    if (digits.length === 2) {
-      const a = parseInt(digits[0]), b = parseInt(digits[1]);
-      if (a + b <= 180) return { action:'score', score: a + b };
-    }
-  }
-
-  // "twenty" → 20, "sixty" → 60 etc — bare tens word
-  for (const [word, val] of Object.entries(SPOKEN_NUMS)) {
-    // Only accept clean matches of tens/teens (avoid single-digit words like "one", "two" as noise)
-    if (val >= 10 && val <= 180) {
-      const re = new RegExp('^' + word + '$');
-      if (re.test(t.trim())) return { action:'score', score: val };
-    }
-  }
+  const n = wordsToNum(clean);
+  if (n !== null) return { action: 'score', score: n };
 
   return null;
 }
@@ -2235,6 +2405,7 @@ function processThrow(score, bust, fromVoice) {
   const remaining = currentLeg.score - score;
 
   if (bust || remaining < 0 || (remaining === 1 && currentLeg.outMode === 'double')) {
+    currentLeg.throws.push({ score, remaining: currentLeg.score, bust: true });
     addThrowRow(score, currentLeg.score, true, false, fromVoice);
     toast('BUST — score unchanged');
     updateScoreDisplays(currentLeg.score);
@@ -2347,7 +2518,8 @@ function restoreInput(numpad, submitArea) {
 
 function addThrowRow(score, remaining, bust, checkout, fromVoice) {
   const hist = document.getElementById('throw-history');
-  const idx = currentLeg.throws.length + 1;
+  const throwIdx = currentLeg.throws.length - 1; // 0-based index (throw already pushed before addThrowRow)
+  const displayIdx = throwIdx + 1;
   const isTon = score >= 100;
   let badge = '';
   if (bust) badge = '<span class="throw-badge bust">BUST</span>';
@@ -2355,9 +2527,13 @@ function addThrowRow(score, remaining, bust, checkout, fromVoice) {
   else if (isTon) badge = '<span class="throw-badge ton">TON</span>';
   if (fromVoice) badge += '<span class="throw-badge voice">🎙</span>';
 
+  // Edit button — hidden unless hovering; not shown on checkout rows
+  const editBtn = checkout ? '' : `<button class="throw-edit-btn" onclick="openEditThrow(${throwIdx}, this)" title="Edit this score">EDIT</button>`;
+
   const row = document.createElement('div');
-  row.className = `throw-row ${bust?'bust':''} ${checkout?'checkout':''}`;
-  row.innerHTML = `<span class="throw-num">${idx}</span><span class="throw-score">${score}</span><span class="throw-remaining">${bust?'—':remaining+' left'}</span>${badge}`;
+  row.className = `throw-row ${bust?'bust':''} ${checkout?'checkout':''}`.trim();
+  row.dataset.throwIdx = throwIdx;
+  row.innerHTML = `<span class="throw-num">${displayIdx}</span><span class="throw-score">${score}</span><span class="throw-remaining">${bust?'—':remaining+' left'}</span>${badge}${editBtn}`;
   hist.insertBefore(row, hist.firstChild);
 }
 
@@ -4628,6 +4804,110 @@ function updateScoreDisplays(yourScore) {
 // ═══════════════════════════════════════════════════
 //  HISTORY PAGE
 // ═══════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════
+//  THROW EDITING
+// ═══════════════════════════════════════════════════
+let _editThrowIdx = null; // index into currentLeg.throws[] being edited
+
+function openEditThrow(idx, btn) {
+  const throw_ = currentLeg.throws[idx];
+  if (!throw_) return;
+  _editThrowIdx = idx;
+  const roundNum = idx + 1;
+  document.getElementById('edit-throw-was').textContent = throw_.bust ? throw_.score + ' (BUST)' : throw_.score;
+  document.getElementById('edit-throw-sub').innerHTML =
+    'Round ' + roundNum + ' &mdash; was <strong>' + (throw_.bust ? throw_.score + ' (BUST)' : throw_.score) + '</strong>. Enter correct score (0–180):';
+  const input = document.getElementById('edit-throw-input');
+  input.value = throw_.score;
+  document.getElementById('edit-throw-modal').style.display = 'flex';
+  setTimeout(() => { input.select(); }, 50);
+}
+
+function closeEditThrow() {
+  document.getElementById('edit-throw-modal').style.display = 'none';
+  _editThrowIdx = null;
+}
+
+function confirmEditThrow() {
+  if (_editThrowIdx === null) return;
+  const input = document.getElementById('edit-throw-input');
+  const newScore = parseInt(input.value);
+  if (isNaN(newScore) || newScore < 0 || newScore > 180) {
+    toast('Enter a valid score (0–180)', true);
+    input.focus();
+    return;
+  }
+
+  const idx = _editThrowIdx;
+  closeEditThrow();
+
+  // Replay the leg from scratch using the edited throws array
+  // Build a fresh throws list with the corrected entry
+  const oldThrows = currentLeg.throws.slice();
+  oldThrows[idx] = { ...oldThrows[idx], score: newScore };
+
+  // Recalculate the leg state by replaying all throws
+  let runningScore = currentLeg.startScore;
+  const newThrows = [];
+
+  for (let i = 0; i < oldThrows.length; i++) {
+    const t = oldThrows[i];
+    const remaining = runningScore - t.score;
+    const isBust = remaining < 0 || (remaining === 1 && currentLeg.outMode === 'double');
+    const isCheckout = !isBust && remaining === 0;
+
+    if (isBust) {
+      newThrows.push({ score: t.score, remaining: runningScore, bust: true });
+      // runningScore unchanged on bust
+    } else if (isCheckout) {
+      newThrows.push({ score: t.score, remaining: 0, bust: false, checkout: true });
+      runningScore = 0;
+      break;
+    } else {
+      newThrows.push({ score: t.score, remaining, bust: false });
+      runningScore = remaining;
+    }
+  }
+
+  // Recalculate leg totals
+  const totalDarts = newThrows.length * 3;
+  const checkouts = newThrows.filter(t => t.checkout).length;
+  const checkoutAttempts = newThrows.filter((t, i) => {
+    // A checkout attempt is when remaining was ≤ 170 before this throw
+    let rem = currentLeg.startScore;
+    for (let j = 0; j < i; j++) {
+      if (!newThrows[j].bust) rem = newThrows[j].remaining;
+    }
+    return rem <= 170 && !t.bust;
+  }).length;
+
+  // Update leg state
+  currentLeg.throws = newThrows;
+  currentLeg.totalDarts = totalDarts;
+  currentLeg.score = runningScore;
+  currentLeg.round = newThrows.length + 1;
+  currentLeg.checkouts = checkouts;
+  currentLeg.checkoutAttempts = Math.max(checkoutAttempts, checkouts);
+
+  // Rebuild throw history UI
+  const hist = document.getElementById('throw-history');
+  hist.innerHTML = '';
+  for (let i = 0; i < newThrows.length; i++) {
+    const t = newThrows[i];
+    addThrowRow(t.score, t.bust ? currentLeg.startScore : t.remaining, t.bust, !!t.checkout, false);
+  }
+
+  // Update score display and meta
+  updateScoreDisplays(runningScore);
+  updateMeta();
+  toast('Score corrected — leg recalculated');
+
+  // If the edited throw caused a checkout, complete the leg
+  if (runningScore === 0) {
+    setTimeout(() => completeLeg(), 600);
+  }
+}
 function renderHistoryPage() {
   const el = document.getElementById('history-list');
   const filter = document.getElementById('history-filter') ? document.getElementById('history-filter').value : 'all';
@@ -4946,5 +5226,19 @@ updateAttemptDots();
   });
 </script>
 
+
+<!-- ═══════════════════════ EDIT THROW MODAL ═══════════════════════ -->
+<div id="edit-throw-modal" class="edit-confirm-overlay" style="display:none">
+  <div class="edit-confirm-box">
+    <div class="edit-confirm-title">Edit Score</div>
+    <div class="edit-confirm-sub" id="edit-throw-sub">Round 1 · was <strong id="edit-throw-was">0</strong>. Enter the correct score (0–180):</div>
+    <input class="edit-confirm-input" id="edit-throw-input" type="number" min="0" max="180"
+      onkeydown="if(event.key==='Enter')confirmEditThrow(); if(event.key==='Escape')closeEditThrow();" />
+    <div class="edit-confirm-row">
+      <button class="edit-confirm-btn cancel" onclick="closeEditThrow()">CANCEL</button>
+      <button class="edit-confirm-btn confirm" onclick="confirmEditThrow()">CONFIRM</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
