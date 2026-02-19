@@ -506,11 +506,24 @@
   @keyframes toastOut { to { opacity:0; transform: translateY(10px); } }
 
   .session-end-btn {
-    width: 100%; background: none; border: 1px solid var(--dim); color: var(--dim);
-    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px;
-    padding: 10px; cursor: pointer; text-transform: uppercase; transition: all 0.15s; margin-top: 16px;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(232,255,58,0.12), rgba(232,255,58,0.06));
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    padding: 14px 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    margin-top: 20px;
+    box-shadow: 0 0 16px rgba(232,255,58,0.08), inset 0 0 20px rgba(232,255,58,0.03);
   }
-  .session-end-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .session-end-btn:hover {
+    background: linear-gradient(135deg, rgba(232,255,58,0.22), rgba(232,255,58,0.12));
+    box-shadow: 0 0 24px rgba(232,255,58,0.2), inset 0 0 20px rgba(232,255,58,0.06);
+  }
   .leg-counter { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: 1px; }
 
   .weak-spots { display: flex; flex-direction: column; gap: 8px; }
@@ -521,7 +534,7 @@
   .weak-spot-pct { color: var(--muted); width: 40px; text-align: right; }
   .weak-spot-tip { font-size: 10px; color: var(--muted); margin-top: 3px; }
 
-  .board-container { display: flex; flex-direction: column; align-items: center; }
+  .board-container { display: flex; flex-direction: column; align-items: flex-start; overflow: visible; }
 
   /* voice help tooltip */
   .voice-help {
@@ -619,25 +632,33 @@
     color: var(--muted);
   }
   .drill-voice-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 6px 12px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
+    background: rgba(232,255,58,0.06);
+    border: 1.5px solid rgba(232,255,58,0.35);
+    color: var(--accent);
+    padding: 8px 14px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     transition: all 0.15s;
-    letter-spacing: 1px;
     white-space: nowrap;
+    width: 100%;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(232,255,58,0.06);
   }
-  .drill-voice-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .drill-voice-btn:hover {
+    background: rgba(232,255,58,0.12);
+    border-color: var(--accent);
+    box-shadow: 0 0 16px rgba(232,255,58,0.14);
+  }
   .drill-voice-btn.listening {
     border-color: var(--accent2);
     color: var(--accent2);
-    background: rgba(255,77,77,0.1);
+    background: rgba(255,77,77,0.12);
+    box-shadow: 0 0 16px rgba(255,77,77,0.15);
     animation: voicePulse 1s infinite;
   }
   .drill-transcript {
@@ -1179,12 +1200,12 @@
   <div class="logo">Bullboard <span>// PRACTICE</span></div>
 
   <nav id="main-nav">
-    <button class="active" onclick="showPage('practice',this);closeMenu()">Practice</button>
+    <button onclick="showPage('practice',this);closeMenu()">Practice</button>
     <button onclick="showPage('drill',this);closeMenu()">Drills</button>
     <button onclick="showPage('stats',this);closeMenu()">Stats</button>
     <button onclick="showPage('analysis',this);closeMenu()">Analysis</button>
     <button onclick="showPage('history',this);closeMenu()">History</button>
-    <button onclick="showPage('home',this);closeMenu()">Home</button>
+    <button class="active" onclick="showPage('home',this);closeMenu()">Home</button>
   </nav>
 
   <div id="auth-container" style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
@@ -1202,7 +1223,7 @@
   <p id="userStatus" style="font-family:DM Mono,monospace;font-size:11px;color:var(--muted);position:absolute;right:20px;bottom:-20px;pointer-events:none;">Not signed in.</p>
 </header>
 <!-- ═══════════════════ PRACTICE PAGE ═══════════════════ -->
-<div id="page-practice" class="page active">
+<div id="page-practice" class="page">
   <div class="session-setup">
     <select class="setup-select" id="game-mode" onchange="onGameModeChange()">
       <option value="501">501</option>
@@ -1518,23 +1539,25 @@
 
 <!-- ═══════════════════ ANALYSIS PAGE ═══════════════════ -->
 <div id="page-analysis" class="page">
-  <div class="two-col" style="margin-bottom:24px;">
-    <div class="panel">
-      <div class="panel-title">Target Heat Map</div>
-      <div class="board-container">
-        <canvas id="heatmap-canvas" style="display:block;max-width:100%;"></canvas>
-        <div style="font-family:DM Mono,monospace;font-size:10px;color:var(--muted);margin-top:10px;letter-spacing:1px;text-align:center;">DRILL HIT RATE — BRIGHTER = BETTER</div>
-        <div class="toggle-group g3" style="margin-top:10px;width:260px;" id="heatmap-bed-toggle">
-          <button class="toggle-btn sel-single" onclick="selectHeatmapBed('single',this)">Single</button>
-          <button class="toggle-btn" onclick="selectHeatmapBed('double',this)">Double</button>
-          <button class="toggle-btn" onclick="selectHeatmapBed('treble',this)">Treble</button>
+  <div class="panel" style="margin-bottom:24px;">
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;">
+      <div>
+        <div class="panel-title">Target Heat Map</div>
+        <div style="margin-bottom:10px;">
+          <div class="toggle-group g3" style="width:240px;" id="heatmap-bed-toggle">
+            <button class="toggle-btn sel-single" onclick="selectHeatmapBed('single',this)">Single</button>
+            <button class="toggle-btn" onclick="selectHeatmapBed('double',this)">Double</button>
+            <button class="toggle-btn" onclick="selectHeatmapBed('treble',this)">Treble</button>
+          </div>
         </div>
+        <canvas id="heatmap-canvas" style="display:block;"></canvas>
+        <div style="font-family:DM Mono,monospace;font-size:9px;color:var(--muted);margin-top:8px;letter-spacing:1px;text-align:center;">DRILL HIT RATE — BRIGHTER = BETTER</div>
       </div>
-    </div>
-    <div class="panel">
-      <div class="panel-title">Weak Spots</div>
-      <div class="weak-spots" id="weak-spots-container">
-        <div style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);text-align:center;padding:20px;">Log 5+ throws per target to see weak spots.</div>
+      <div>
+        <div class="panel-title">Weak Spots</div>
+        <div class="weak-spots" id="weak-spots-container">
+          <div style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);text-align:center;padding:20px;">Log 5+ throws per target to see weak spots.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1562,7 +1585,7 @@
 </div>
 
 <!-- ═══════════════════ SOCIAL PAGE ═══════════════════ -->
-<div id="page-home" class="page">
+<div id="page-home" class="page active">
 
   <!-- SIGN-IN GATE (shown when logged out) -->
   <div id="social-gate" class="social-gate hidden">
