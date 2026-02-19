@@ -288,9 +288,21 @@
 
   /* ── DRILL PAGE LAYOUT ── */
   .drill-page-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .drill-controls-row {
     display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: 24px;
+    grid-template-columns: 220px 220px 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .drill-controls-row .drill-section { }
+  .drill-bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
   }
 
   /* ── DRILL TRACKER ── */
@@ -826,104 +838,91 @@
   .hidden { display: none !important; }
 
   /* ── CRICKET ── */
-  .cricket-board {
+  /* ── CRICKET SCOREBOARD — Vertical layout ── */
+  .cricket-layout {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 0;
-    background: var(--border);
-    border: 1px solid var(--border);
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
     margin-bottom: 16px;
-    font-family: 'DM Mono', monospace;
   }
-  .cricket-col { background: var(--surface); }
+  .cricket-board {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-family: 'DM Mono', monospace;
+    overflow: hidden;
+  }
   .cricket-header {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 0;
+    grid-template-columns: 1fr 60px 1fr;
     background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 0;
+    border-bottom: 2px solid var(--border);
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 14px;
-    letter-spacing: 2px;
+    font-size: 15px;
+    letter-spacing: 3px;
   }
-  .cricket-header .ch-player { text-align: center; padding: 0 12px; }
-  .cricket-header .ch-player.you { color: var(--accent); }
-  .cricket-header .ch-player.bot { color: var(--accent4); }
-  .cricket-header .ch-numbers { text-align: center; color: var(--muted); font-size: 11px; padding: 0 8px; display: flex; align-items: center; }
+  .ch-player {
+    text-align: center;
+    padding: 12px 8px;
+    line-height: 1;
+  }
+  .ch-player.you { color: var(--accent); }
+  .ch-player.bot { color: var(--accent4); }
+  .ch-player .ch-score {
+    font-size: 28px;
+    display: block;
+    margin-top: 4px;
+  }
+  .ch-player.you .ch-score { color: var(--accent); }
+  .ch-player.bot .ch-score { color: var(--accent4); }
+  .ch-middle-header {
+    display: flex; align-items: center; justify-content: center;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    color: var(--muted); font-size: 9px; letter-spacing: 2px;
+    text-align: center; padding: 4px;
+  }
   .cricket-row {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: 1fr 60px 1fr;
     border-bottom: 1px solid var(--border);
-    gap: 0;
-    cursor: pointer;
+    min-height: 52px;
     transition: background 0.1s;
-    min-height: 48px;
   }
   .cricket-row:last-child { border-bottom: none; }
-  .cricket-row:hover { background: rgba(255,255,255,0.02); }
-  .cricket-row.fully-closed { opacity: 0.35; }
+  .cricket-row.fully-closed { background: rgba(0,0,0,0.25); }
   .cricket-marks {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 64px;
-    padding: 8px 12px;
-    font-size: 22px;
-    font-weight: bold;
-    line-height: 1;
+    padding: 6px 8px;
   }
-  .cricket-marks.you { color: var(--accent); }
-  .cricket-marks.bot { color: var(--accent4); }
   .cricket-marks svg { display: block; }
   .cricket-num {
-    background: var(--surface2);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
+    font-size: 24px;
     letter-spacing: 1px;
     color: var(--text);
-    min-width: 52px;
     border-left: 1px solid var(--border);
     border-right: 1px solid var(--border);
-    padding: 0 8px;
-    text-align: center;
     position: relative;
+    user-select: none;
   }
-  .cricket-num.closed-both::after {
+  .cricket-num.closed-both {
+    color: var(--dim);
+  }
+  .cricket-num.closed-both::before {
     content: '';
     position: absolute;
-    left: 6px; right: 6px;
+    left: 4px; right: 4px;
     top: 50%;
-    height: 2px;
-    background: var(--muted);
+    height: 1.5px;
+    background: var(--dim);
   }
-  .cricket-num.owned-you { color: var(--accent); }
-  .cricket-num.owned-bot { color: var(--accent4); }
-  .cricket-score-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    background: var(--surface2);
-    border-top: 1px solid var(--border);
-    padding: 12px 0;
-    text-align: center;
-  }
-  .cricket-score-val {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px;
-    line-height: 1;
-  }
-  .cricket-score-val.you { color: var(--accent); }
-  .cricket-score-val.bot { color: var(--accent4); }
-  .cricket-score-label {
-    font-size: 9px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-top: 2px;
-  }
+  .cricket-num.owned-you { color: var(--accent); text-shadow: 0 0 10px rgba(232,255,58,0.3); }
+  .cricket-num.owned-bot { color: var(--accent4); text-shadow: 0 0 10px rgba(167,139,250,0.3); }
   /* Cricket dart input - multiplier buttons */
   .cricket-input-area { margin-bottom: 12px; }
   .cricket-mult-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 8px; }
@@ -1260,23 +1259,46 @@
   <!-- Cricket UI (hidden for 01 games) -->
   <div id="cricket-ui" style="display:none">
     <div id="bot-turn-overlay" class="bot-turn-overlay"></div>
-    <div class="cricket-board" id="cricket-board">
-      <!-- rendered by renderCricketBoard() -->
+
+    <!-- Turn + darts counter bar -->
+    <div class="cricket-turn-info" id="cricket-turn-info">
+      <span id="cricket-whose-turn">YOUR TURN</span> &nbsp;·&nbsp;
+      Darts: <span class="dart-pips" id="cricket-dart-pips">● ● ●</span>
     </div>
-    <div class="cricket-input-area">
-      <div class="cricket-turn-info" id="cricket-turn-info">
-        <span id="cricket-whose-turn">YOUR TURN</span> &nbsp;·&nbsp;
-        Darts: <span class="dart-pips" id="cricket-dart-pips">● ● ●</span>
+
+    <!-- Scoreboard + input side-by-side -->
+    <div class="cricket-layout">
+      <!-- LEFT: Scoreboard -->
+      <div class="cricket-board" id="cricket-board">
+        <!-- rendered by renderCricketBoard() -->
       </div>
-      <div class="cricket-mult-row">
-        <button class="cricket-mult-btn active" id="cm-single" onclick="setCricketMult(1,this)">Single</button>
-        <button class="cricket-mult-btn" id="cm-double" onclick="setCricketMult(2,this)">Double</button>
-        <button class="cricket-mult-btn" id="cm-treble" onclick="setCricketMult(3,this)">Treble</button>
+
+      <!-- RIGHT: Input -->
+      <div class="cricket-input-area">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Multiplier</div>
+        <div class="cricket-mult-row">
+          <button class="cricket-mult-btn active" id="cm-single" onclick="setCricketMult(1,this)">Single</button>
+          <button class="cricket-mult-btn" id="cm-double" onclick="setCricketMult(2,this)">Double</button>
+          <button class="cricket-mult-btn" id="cm-treble" onclick="setCricketMult(3,this)">Treble</button>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:10px 0 6px;">Target</div>
+        <div class="cricket-num-btns" id="cricket-num-btns">
+          <!-- rendered dynamically -->
+        </div>
+        <button class="cricket-miss-btn" style="margin-top:8px" onclick="cricketMiss()">Miss (no score)</button>
+
+        <!-- Cricket Voice Input -->
+        <div style="margin-top:12px;">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Voice</div>
+          <button class="voice-btn-hero" id="cricket-voice-btn" onclick="toggleCricketVoice()"
+            style="width:100%;min-height:54px;flex-direction:row;gap:10px;border:1px solid rgba(232,255,58,0.3);"
+            title="Say: Single 20 / Double 18 / Treble 20 / Bull / Miss">
+            <span class="mic-icon" style="font-size:22px">🎙</span>
+            <span class="mic-label">Say: Single 20 · Double 18 · Treble 20</span>
+          </button>
+          <div id="cricket-voice-transcript" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);min-height:18px;margin-top:4px;text-align:center;"></div>
+        </div>
       </div>
-      <div class="cricket-num-btns" id="cricket-num-btns">
-        <!-- rendered dynamically -->
-      </div>
-      <button class="cricket-miss-btn" style="margin-top:8px" onclick="cricketMiss()">Miss (no score)</button>
     </div>
   </div>
 
@@ -1357,53 +1379,57 @@
 <div id="page-drill" class="page">
   <div class="drill-page-grid">
 
-    <!-- LEFT: CONTROLS -->
+    <!-- TOP: CONTROLS ROW (full width) -->
     <div class="panel">
       <div class="panel-title">Drill Tracker</div>
+      <div class="drill-controls-row">
 
-      <div class="dsec">Bed Type</div>
-      <div class="toggle-group g3" id="bed-toggle">
-        <button class="toggle-btn sel-single" onclick="selectBedType('single',this)">Single</button>
-        <button class="toggle-btn" onclick="selectBedType('double',this)">Double</button>
-        <button class="toggle-btn" onclick="selectBedType('treble',this)">Treble</button>
+        <div class="drill-section">
+          <div class="dsec" style="margin-top:0">Bed Type</div>
+          <div class="toggle-group g3" id="bed-toggle">
+            <button class="toggle-btn sel-single" onclick="selectBedType('single',this)">Single</button>
+            <button class="toggle-btn" onclick="selectBedType('double',this)">Double</button>
+            <button class="toggle-btn" onclick="selectBedType('treble',this)">Treble</button>
+          </div>
+          <div class="dsec">Darts Per Attempt</div>
+          <div class="toggle-group g2" id="darts-toggle">
+            <button class="toggle-btn" onclick="selectDartCount(1,this)">1 Dart</button>
+            <button class="toggle-btn sel-darts" onclick="selectDartCount(3,this)">3 Darts</button>
+          </div>
+        </div>
+
+        <div class="drill-section">
+          <div class="dsec" style="margin-top:0">Miss Direction</div>
+          <div class="miss-grid">
+            <button class="miss-btn" onclick="selectMiss('left',this)">← Left</button>
+            <button class="miss-btn" onclick="selectMiss('high',this)">↑ High</button>
+            <button class="miss-btn" onclick="selectMiss('low',this)">↓ Low</button>
+            <button class="miss-btn" onclick="selectMiss('right',this)">→ Right</button>
+          </div>
+          <div class="dsec">Voice</div>
+          <div class="drill-voice-bar">
+            <button class="drill-voice-btn" id="drill-voice-btn" onclick="toggleDrillVoice()">🎙 <span id="drill-voice-btn-label">Tap to speak</span></button>
+            <div class="drill-transcript" id="drill-transcript">Say "Hit" or "Miss left"</div>
+          </div>
+        </div>
+
+        <div class="drill-section" style="grid-column:span 3">
+          <div class="dsec" style="margin-top:0">Target</div>
+          <div class="target-grid" id="target-grid" style="grid-template-columns:repeat(14,1fr)"></div>
+          <div class="attempt-label" id="attempt-label" style="text-align:left;margin-top:8px">Select a target to begin</div>
+          <div class="attempt-progress" id="attempt-progress"></div>
+          <div class="drill-action-btns" style="margin-top:12px">
+            <button class="drill-hit" onclick="logDrill('hit')">HIT ✓</button>
+            <button class="drill-miss" onclick="logDrill('miss')">MISS ✗</button>
+          </div>
+          <div class="drill-stats-panel" id="drill-stats-display" style="margin-top:10px">Select a target and start throwing.</div>
+        </div>
+
       </div>
-
-      <div class="dsec">Darts Per Attempt</div>
-      <div class="toggle-group g2" id="darts-toggle">
-        <button class="toggle-btn" onclick="selectDartCount(1,this)">1 Dart</button>
-        <button class="toggle-btn sel-darts" onclick="selectDartCount(3,this)">3 Darts</button>
-      </div>
-
-      <div class="dsec">Target</div>
-      <div class="target-grid" id="target-grid"></div>
-
-      <div class="attempt-label" id="attempt-label">Select a target to begin</div>
-      <div class="attempt-progress" id="attempt-progress"></div>
-
-      <div class="dsec">Miss Direction (optional)</div>
-      <div class="miss-grid">
-        <button class="miss-btn" onclick="selectMiss('left',this)">← Left</button>
-        <button class="miss-btn" onclick="selectMiss('high',this)">↑ High</button>
-        <button class="miss-btn" onclick="selectMiss('low',this)">↓ Low</button>
-        <button class="miss-btn" onclick="selectMiss('right',this)">→ Right</button>
-      </div>
-
-      <div class="dsec">Voice Input</div>
-      <div class="drill-voice-bar">
-        <button class="drill-voice-btn" id="drill-voice-btn" onclick="toggleDrillVoice()">🎙 <span id="drill-voice-btn-label">Tap to speak</span></button>
-        <div class="drill-transcript" id="drill-transcript">Say "Hit" or "Miss left / right / high / low"</div>
-      </div>
-
-      <div class="drill-action-btns">
-        <button class="drill-hit" onclick="logDrill('hit')">HIT ✓</button>
-        <button class="drill-miss" onclick="logDrill('miss')">MISS ✗</button>
-      </div>
-
-      <div class="drill-stats-panel" id="drill-stats-display">Select a target and start throwing.</div>
     </div>
 
-    <!-- RIGHT: SESSION SUMMARY -->
-    <div class="drill-history-grid">
+    <!-- BOTTOM: THIS SESSION + ALL-TIME -->
+    <div class="drill-bottom-row">
       <div class="panel">
         <div class="panel-title">This Session</div>
         <div id="drill-session-log" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);">No throws logged yet.</div>
@@ -1496,7 +1522,7 @@
     <div class="panel">
       <div class="panel-title">Target Heat Map</div>
       <div class="board-container">
-        <canvas id="heatmap-canvas" width="280" height="280"></canvas>
+        <canvas id="heatmap-canvas" style="display:block;max-width:100%;"></canvas>
         <div style="font-family:DM Mono,monospace;font-size:10px;color:var(--muted);margin-top:10px;letter-spacing:1px;text-align:center;">DRILL HIT RATE — BRIGHTER = BETTER</div>
         <div class="toggle-group g3" style="margin-top:10px;width:260px;" id="heatmap-bed-toggle">
           <button class="toggle-btn sel-single" onclick="selectHeatmapBed('single',this)">Single</button>
@@ -1971,6 +1997,17 @@ function showPage(name, btn) {
   if (name === 'analysis') renderAnalysis();
   if (name === 'drill') renderDrillPage();
   if (name === 'social') renderSocialPage();
+  // Update logo subtitle
+  const subtitles = {
+    practice: 'PRACTICE',
+    drill: 'DRILLS',
+    stats: 'STATS',
+    analysis: 'ANALYSIS',
+    history: 'HISTORY',
+    social: 'SOCIAL',
+  };
+  const sub = document.querySelector('.logo span');
+  if (sub) sub.textContent = '// ' + (subtitles[name] || name.toUpperCase());
 }
 
 // ═══════════════════════════════════════════════════
@@ -2668,55 +2705,136 @@ function selectHeatmapBed(type, btn) {
 }
 
 function renderHeatmap() {
-  const canvas=document.getElementById('heatmap-canvas');
-  const ctx=canvas.getContext('2d');
-  const W=280,H=280,cx=W/2,cy=H/2;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#0f0f0f'; ctx.fillRect(0,0,W,H);
+  const canvas = document.getElementById('heatmap-canvas');
+  const ctx = canvas.getContext('2d');
+  const DPR = window.devicePixelRatio || 1;
+  const SIZE = 320;
+  canvas.width = SIZE * DPR;
+  canvas.height = SIZE * DPR;
+  canvas.style.width = SIZE + 'px';
+  canvas.style.height = SIZE + 'px';
+  ctx.scale(DPR, DPR);
 
-  const seq=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
-  const r={bull:8,bull2:20,inner:80,triple1:90,outer:115,triple2:126,edge:130};
-  const ac=heatmapBedType==='double'?[58,255,184]:heatmapBedType==='treble'?[167,139,250]:[232,255,58];
+  const W = SIZE, H = SIZE, cx = W/2, cy = H/2;
 
-  seq.forEach((num,i)=>{
-    const sa=(i/20*2*Math.PI)-Math.PI/2-Math.PI/20;
-    const ea=sa+(2*Math.PI/20);
-    const d=state.drillData[heatmapBedType][String(num)];
-    const hr=(d&&d.attempts>0)?d.hits/d.attempts:0;
-    const hot=`rgba(${ac[0]},${ac[1]},${ac[2]},${hr*0.75})`;
+  // Board rings (proportional to actual dartboard)
+  const R = {
+    bull_inner: 7,    // double bull
+    bull_outer: 17,   // single bull
+    inner: 95,        // inner single
+    triple_in: 100,   // triple inner edge
+    triple_out: 114,  // triple outer edge
+    outer: 155,       // outer single
+    double_in: 161,   // double inner edge
+    double_out: 174,  // double outer edge
+  };
 
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r.edge,sa,ea); ctx.closePath();
-    ctx.fillStyle=i%2===0?'#181818':'#1e1e1e'; ctx.fill();
-    ctx.fillStyle=hot; ctx.fill();
+  const seq = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+  const TAU = Math.PI * 2;
+  const SLICE = TAU / 20;
+  const OFFSET = -Math.PI / 2 - SLICE / 2; // 20 at top
 
-    ctx.beginPath(); ctx.arc(cx,cy,r.triple2,sa,ea); ctx.arc(cx,cy,r.triple1,ea,sa,true); ctx.closePath();
-    ctx.fillStyle=i%2===0?'#2a1a1a':'#1a2a1a'; ctx.fill();
-    ctx.fillStyle=`rgba(${ac[0]},${ac[1]},${ac[2]},${hr})`; ctx.fill();
+  const ac = heatmapBedType === 'double' ? [58,255,184] : heatmapBedType === 'treble' ? [167,139,250] : [232,255,58];
 
-    const midA=sa+Math.PI/20;
-    const lx=cx+Math.cos(midA)*(r.edge+10), ly=cy+Math.sin(midA)*(r.edge+10);
-    ctx.fillStyle=hr>0?`rgba(${ac[0]},${ac[1]},${ac[2]},${0.4+hr*0.6})`:'#333';
-    ctx.font="bold 9px 'DM Mono'"; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(num,lx,ly);
+  // Background
+  ctx.fillStyle = '#0d0d0d';
+  ctx.fillRect(0, 0, W, H);
+
+  // Draw each segment
+  seq.forEach((num, i) => {
+    const sa = OFFSET + i * SLICE;
+    const ea = sa + SLICE;
+    const midA = sa + SLICE / 2;
+    const d = state.drillData[heatmapBedType][String(num)];
+    const hr = (d && d.attempts > 0) ? d.hits / d.attempts : -1; // -1 = no data
+    const hasData = hr >= 0;
+
+    // Base alternating segment colors (like real dartboard dark/light)
+    const baseLight = i % 2 === 0 ? '#1c1c1c' : '#161616';
+    const baseTriple = i % 2 === 0 ? '#1a0e0e' : '#0e1a0e';
+    const baseDouble = i % 2 === 0 ? '#1a0a0a' : '#0a1a0a';
+
+    // Heat color with glow
+    const alpha = hasData ? (0.15 + hr * 0.85) : 0;
+    const heatColor = `rgba(${ac[0]},${ac[1]},${ac[2]},${alpha})`;
+    const tripleAlpha = hasData ? (0.2 + hr * 0.8) : 0;
+    const tripleHeat = `rgba(${ac[0]},${ac[1]},${ac[2]},${tripleAlpha})`;
+    const doubleAlpha = hasData ? (0.25 + hr * 0.75) : 0;
+    const doubleHeat = `rgba(${ac[0]},${ac[1]},${ac[2]},${doubleAlpha})`;
+
+    function segment(r1, r2, fillA, fillB) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r2, sa, ea);
+      ctx.arc(cx, cy, r1, ea, sa, true);
+      ctx.closePath();
+      ctx.fillStyle = fillA; ctx.fill();
+      if (fillB) { ctx.fillStyle = fillB; ctx.fill(); }
+    }
+
+    // Outer single
+    segment(R.triple_out, R.double_in, baseLight, heatColor);
+    // Triple band
+    segment(R.triple_in, R.triple_out, baseTriple, tripleHeat);
+    // Inner single
+    segment(R.bull_outer, R.inner, baseLight, heatColor);
+    // Double band
+    segment(R.double_in, R.double_out, baseDouble, doubleHeat);
+
+    // Number labels outside the double ring
+    const labelR = R.double_out + 11;
+    const lx = cx + Math.cos(midA) * labelR;
+    const ly = cy + Math.sin(midA) * labelR;
+    const labelAlpha = hasData ? (0.5 + hr * 0.5) : 0.25;
+    ctx.fillStyle = `rgba(${hasData ? ac[0] : 200},${hasData ? ac[1] : 200},${hasData ? ac[2] : 200},${labelAlpha})`;
+    ctx.font = `bold ${hasData ? '11' : '9'}px DM Mono, monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(num), lx, ly);
   });
 
-  const bd=state.drillData[heatmapBedType]['Bull'];
-  const br=(bd&&bd.attempts>0)?bd.hits/bd.attempts:0;
-  ctx.beginPath(); ctx.arc(cx,cy,r.bull2,0,Math.PI*2); ctx.fillStyle='#2a4020'; ctx.fill();
-  ctx.fillStyle=`rgba(${ac[0]},${ac[1]},${ac[2]},${br*0.8})`; ctx.fill();
-  ctx.beginPath(); ctx.arc(cx,cy,r.bull,0,Math.PI*2); ctx.fillStyle='#402020'; ctx.fill();
-  ctx.fillStyle=`rgba(${ac[0]},${ac[1]},${ac[2]},${br})`; ctx.fill();
+  // Bull rings
+  const bd = state.drillData[heatmapBedType]['Bull'];
+  const br = (bd && bd.attempts > 0) ? bd.hits / bd.attempts : -1;
+  const bullAlpha = br >= 0 ? (0.2 + br * 0.8) : 0;
 
-  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=0.5;
-  seq.forEach((_,i)=>{
-    const a=(i/20*2*Math.PI)-Math.PI/2-Math.PI/20;
+  ctx.beginPath(); ctx.arc(cx, cy, R.bull_outer, 0, TAU);
+  ctx.fillStyle = '#1a180a'; ctx.fill();
+  ctx.fillStyle = `rgba(${ac[0]},${ac[1]},${ac[2]},${bullAlpha * 0.6})`; ctx.fill();
+
+  ctx.beginPath(); ctx.arc(cx, cy, R.bull_inner, 0, TAU);
+  ctx.fillStyle = '#2a0808'; ctx.fill();
+  ctx.fillStyle = `rgba(${ac[0]},${ac[1]},${ac[2]},${bullAlpha})`; ctx.fill();
+
+  // Wire lines
+  ctx.strokeStyle = 'rgba(80,80,80,0.6)';
+  ctx.lineWidth = 0.8;
+  seq.forEach((_, i) => {
+    const a = OFFSET + i * SLICE;
     ctx.beginPath();
-    ctx.moveTo(cx+Math.cos(a)*r.bull2,cy+Math.sin(a)*r.bull2);
-    ctx.lineTo(cx+Math.cos(a)*r.edge,cy+Math.sin(a)*r.edge); ctx.stroke();
+    ctx.moveTo(cx + Math.cos(a) * R.bull_outer, cy + Math.sin(a) * R.bull_outer);
+    ctx.lineTo(cx + Math.cos(a) * R.double_out, cy + Math.sin(a) * R.double_out);
+    ctx.stroke();
   });
-  [r.inner,r.triple1,r.triple2,r.edge].forEach(rad=>{
-    ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.stroke();
+  [R.bull_outer, R.inner, R.triple_in, R.triple_out, R.double_in, R.double_out].forEach(rad => {
+    ctx.beginPath(); ctx.arc(cx, cy, rad, 0, TAU);
+    ctx.stroke();
   });
+
+  // Legend bar (bottom of canvas)
+  const lgW = 160, lgH = 6, lgX = cx - lgW/2, lgY = H - 14;
+  const grad = ctx.createLinearGradient(lgX, 0, lgX + lgW, 0);
+  grad.addColorStop(0, `rgba(${ac[0]},${ac[1]},${ac[2]},0.1)`);
+  grad.addColorStop(1, `rgba(${ac[0]},${ac[1]},${ac[2]},1)`);
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(lgX - 2, lgY - 2, lgW + 34, lgH + 6);
+  ctx.fillStyle = grad;
+  ctx.fillRect(lgX, lgY, lgW, lgH);
+  ctx.fillStyle = 'rgba(200,200,200,0.4)';
+  ctx.font = '8px DM Mono, monospace';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText('0%', lgX - 14, lgY + lgH/2);
+  ctx.textAlign = 'right';
+  ctx.fillText('100%', lgX + lgW + 28, lgY + lgH/2);
 }
 
 function renderWeakSpots() {
@@ -3489,12 +3607,14 @@ function renderCricketBoard() {
     ? (BOT_PROFILES[cricketState.botLevel] ? BOT_PROFILES[cricketState.botLevel].name : 'BOT')
     : 'BOT';
 
+  // Header with player names AND running scores
   var html = '<div class="cricket-header">'
-    + '<div class="ch-player you">YOU</div>'
-    + '<div class="ch-numbers">NUMBER</div>'
-    + '<div class="ch-player bot">' + botName + '</div>'
+    + '<div class="ch-player you">YOU<span class="ch-score">' + cricketState.you.score + '</span></div>'
+    + '<div class="ch-middle-header">NUM</div>'
+    + '<div class="ch-player bot">' + botName + '<span class="ch-score">' + cricketState.bot.score + '</span></div>'
     + '</div>';
 
+  // One row per number, marks on each side, number in centre
   CRICKET_NUMS.forEach(function(n) {
     var key = String(n);
     var yMarks = cricketState.you.marks[key] || 0;
@@ -3506,19 +3626,14 @@ function renderCricketBoard() {
       + (yMarks >= 3 && !bothClosed ? ' owned-you' : '')
       + (bMarks >= 3 && !bothClosed ? ' owned-bot' : '');
     var rowClass = 'cricket-row' + (bothClosed ? ' fully-closed' : '');
-    html += '<div class="' + rowClass + '" onclick="cricketNumClick(\'' + key + '\')">'
-      + '<div class="cricket-marks you">' + markSvg(Math.min(yMarks, 3), '#e8ff3a') + '</div>'
+    html += '<div class="' + rowClass + '">'
+      + '<div class="cricket-marks you" onclick="cricketNumClick(\'' + key + '\')" style="cursor:pointer">'
+      + markSvg(Math.min(yMarks, 3), '#e8ff3a') + '</div>'
       + '<div class="' + numClass + '">' + numLabel + '</div>'
-      + '<div class="cricket-marks bot">' + markSvg(Math.min(bMarks, 3), '#a78bfa') + '</div>'
+      + '<div class="cricket-marks bot" style="justify-content:flex-end">'
+      + markSvg(Math.min(bMarks, 3), '#a78bfa') + '</div>'
       + '</div>';
   });
-
-  // Score row
-  html += '<div class="cricket-score-row">'
-    + '<div><div class="cricket-score-val you">' + cricketState.you.score + '</div><div class="cricket-score-label">YOUR PTS</div></div>'
-    + '<div style="display:flex;align-items:center;padding:0 16px;font-family:\'DM Mono\',monospace;font-size:10px;color:var(--muted);">VS</div>'
-    + '<div><div class="cricket-score-val bot">' + cricketState.bot.score + '</div><div class="cricket-score-label">' + botName + ' PTS</div></div>'
-    + '</div>';
 
   board.innerHTML = html;
 }
@@ -3803,6 +3918,164 @@ function saveCricketLeg(youWon) {
   state.cricketLegs.push(leg);
   saveState();
   cricketState.legs++;
+}
+
+// ═══════════════════════════════════════════════════
+//  CRICKET VOICE INPUT
+// ═══════════════════════════════════════════════════
+var cricketRecognition = null;
+var cricketVoiceActive = false;
+
+function initCricketVoice() {
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return false;
+  cricketRecognition = new SpeechRecognition();
+  cricketRecognition.lang = 'en-GB';
+  cricketRecognition.interimResults = true;
+  cricketRecognition.continuous = false;
+  cricketRecognition.maxAlternatives = 4;
+
+  cricketRecognition.onstart = function() {
+    cricketVoiceActive = true;
+    var btn = document.getElementById('cricket-voice-btn');
+    if (btn) btn.classList.add('listening');
+    setCricketTranscript('Listening…', '');
+  };
+
+  cricketRecognition.onresult = function(e) {
+    var results = e.results[e.results.length - 1];
+    var interim = results[0].transcript;
+    setCricketTranscript(interim, '');
+
+    if (results.isFinal) {
+      var parsed = null;
+      for (var i = 0; i < results.length; i++) {
+        parsed = parseCricketVoice(results[i].transcript);
+        if (parsed) break;
+      }
+      if (parsed) {
+        setCricketTranscript('"' + results[0].transcript + '" → ' + parsed.label, 'heard');
+        applyCricketVoiceThrow(parsed);
+        // Restart for next dart if more to throw
+        if (cricketState.yourTurn && cricketState.dartsLeft > 0) {
+          setTimeout(function() {
+            try { cricketRecognition.start(); } catch(e) {}
+          }, 400);
+        }
+      } else {
+        setCricketTranscript('Didn\'t catch that — say "Single 20" etc.', '');
+      }
+    }
+  };
+
+  cricketRecognition.onerror = function(e) {
+    cricketVoiceActive = false;
+    var btn = document.getElementById('cricket-voice-btn');
+    if (btn) btn.classList.remove('listening');
+    if (e.error !== 'no-speech' && e.error !== 'aborted') {
+      setCricketTranscript('Mic error — check permissions', '');
+    }
+  };
+
+  cricketRecognition.onend = function() {
+    cricketVoiceActive = false;
+    var btn = document.getElementById('cricket-voice-btn');
+    if (btn) btn.classList.remove('listening');
+  };
+
+  return true;
+}
+
+function toggleCricketVoice() {
+  if (!cricketRecognition) {
+    var ok = initCricketVoice();
+    if (!ok) { toast('Voice not supported in this browser', true); return; }
+  }
+  if (cricketVoiceActive) {
+    cricketRecognition.stop();
+    return;
+  }
+  try { cricketRecognition.start(); }
+  catch(e) {
+    cricketRecognition = null;
+    initCricketVoice();
+    try { cricketRecognition.start(); } catch(e2) { toast('Voice error — try again', true); }
+  }
+}
+
+function setCricketTranscript(text, cls) {
+  var el = document.getElementById('cricket-voice-transcript');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = cls === 'heard' ? 'var(--accent3)' : 'var(--muted)';
+}
+
+function parseCricketVoice(raw) {
+  var text = raw.toLowerCase().trim();
+  // Normalise triple→treble
+  text = text.replace(/\btriple\b/g, 'treble');
+
+  // Miss / no score
+  if (/\b(miss|missed|no score|out)\b/.test(text)) {
+    return { type: 'miss', label: 'MISS' };
+  }
+
+  // Bull / bullseye variants
+  var bullDouble = /\b(double bull|inner bull|bullseye double|db|50)\b/.test(text);
+  var bullSingle = /\b(bull|bullseye|outer bull|25|single bull)\b/.test(text);
+  if (bullDouble) return { type: 'hit', key: 'B', mult: 2, label: 'D-Bull' };
+  if (bullSingle) return { type: 'hit', key: 'B', mult: 1, label: 'S-Bull' };
+
+  // Number words → digits
+  var wordMap = {
+    'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,'twenty':20,
+    'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,'twenty':20
+  };
+  Object.keys(wordMap).forEach(function(w) {
+    text = text.replace(new RegExp('\\b' + w + '\\b', 'g'), String(wordMap[w]));
+  });
+
+  // Match: (single|double|treble) + (15-20)
+  // or: (15-20) + (single|double|treble)
+  var multMap = { single: 1, double: 2, treble: 3 };
+  var patterns = [
+    /\b(single|double|treble)\s+(1[5-9]|20)\b/,
+    /\b(1[5-9]|20)\s+(single|double|treble)\b/,
+    /\b(single|double|treble)\s+(1[5-9]|20)\b/,
+  ];
+
+  // Try pattern: mult then num
+  var m = text.match(/\b(single|double|treble)\s+(1[5-9]|20)\b/);
+  if (m) {
+    var mult = multMap[m[1]];
+    var num = parseInt(m[2]);
+    return { type: 'hit', key: String(num), mult: mult, label: m[1].charAt(0).toUpperCase() + ' ' + num };
+  }
+  // Try pattern: num then mult
+  m = text.match(/\b(1[5-9]|20)\s+(single|double|treble)\b/);
+  if (m) {
+    var num = parseInt(m[1]);
+    var mult = multMap[m[2]];
+    return { type: 'hit', key: String(num), mult: mult, label: m[2].charAt(0).toUpperCase() + ' ' + num };
+  }
+  // Just a number with no multiplier? Treat as single
+  m = text.match(/\b(1[5-9]|20)\b/);
+  if (m) {
+    return { type: 'hit', key: m[1], mult: 1, label: 'S ' + m[1] };
+  }
+
+  return null;
+}
+
+function applyCricketVoiceThrow(parsed) {
+  if (!cricketState.yourTurn) return;
+  if (parsed.type === 'miss') {
+    cricketMiss();
+  } else if (parsed.type === 'hit') {
+    // Check number is valid for cricket
+    if (!CRICKET_NUMS.map(String).includes(parsed.key)) return;
+    applyMarks('you', parsed.key, parsed.mult);
+  }
 }
 
 // ═══════════════════════════════════════════════════
