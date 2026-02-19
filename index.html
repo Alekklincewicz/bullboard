@@ -736,6 +736,59 @@
   .follow-info { flex: 1; min-width: 0; }
   .follow-name { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
   .follow-avg { font-size: 10px; color: var(--muted); }
+  /* ── COMMENTS ── */
+  .post-comments {
+    border-top: 1px solid var(--border);
+    padding: 10px 14px 4px;
+    display: none;
+  }
+  .post-comments.open { display: block; }
+  .comment-item {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+  .comment-avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 10px;
+    flex-shrink: 0; margin-top: 1px;
+    background: var(--surface2); color: var(--muted);
+  }
+  .comment-body { flex: 1; }
+  .comment-handle { color: var(--accent); font-size: 10px; margin-bottom: 2px; }
+  .comment-text { color: var(--text); line-height: 1.5; }
+  .comment-time { color: var(--dim); font-size: 9px; margin-top: 2px; }
+  .comment-input-row {
+    display: flex; gap: 6px; margin-top: 6px; padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .comment-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 11px;
+    padding: 6px 10px; outline: none;
+  }
+  .comment-input:focus { border-color: var(--accent); }
+  .comment-submit {
+    background: var(--accent); color: #000; border: none;
+    font-family: 'Bebas Neue', sans-serif; font-size: 13px;
+    letter-spacing: 1px; padding: 6px 12px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .comment-submit:hover { opacity: 0.85; }
+
+  /* inline follow on post header */
+  .post-follow-btn {
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px;
+    padding: 3px 8px; border: 1px solid var(--border); color: var(--muted);
+    background: none; cursor: pointer; transition: all 0.12s; white-space: nowrap;
+    text-transform: uppercase;
+  }
+  .post-follow-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .post-follow-btn.following { border-color: var(--accent3); color: var(--accent3); }
+
   .follow-btn {
     background: none; border: 1px solid var(--accent3); color: var(--accent3);
     padding: 4px 10px; font-family: 'DM Mono', monospace; font-size: 10px;
@@ -1325,6 +1378,9 @@
 
   <!-- Standard 01 UI (hidden for Cricket) -->
   <div id="standard-ui">
+
+  <!-- Bot status bar (shown when bot active) -->
+  <div id="bot-status-bar" style="display:none;background:var(--surface2);border:1px solid var(--accent4);border-left:3px solid var(--accent4);padding:10px 14px;margin-bottom:10px;font-family:'DM Mono',monospace;font-size:12px;color:var(--accent4);letter-spacing:0.5px;"></div>
 
   <!-- Input row -->
   <div class="input-row">
@@ -2055,6 +2111,8 @@ function processThrow(score, bust, fromVoice) {
   if (bust || remaining < 0 || (remaining === 1 && currentLeg.outMode === 'double')) {
     addThrowRow(score, currentLeg.score, true, false, fromVoice);
     toast('BUST — score unchanged');
+    // Bot still takes its turn even when you bust
+    scheduleBotTurn01();
   } else if (remaining === 0) {
     currentLeg.checkoutAttempts++;
     currentLeg.checkouts++;
@@ -2063,8 +2121,9 @@ function processThrow(score, bust, fromVoice) {
     currentLeg.throws.push({ score, remaining:0, bust:false, checkout:true });
     addThrowRow(score, 0, false, true, fromVoice);
     document.getElementById('score-display').textContent = '0';
-    toast('🎯 CHECKOUT! Leg complete');
+    toast('🎯 CHECKOUT! Leg complete — YOU WIN!');
     if (typeof maybeAutoPostCheckout === 'function') maybeAutoPostCheckout(score);
+    hideBotStatus();
     setTimeout(() => completeLeg(), 800);
   } else {
     currentLeg.score = remaining;
@@ -2075,9 +2134,69 @@ function processThrow(score, bust, fromVoice) {
     document.getElementById('score-display').textContent = remaining;
     updateMeta();
     if (typeof maybeAutoPostTon === 'function') maybeAutoPostTon(score);
+    scheduleBotTurn01();
   }
   inputVal = ''; updateInputDisplay();
   if (!fromVoice) setTranscript('', '');
+}
+
+function scheduleBotTurn01() {
+  const botLvl = parseInt(document.getElementById('bot-level').value) || 0;
+  if (!botLvl) return;
+  // Disable input while bot "thinks"
+  const numpad = document.querySelector('.numpad');
+  const submitArea = document.querySelector('.input-row');
+  if (numpad) numpad.style.opacity = '0.35';
+  if (submitArea) submitArea.style.pointerEvents = 'none';
+  setTimeout(function() { runBot01Turn(botLvl, numpad, submitArea); }, 900);
+}
+
+function runBot01Turn(botLvl, numpad, submitArea) {
+  const p = BOT_PROFILES[botLvl];
+  if (!p) return restoreInput(numpad, submitArea);
+
+  // Init bot score if needed
+  if (!currentLeg._botScore) currentLeg._botScore = currentLeg.startScore;
+
+  const result = runBotTurn(botLvl, currentLeg._botScore);
+  if (!result) return restoreInput(numpad, submitArea);
+
+  currentLeg._botScore = result.remaining;
+
+  let msg = p.name + '  ';
+  if (result.bust) {
+    msg += 'scored ' + result.score + '  —  BUST  ·  still on ' + currentLeg._botScore;
+  } else if (result.checkout) {
+    msg += 'scored ' + result.score + '  —  CHECKOUT! 🎯  Bot wins this leg!';
+    showBotStatus(msg);
+    restoreInput(numpad, submitArea);
+    // Bot won — end leg (don't count as player checkout)
+    setTimeout(function() {
+      toast(p.name + ' checked out! New leg starting…');
+      hideBotStatus();
+      currentLeg._botScore = null;
+      newLeg();
+    }, 1800);
+    return;
+  } else {
+    msg += 'scored ' + result.score + '  ·  ' + result.remaining + ' remaining';
+  }
+
+  showBotStatus(msg);
+  restoreInput(numpad, submitArea);
+}
+
+function showBotStatus(msg) {
+  const el = document.getElementById('bot-status-bar');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+function hideBotStatus() {
+  const el = document.getElementById('bot-status-bar');
+  if (el) el.style.display = 'none';
+}
+function restoreInput(numpad, submitArea) {
+  if (numpad) numpad.style.opacity = '';
+  if (submitArea) submitArea.style.pointerEvents = '';
 }
 
 function addThrowRow(score, remaining, bust, checkout, fromVoice) {
@@ -2109,25 +2228,7 @@ function completeLeg() {
   const scored = currentLeg.startScore - currentLeg.score;
   const avg = currentLeg.totalDarts > 0 ? (scored/currentLeg.totalDarts)*3 : 0;
   sessionLegs.push({ score:currentLeg.startScore, darts:currentLeg.totalDarts, avg:avg.toFixed(1), checkouts:currentLeg.checkouts, checkoutAttempts:currentLeg.checkoutAttempts, throws:[...currentLeg.throws], timestamp:Date.now() });
-
-  // Run bot leg if bot is set (01 games only)
-  const botLvl = parseInt(document.getElementById('bot-level').value) || 0;
-  if (botLvl > 0) {
-    const startScore = currentLeg.startScore;
-    resetBot(startScore);
-    // Simulate bot finishing the same leg
-    let botRemaining = startScore;
-    let turns = 0;
-    while (botRemaining > 0 && turns < 60) {
-      const res = runBotTurn(botLvl, botRemaining);
-      if (!res) break;
-      botRemaining = res.remaining;
-      turns++;
-    }
-    const p = BOT_PROFILES[botLvl];
-    if (p) toast(p.name + ' would have finished in ~' + turns + ' rounds');
-  }
-
+  hideBotStatus();
   newLeg();
 }
 
@@ -2136,7 +2237,14 @@ function newLeg() {
   if (mode === 'cricket') { newCricketLeg(); return; }
   // 01 games — read start score directly from dropdown
   const startScore = mode === '501' ? 501 : 301;
-  currentLeg = { score:startScore, startScore, throws:[], round:1, totalDarts:0, checkoutAttempts:0, checkouts:0, mode, outMode:document.getElementById('out-mode').value, feel:currentLeg.feel||3 };
+  const botLvl01 = parseInt(document.getElementById('bot-level').value) || 0;
+  currentLeg = { score:startScore, startScore, throws:[], round:1, totalDarts:0, checkoutAttempts:0, checkouts:0, mode, outMode:document.getElementById('out-mode').value, feel:currentLeg.feel||3, _botScore: botLvl01 ? startScore : null };
+  if (botLvl01) {
+    const p = BOT_PROFILES[botLvl01];
+    showBotStatus((p ? p.name : 'Bot') + ' is ready — ' + startScore + ' to start. Your throw first!');
+  } else {
+    hideBotStatus();
+  }
   document.getElementById('score-display').textContent = startScore;
   document.getElementById('throw-history').innerHTML = '';
   inputVal = ''; updateInputDisplay(); updateMeta();
