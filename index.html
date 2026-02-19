@@ -4993,10 +4993,20 @@ function runCricketBotTurn() {
     if (hit) {
       // What multiplier does bot use? Better bots go for trebles
       var multRoll = Math.random();
-      var mult = 1;
-      if (lvl >= 8 && multRoll < 0.40) mult = 3;
-      else if (lvl >= 5 && multRoll < 0.25) mult = 3;
-      else if (lvl >= 3 && multRoll < 0.20) mult = 2;
+
+var mult = 1;
+
+// High-level bots press advantage
+if (lvl >= 9) {
+  mult = Math.random() < 0.55 ? 3 : 2;
+} else if (lvl >= 7) {
+  mult = Math.random() < 0.40 ? 3 : 2;
+} else if (lvl >= 5) {
+  mult = Math.random() < 0.30 ? 2 : 1;
+} else if (lvl >= 3) {
+  mult = Math.random() < 0.20 ? 2 : 1;
+}
+
       applyBotMarks(target, mult, msgs);
     } else {
       msgs.push('Missed');
@@ -5042,39 +5052,63 @@ function applyBotMarks(key, mult, msgs) {
   msgs.push(multLabel + numLabel + (newMarks >= 3 && newMarks - mult < 3 ? ' ✓' : '') + scored);
 }
 
+
 function chooseBotCricketTarget(lvl) {
-  // Strategy: close own open numbers first, then score on opponent's open numbers
-  var openForBot = CRICKET_NUMS.map(String).filter(function(k) {
-    return (cricketState.bot.marks[k] || 0) < 3;
-  });
-  var canScore = CRICKET_NUMS.map(String).filter(function(k) {
-    return (cricketState.bot.marks[k] || 0) >= 3 && (cricketState.you.marks[k] || 0) < 3;
-  });
+  const nums = CRICKET_NUMS.map(String);
 
-  if (openForBot.length === 0 && canScore.length === 0) return null;
+  const you = cricketState.you;
+  const bot = cricketState.bot;
 
-  // Higher level bots prefer scoring; lower bots just close
-  var scoreWeight = lvl / 10.0;
-  if (canScore.length > 0 && Math.random() < scoreWeight) {
-    // Score on highest-value open number
-    canScore.sort(function(a, b) {
-      var av = a === 'B' ? 25 : parseInt(a);
-      var bv = b === 'B' ? 25 : parseInt(b);
-      return bv - av;
-    });
-    return canScore[0];
+  const scoreDiff = bot.score - you.score; // + = bot ahead
+  const aggressiveness = lvl / 10;
+
+  // Helper: numeric value
+  const val = k => (k === 'B' ? 25 : parseInt(k));
+
+  // 1. Numbers bot can score on
+  const scoring = nums.filter(k =>
+    bot.marks[k] >= 3 && you.marks[k] < 3
+  );
+
+  // 2. Numbers bot still needs to close
+  const open = nums.filter(k =>
+    bot.marks[k] < 3
+  );
+
+  // 3. Numbers YOU own and bot doesn't (danger numbers)
+  const threats = nums.filter(k =>
+    you.marks[k] >= 3 && bot.marks[k] < 3
+  );
+
+  // ---- STRATEGY LAYERS ----
+
+  // 🔥 If bot is BEHIND → score aggressively
+  if (scoreDiff < 0 && scoring.length) {
+    scoring.sort((a, b) => val(b) - val(a));
+    return scoring[0];
   }
-  if (openForBot.length > 0) {
-    // Close highest-value unclosed
-    openForBot.sort(function(a, b) {
-      var av = a === 'B' ? 25 : parseInt(a);
-      var bv = b === 'B' ? 25 : parseInt(b);
-      return bv - av;
-    });
-    return openForBot[0];
+
+  // 🧱 If YOU are about to dominate → block
+  if (threats.length && Math.random() < aggressiveness) {
+    threats.sort((a, b) => val(b) - val(a));
+    return threats[0];
   }
-  return canScore[0] || null;
+
+  // ⚖️ Neutral / ahead → close efficiently
+  if (open.length) {
+    open.sort((a, b) => val(b) - val(a));
+    return open[0];
+  }
+
+  // 🧮 Late game: score if possible
+  if (scoring.length) {
+    scoring.sort((a, b) => val(b) - val(a));
+    return scoring[0];
+  }
+
+  return null;
 }
+
 
 function checkCricketWinState() {
   var youDone = CRICKET_NUMS.every(function(n) { return (cricketState.you.marks[String(n)] || 0) >= 3; });
