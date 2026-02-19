@@ -1158,7 +1158,7 @@
   .cricket-num.owned-bot { color: var(--accent4); text-shadow: 0 0 10px rgba(167,139,250,0.3); }
   /* Cricket dart input - multiplier buttons */
   .cricket-input-area { margin-bottom: 12px; }
-  .cricket-mult-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 8px; }
+  .cricket-mult-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 8px; }
   .cricket-mult-btn {
     background: var(--surface2); border: 1px solid var(--border);
     color: var(--muted); padding: 10px; font-family: 'Bebas Neue', sans-serif;
@@ -1184,8 +1184,26 @@
     width: 100%; background: none; border: 1px solid var(--dim); color: var(--dim);
     font-family: 'DM Mono', monospace; font-size: 11px; padding: 9px;
     cursor: pointer; letter-spacing: 1px; text-transform: uppercase; transition: all 0.15s;
+    margin-top: 8px;
   }
   .cricket-miss-btn:hover { border-color: var(--muted); color: var(--muted); }
+  /* Miss mode mult button */
+  .cricket-mult-btn.miss-mode { color: var(--accent2); border-color: transparent; }
+  .cricket-mult-btn.miss-mode.active {
+    border-color: var(--accent2); color: var(--accent2);
+    background: rgba(255,77,77,0.08);
+  }
+  /* Miss dot indicators in board rows */
+  .cricket-miss-dots {
+    display: flex; flex-wrap: wrap; gap: 2px;
+    align-items: center; justify-content: center;
+    min-height: 14px; padding: 0 4px;
+  }
+  .cricket-miss-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent2); opacity: 0.55;
+    flex-shrink: 0;
+  }
 
   /* ── BOT OPPONENT ── */
   .bot-turn-overlay {
@@ -1412,12 +1430,12 @@
   <div class="logo">Bullboard <span>// PRACTICE</span></div>
 
   <nav id="main-nav">
+    <button class="active" onclick="showPage('home',this);closeMenu()">Home</button>
     <button onclick="showPage('practice',this);closeMenu()">Practice</button>
     <button onclick="showPage('drill',this);closeMenu()">Drills</button>
     <button onclick="showPage('stats',this);closeMenu()">Stats</button>
     <button onclick="showPage('analysis',this);closeMenu()">Analysis</button>
     <button onclick="showPage('history',this);closeMenu()">History</button>
-    <button class="active" onclick="showPage('home',this);closeMenu()">Home</button>
   </nav>
 
   <div id="auth-container" style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
@@ -1547,12 +1565,13 @@
           <button class="cricket-mult-btn active" id="cm-single" onclick="setCricketMult(1,this)">Single</button>
           <button class="cricket-mult-btn" id="cm-double" onclick="setCricketMult(2,this)">Double</button>
           <button class="cricket-mult-btn" id="cm-treble" onclick="setCricketMult(3,this)">Treble</button>
+          <button class="cricket-mult-btn miss-mode" id="cm-miss" onclick="setCricketMult(0,this)">Miss</button>
         </div>
         <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:10px 0 6px;">Target</div>
         <div class="cricket-num-btns" id="cricket-num-btns">
           <!-- rendered dynamically -->
         </div>
-        <button class="cricket-miss-btn" style="margin-top:8px" onclick="cricketMiss()">Miss (no score)</button>
+        <button class="cricket-miss-btn" style="margin-top:8px" onclick="cricketMiss()">Off-board (no target)</button>
 
         <!-- Cricket Voice Input -->
         <div style="margin-top:12px;">
@@ -2989,13 +3008,55 @@ function renderCricketStats() {
   var avgScore = Math.round(legs.reduce(function(s,l){return s+l.yourScore;},0) / legs.length);
   var botGames = legs.filter(function(l){return l.botLevel > 0;});
   var winVsBot = botGames.filter(function(l){return l.youWon;}).length;
-  container.innerHTML = '<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:0;">'
+
+  // Aggregate hit marks + misses per number
+  var accuracy = {};
+  CRICKET_NUMS.forEach(function(n) { accuracy[String(n)] = { hits: 0, misses: 0 }; });
+  legs.forEach(function(leg) {
+    CRICKET_NUMS.forEach(function(n) {
+      var key = String(n);
+      accuracy[key].hits += (leg.marks && leg.marks[key]) || 0;
+      accuracy[key].misses += (leg.misses && leg.misses[key]) || 0;
+    });
+  });
+  var totalMisses = Object.values(accuracy).reduce(function(s,v){return s+v.misses;}, 0);
+
+  var html = '<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:' + (totalMisses>0?'16':'0') + 'px;">'
     + '<div class="stat-card"><label>Cricket Legs</label><div class="big-num">' + legs.length + '</div><div class="sub">played</div></div>'
     + '<div class="stat-card"><label>Win Rate</label><div class="big-num" style="color:' + (pct>=50?'var(--accent3)':'var(--accent2)') + '">' + pct + '%</div><div class="sub">of legs</div></div>'
     + '<div class="stat-card"><label>Avg Points</label><div class="big-num">' + avgScore + '</div><div class="sub">per leg</div></div>'
     + '<div class="stat-card"><label>vs Bot Wins</label><div class="big-num">' + winVsBot + '</div><div class="sub">of ' + botGames.length + '</div></div>'
     + '</div>';
+
+  if (totalMisses > 0) {
+    html += '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Accuracy by number</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">';
+    CRICKET_NUMS.forEach(function(n) {
+      var key = String(n);
+      var a = accuracy[key];
+      var total = a.hits + a.misses;
+      var label = n === 'B' ? 'Bull' : n;
+      if (total === 0) {
+        html += '<div style="background:var(--surface2);border:1px solid var(--border);padding:8px 4px;text-align:center;">'
+          + '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--muted);">' + label + '</div>'
+          + '<div style="font-size:10px;color:var(--dim);margin-top:2px;">—</div></div>';
+      } else {
+        var hitPct = Math.round(a.hits / total * 100);
+        var col = hitPct >= 70 ? 'var(--accent3)' : hitPct >= 40 ? 'var(--accent)' : 'var(--accent2)';
+        html += '<div style="background:var(--surface2);border:1px solid var(--border);padding:8px 4px;text-align:center;">'
+          + '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--text);">' + label + '</div>'
+          + '<div style="font-size:13px;font-weight:600;color:' + col + ';font-family:Bebas Neue,sans-serif;">' + hitPct + '%</div>'
+          + '<div style="font-size:9px;color:var(--muted);font-family:DM Mono,monospace;">' + a.hits + 'h·' + a.misses + 'm</div>'
+          + '<div style="height:3px;background:var(--border);margin-top:4px;border-radius:1px;">'
+          + '<div style="height:3px;width:' + hitPct + '%;background:' + col + ';transition:width 0.3s;"></div></div>'
+          + '</div>';
+      }
+    });
+    html += '</div>';
+  }
+  container.innerHTML = html;
 }
+
 
 function renderCheckoutDoubles() {
   const doubleNums=['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','Bull'];
@@ -3563,6 +3624,7 @@ function saveSocialState() {
   }));
 }
 loadSocialState();
+restoreSocialSettingsUI();
 
 // ── Gate: show/hide based on auth state ──
 function updateSocialGate(isSignedIn, email) {
@@ -3582,9 +3644,29 @@ function updateSocialGate(isSignedIn, email) {
   }
 }
 
+// Restore social settings UI from saved state (runs regardless of auth)
+function restoreSocialSettingsUI() {
+  // Handle input
+  const nameInput = document.getElementById('social-name-input');
+  if (nameInput && socialState.myHandle) nameInput.value = socialState.myHandle;
+
+  // Autopost toggles
+  Object.keys(socialState.autoPost).forEach(function(key) {
+    const el = document.getElementById('ap-' + key);
+    if (el) {
+      if (socialState.autoPost[key]) el.classList.add('on');
+      else el.classList.remove('on');
+    }
+  });
+}
+
 function renderSocialPage() {
   const isSignedIn = !!window._currentUser;
   updateSocialGate(isSignedIn, window._currentUser ? window._currentUser.email : null);
+
+  // Always restore settings fields (handle input, autopost toggles) — auth not required
+  restoreSocialSettingsUI();
+
   if (!isSignedIn) return;
 
   const emailPrefix = window._currentUser && window._currentUser.email ? window._currentUser.email.split('@')[0] : 'You';
@@ -3620,12 +3702,18 @@ function toggleAutoPost(key, el) {
 }
 
 function setSocialProfile() {
-  const val = document.getElementById('social-name-input').value.trim().replace(/\s+/g,'_');
+  const val = document.getElementById('social-name-input').value.trim().replace(/[\s@#]+/g,'_');
   if (!val) return;
   socialState.myHandle = val;
   saveSocialState();
-  renderSocialPage();
-  toast('Handle updated');
+  // Update displayed handle elements if visible
+  const handleEl = document.getElementById('social-handle');
+  if (handleEl) handleEl.textContent = val.toUpperCase();
+  const subEl = document.getElementById('social-sub');
+  if (subEl) subEl.textContent = '@' + val.toLowerCase() + ' · Bullboard';
+  const avatarEls = [document.getElementById('social-avatar'), document.getElementById('composer-avatar')];
+  avatarEls.forEach(function(el) { if (el) el.textContent = val.slice(0,2).toUpperCase(); });
+  toast('Handle saved: @' + val);
 }
 
 function renderFollowList() {
@@ -3993,9 +4081,9 @@ const CRICKET_NUMS = [20, 19, 18, 17, 16, 15, 'B']; // B = Bull (25/50)
 
 // marks: 0=none, 1=slash, 2=X, 3=circled-X (owned), 4=closed (both have 3)
 let cricketState = {
-  you: { marks: {}, score: 0 },
-  bot: { marks: {}, score: 0 },
-  currentMult: 1,
+  you: { marks: {}, score: 0, misses: {} },
+  bot: { marks: {}, score: 0, misses: {} },
+  currentMult: 1,  // 0 = Miss mode
   dartsLeft: 3,
   yourTurn: true,
   round: 1,
@@ -4012,9 +4100,10 @@ function initCricketMarks() {
 
 function newCricketLeg() {
   var botLvl = parseInt(document.getElementById('bot-level').value) || 0;
+  var initMisses = function() { var m={}; CRICKET_NUMS.forEach(function(n){m[String(n)]=0;}); return m; };
   cricketState = {
-    you: { marks: initCricketMarks(), score: 0 },
-    bot: { marks: initCricketMarks(), score: 0 },
+    you: { marks: initCricketMarks(), score: 0, misses: initMisses() },
+    bot: { marks: initCricketMarks(), score: 0, misses: initMisses() },
     currentMult: 1,
     dartsLeft: 3,
     yourTurn: true,
@@ -4080,9 +4169,13 @@ function renderCricketBoard() {
       + (yMarks >= 3 && !bothClosed ? ' owned-you' : '')
       + (bMarks >= 3 && !bothClosed ? ' owned-bot' : '');
     var rowClass = 'cricket-row' + (bothClosed ? ' fully-closed' : '');
+    var yMisses = (cricketState.you.misses && cricketState.you.misses[key]) || 0;
+    var missDots = '';
+    for (var d = 0; d < yMisses; d++) missDots += '<span class="cricket-miss-dot"></span>';
+    var missHtml = yMisses > 0 ? '<div class="cricket-miss-dots">' + missDots + '</div>' : '';
     html += '<div class="' + rowClass + '">'
       + '<div class="cricket-marks you" onclick="cricketNumClick(\'' + key + '\')" style="cursor:pointer">'
-      + markSvg(Math.min(yMarks, 3), '#e8ff3a') + '</div>'
+      + markSvg(Math.min(yMarks, 3), '#e8ff3a') + missHtml + '</div>'
       + '<div class="' + numClass + '">' + numLabel + '</div>'
       + '<div class="cricket-marks bot" style="justify-content:flex-end">'
       + markSvg(Math.min(bMarks, 3), '#a78bfa') + '</div>'
@@ -4140,11 +4233,43 @@ function setCricketMult(n, btn) {
   cricketState.currentMult = n;
   document.querySelectorAll('.cricket-mult-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
+  // Update num-btn labels to hint miss mode
+  var isMiss = (n === 0);
+  document.querySelectorAll('.cricket-num-btn').forEach(function(b) {
+    b.style.borderColor = isMiss ? 'rgba(255,77,77,0.35)' : '';
+    b.style.color = isMiss ? 'var(--accent2)' : '';
+  });
 }
 
 function cricketNumClick(key) {
   if (!cricketState.yourTurn) return;
-  applyMarks('you', key, cricketState.currentMult);
+  if (cricketState.currentMult === 0) {
+    applyMiss('you', key);
+  } else {
+    applyMarks('you', key, cricketState.currentMult);
+  }
+}
+
+function applyMiss(player, key) {
+  // Record a miss at this target — burns a dart, shows dot on board, no marks scored
+  var gs = cricketState[player];
+  if (!gs.misses) gs.misses = {};
+  gs.misses[key] = (gs.misses[key] || 0) + 1;
+
+  renderCricketBoard();
+
+  // Reset to Single after miss (same as after any dart)
+  cricketState.currentMult = 1;
+  document.querySelectorAll('.cricket-mult-btn').forEach(function(b) { b.classList.remove('active'); });
+  var single = document.getElementById('cm-single');
+  if (single) single.classList.add('active');
+  document.querySelectorAll('.cricket-num-btn').forEach(function(b) {
+    b.style.borderColor = ''; b.style.color = '';
+  });
+
+  cricketState.dartsLeft--;
+  updateCricketTurnInfo();
+  if (cricketState.dartsLeft <= 0) endCricketPlayerTurn();
 }
 
 function applyMarks(player, key, mult) {
@@ -4185,6 +4310,8 @@ function applyMarks(player, key, mult) {
   cricketState.currentMult = 1;
   document.querySelectorAll('.cricket-mult-btn').forEach(function(b) { b.classList.remove('active'); });
   document.getElementById('cm-single') && document.getElementById('cm-single').classList.add('active');
+  // Clear any miss-mode tinting on number buttons
+  document.querySelectorAll('.cricket-num-btn').forEach(function(b) { b.style.borderColor = ''; b.style.color = ''; });
 
   if (cricketState.dartsLeft <= 0) {
     endCricketPlayerTurn();
@@ -4367,6 +4494,7 @@ function saveCricketLeg(youWon) {
     botLevel: cricketState.botLevel,
     youWon: youWon,
     marks: JSON.parse(JSON.stringify(cricketState.you.marks)),
+    misses: JSON.parse(JSON.stringify(cricketState.you.misses || {})),
   };
   if (!state.cricketLegs) state.cricketLegs = [];
   state.cricketLegs.push(leg);
