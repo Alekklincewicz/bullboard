@@ -669,13 +669,12 @@
     flex-shrink: 0;
   }
   .checkout-dart {
-    padding: 3px 8px;
+    padding: 5px 12px;
     border: 1px solid var(--border);
-    font-size: 11px;
-    letter-spacing: 0.5px;
     white-space: nowrap;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 13px;
+    font-size: 18px;
+    letter-spacing: 1px;
   }
   .checkout-dart.double { border-color: rgba(58,255,184,0.6); color: var(--accent3); background: rgba(58,255,184,0.08); }
   .checkout-dart.treble { border-color: rgba(167,139,250,0.6); color: var(--accent4); background: rgba(167,139,250,0.08); }
@@ -1643,7 +1642,18 @@
         </div>
         <button class="cricket-miss-btn" style="margin-top:8px" onclick="cricketMiss()">Off-board (no target)</button>
 
-        <!-- Cricket Voice Input -->
+        <!-- Cricket Quick Input (3 darts at once) -->
+        <div style="margin-top:12px;">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Quick Input (3 darts)</div>
+          <div style="display:flex;gap:6px;">
+            <input id="cricket-quick-input" type="text"
+              style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:DM Mono,monospace;font-size:13px;padding:10px 12px;outline:none;"
+              placeholder='e.g. T20 D18 S15 or "treble 20 double 18"'
+              onkeydown="if(event.key==='Enter'){submitCricketQuickInput();event.preventDefault();}" />
+            <button onclick="submitCricketQuickInput()" style="background:var(--accent);color:#000;border:none;font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;padding:10px 16px;cursor:pointer;white-space:nowrap;">ENTER</button>
+          </div>
+          <div id="cricket-quick-transcript" style="font-family:DM Mono,monospace;font-size:10px;color:var(--muted);min-height:16px;margin-top:4px;"></div>
+        </div>
         <div style="margin-top:12px;">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Voice</div>
           <button class="voice-btn-hero" id="cricket-voice-btn" onclick="toggleCricketVoice()"
@@ -1677,11 +1687,6 @@
   <button class="btn-submit" onclick="submitScore(false)">ENTER</button>
 
   <div class="throw-history" id="throw-history"></div>
-
-
-    
-  <div class="throw-history" id="throw-history"></div>
-
 
   <div class="row" style="margin-top:16px">
     <span style="font-family:DM Mono,monospace;font-size:11px;color:var(--muted);letter-spacing:1px;">FEEL</span>
@@ -1843,7 +1848,7 @@
     <div class="stat-card"><label>Career Average</label><div class="big-num" id="stat-avg">—</div><div class="sub">per 3 darts</div></div>
     <div class="stat-card"><label>Checkout %</label><div class="big-num" id="stat-checkout">—</div><div class="sub">of attempts</div></div>
     <div class="stat-card"><label>Total Legs</label><div class="big-num" id="stat-legs">0</div><div class="sub">played</div></div>
-    <div class="stat-card"><label>Sessions</label><div class="big-num" id="stat-sessions">0</div><div class="sub">logged</div></div>
+    <div class="stat-card"><label>Total Darts Tracked</label><div class="big-num" id="stat-sessions">0</div><div class="sub">thrown</div></div>
   </div>
 
   <div class="two-col" style="margin-bottom:24px;">
@@ -1860,6 +1865,12 @@
       </table>
       <div id="no-sessions" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);padding:20px;text-align:center;display:none;">No sessions yet.</div>
     </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:24px;">
+    <div class="panel-title">Darts Thrown Over Time</div>
+    <div class="trend-chart"><canvas id="darts-trend-canvas"></canvas></div>
+    <div style="font-family:DM Mono,monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:8px;letter-spacing:1px;">CUMULATIVE DARTS THROWN</div>
   </div>
 
   <div class="panel" style="margin-bottom:24px;">
@@ -1892,8 +1903,13 @@
             <button class="toggle-btn" onclick="selectHeatmapBed('treble',this)">Treble</button>
           </div>
         </div>
-        <canvas id="heatmap-canvas" style="display:block;"></canvas>
-        <div style="font-family:DM Mono,monospace;font-size:9px;color:var(--muted);margin-top:8px;letter-spacing:1px;text-align:center;">DRILL HIT RATE — BRIGHTER = BETTER</div>
+        <div id="heatmap-grid-container"></div>
+        <div style="display:flex;gap:12px;margin-top:10px;font-family:DM Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:1px;align-items:center;">
+          <span style="background:rgba(232,255,58,0.7);display:inline-block;width:12px;height:12px;"></span> 60%+
+          <span style="background:rgba(232,255,58,0.35);display:inline-block;width:12px;height:12px;margin-left:6px;"></span> 35-59%
+          <span style="background:rgba(255,77,77,0.5);display:inline-block;width:12px;height:12px;margin-left:6px;"></span> &lt;35%
+          <span style="background:var(--surface2);border:1px solid var(--border);display:inline-block;width:12px;height:12px;margin-left:6px;"></span> no data
+        </div>
       </div>
       <div>
         <div class="panel-title">Weak Spots</div>
@@ -2515,14 +2531,15 @@ function processThrow(score, bust, fromVoice) {
     currentLeg.checkoutAttempts++;
     currentLeg.checkouts++;
     currentLeg.score = 0;
-    currentLeg.totalDarts += 3;
     currentLeg.throws.push({ score, remaining:0, bust:false, checkout:true });
     addThrowRow(score, 0, false, true, fromVoice);
     updateScoreDisplays(0);
-    toast('🎯 CHECKOUT! Leg complete — YOU WIN!');
     if (typeof maybeAutoPostCheckout === 'function') maybeAutoPostCheckout(score);
     hideBotStatus();
-    setTimeout(() => completeLeg(), 800);
+    // Ask which dart completed the checkout
+    _pendingCheckoutScore = score;
+    _pendingCheckoutDarts = 3; // default 3rd dart
+    document.getElementById('checkout-dart-modal').style.display = 'flex';
   } else {
     currentLeg.score = remaining;
     currentLeg.totalDarts += 3;
@@ -2536,6 +2553,17 @@ function processThrow(score, bust, fromVoice) {
   }
   inputVal = ''; updateInputDisplay();
   if (!fromVoice) setTranscript('', '');
+}
+
+let _pendingCheckoutScore = 0;
+let _pendingCheckoutDarts = 3;
+
+function confirmCheckoutDart(dartNum) {
+  document.getElementById('checkout-dart-modal').style.display = 'none';
+  // dartNum = 1, 2, or 3 — how many darts were used
+  currentLeg.totalDarts += dartNum;
+  toast('🎯 CHECKOUT on dart ' + dartNum + '! Leg complete — YOU WIN!');
+  setTimeout(() => completeLeg(), 800);
 }
 
 function scheduleBotTurn01() {
@@ -3046,6 +3074,7 @@ function renderStats() {
     document.getElementById('stat-legs').textContent='0';
     document.getElementById('stat-sessions').textContent='0';
     renderTrendChart([]);
+    renderDartsTrendChart([]);
     renderCheckoutDoubles();
     renderCheckoutTrend();
     return;
@@ -3059,7 +3088,12 @@ function renderStats() {
   document.getElementById('stat-avg').textContent=avgAvg;
   document.getElementById('stat-checkout').textContent=avgCO+'%';
   document.getElementById('stat-legs').textContent=totalLegs;
-  document.getElementById('stat-sessions').textContent=sessions.length;
+  // Total darts tracked: sum all leg darts across all sessions
+  const totalDarts = sessions.reduce((s,ses)=>{
+    if(ses.legDetails) return s + ses.legDetails.reduce((a,l)=>a+(l.darts||0),0);
+    return s + (ses.legs||0)*3*10; // fallback estimate
+  },0);
+  document.getElementById('stat-sessions').textContent=totalDarts.toLocaleString();
 
   document.getElementById('session-tbody').innerHTML=[...sessions].reverse().map(s=>{
     const co=parseInt(s.checkoutPct);
@@ -3072,9 +3106,96 @@ function renderStats() {
   }).join('');
 
   renderTrendChart(sessions.map(s=>parseFloat(s.avg)));
+  renderDartsTrendChart(sessions);
   renderCheckoutDoubles();
   renderCheckoutTrend();
   renderCricketStats();
+}
+
+function renderDartsTrendChart(sessions) {
+  const canvas = document.getElementById('darts-trend-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * 2; canvas.height = canvas.offsetHeight * 2;
+  ctx.scale(2, 2);
+  const W = canvas.offsetWidth / 2, H = canvas.offsetHeight / 2;
+  ctx.clearRect(0, 0, W, H);
+
+  if (sessions.length < 1) {
+    ctx.fillStyle = '#444'; ctx.font = "12px 'DM Mono'"; ctx.textAlign = 'center';
+    ctx.fillText('No sessions yet', W / 2, H / 2); return;
+  }
+
+  // Build cumulative darts array
+  let cum = 0;
+  const data = sessions.map(s => {
+    const d = s.legDetails ? s.legDetails.reduce((a, l) => a + (l.darts || 0), 0) : (s.legs || 0) * 30;
+    cum += d;
+    return cum;
+  });
+
+  // Per-session darts (bar heights)
+  const perSession = sessions.map(s =>
+    s.legDetails ? s.legDetails.reduce((a, l) => a + (l.darts || 0), 0) : (s.legs || 0) * 30
+  );
+
+  const maxPer = Math.max(...perSession, 1);
+  const pad = { left: 44, right: 12, top: 16, bottom: 28 };
+  const cW = W - pad.left - pad.right, cH = H - pad.top - pad.bottom;
+  const n = sessions.length;
+  const barW = Math.max(2, Math.min(18, cW / n - 4));
+
+  // Grid lines
+  ctx.strokeStyle = '#222'; ctx.lineWidth = 0.5;
+  [0.25, 0.5, 0.75, 1].forEach(t => {
+    const y = pad.top + cH * t;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.font = "9px 'DM Mono'"; ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxPer * (1 - t)), pad.left - 4, y + 3);
+  });
+
+  // Bars (per-session darts)
+  sessions.forEach((s, i) => {
+    const x = pad.left + (i / (n > 1 ? n - 1 : 1)) * cW;
+    const bh = (perSession[i] / maxPer) * cH;
+    const y = pad.top + cH - bh;
+    ctx.fillStyle = 'rgba(58,255,184,0.18)';
+    ctx.fillRect(x - barW / 2, y, barW, bh);
+    ctx.strokeStyle = 'rgba(58,255,184,0.4)'; ctx.lineWidth = 0.8;
+    ctx.strokeRect(x - barW / 2, y, barW, bh);
+  });
+
+  // Cumulative line
+  const cumMax = data[data.length - 1] || 1;
+  const py = v => pad.top + cH - (v / cumMax) * cH;
+  const px = i => pad.left + (i / (n > 1 ? n - 1 : 1)) * cW;
+
+  const grad = ctx.createLinearGradient(0, pad.top, 0, H);
+  grad.addColorStop(0, 'rgba(232,255,58,0.18)'); grad.addColorStop(1, 'rgba(232,255,58,0)');
+  ctx.beginPath(); ctx.moveTo(px(0), cH + pad.top);
+  data.forEach((v, i) => ctx.lineTo(px(i), py(v)));
+  ctx.lineTo(px(n - 1), cH + pad.top); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+
+  ctx.beginPath(); ctx.strokeStyle = '#e8ff3a'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round';
+  data.forEach((v, i) => { i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v)); });
+  ctx.stroke();
+
+  data.forEach((v, i) => {
+    ctx.beginPath(); ctx.arc(px(i), py(v), 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#e8ff3a'; ctx.fill();
+  });
+
+  // Label total
+  ctx.fillStyle = 'rgba(232,255,58,0.8)'; ctx.font = "bold 10px 'DM Mono'"; ctx.textAlign = 'right';
+  ctx.fillText(cumMax.toLocaleString() + ' total', W - pad.right, pad.top + 10);
+
+  // Legend
+  ctx.font = "8px 'DM Mono'"; ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(58,255,184,0.7)'; ctx.fillRect(pad.left, H - 14, 8, 8);
+  ctx.fillStyle = '#999'; ctx.fillText('per session', pad.left + 11, H - 7);
+  ctx.fillStyle = '#e8ff3a'; ctx.fillRect(pad.left + 90, H - 14, 20, 2);
+  ctx.fillText('cumulative', pad.left + 114, H - 7);
 }
 
 function renderCricketStats() {
@@ -3301,136 +3422,82 @@ function selectHeatmapBed(type, btn) {
 }
 
 function renderHeatmap() {
-  const canvas = document.getElementById('heatmap-canvas');
-  const ctx = canvas.getContext('2d');
-  const DPR = window.devicePixelRatio || 1;
-  const SIZE = 320;
-  canvas.width = SIZE * DPR;
-  canvas.height = SIZE * DPR;
-  canvas.style.width = SIZE + 'px';
-  canvas.style.height = SIZE + 'px';
-  ctx.scale(DPR, DPR);
+  const container = document.getElementById('heatmap-grid-container');
+  if (!container) return;
 
-  const W = SIZE, H = SIZE, cx = W/2, cy = H/2;
-
-  // Board rings (proportional to actual dartboard)
-  const R = {
-    bull_inner: 7,    // double bull
-    bull_outer: 17,   // single bull
-    inner: 95,        // inner single
-    triple_in: 100,   // triple inner edge
-    triple_out: 114,  // triple outer edge
-    outer: 155,       // outer single
-    double_in: 161,   // double inner edge
-    double_out: 174,  // double outer edge
-  };
-
+  // Dartboard number sequence (clockwise from top: 20)
   const seq = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
-  const TAU = Math.PI * 2;
-  const SLICE = TAU / 20;
-  const OFFSET = -Math.PI / 2 - SLICE / 2; // 20 at top
-
+  const prefix = heatmapBedType === 'double' ? 'D' : heatmapBedType === 'treble' ? 'T' : '';
   const ac = heatmapBedType === 'double' ? [58,255,184] : heatmapBedType === 'treble' ? [167,139,250] : [232,255,58];
 
-  // Background
-  ctx.fillStyle = '#0d0d0d';
-  ctx.fillRect(0, 0, W, H);
+  function cellColor(hr) {
+    if (hr < 0) return { bg: 'var(--surface2)', border: 'var(--border)', text: 'var(--muted)' };
+    if (hr >= 0.60) return { bg: `rgba(${ac[0]},${ac[1]},${ac[2]},0.7)`, border: `rgba(${ac[0]},${ac[1]},${ac[2]},1)`, text: '#000' };
+    if (hr >= 0.35) return { bg: `rgba(${ac[0]},${ac[1]},${ac[2]},0.3)`, border: `rgba(${ac[0]},${ac[1]},${ac[2]},0.6)`, text: `rgba(${ac[0]},${ac[1]},${ac[2]},1)` };
+    return { bg: 'rgba(255,77,77,0.25)', border: 'rgba(255,77,77,0.5)', text: 'var(--accent2)' };
+  }
 
-  // Draw each segment
-  seq.forEach((num, i) => {
-    const sa = OFFSET + i * SLICE;
-    const ea = sa + SLICE;
-    const midA = sa + SLICE / 2;
-    const d = state.drillData[heatmapBedType][String(num)];
-    const hr = (d && d.attempts > 0) ? d.hits / d.attempts : -1; // -1 = no data
-    const hasData = hr >= 0;
+  function cellHtml(num, prefix) {
+    const key = String(num);
+    const d = state.drillData[heatmapBedType][key];
+    const hr = (d && d.attempts > 0) ? d.hits / d.attempts : -1;
+    const pct = hr >= 0 ? Math.round(hr * 100) : null;
+    const c = cellColor(hr);
+    const label = (num === 'B' ? 'BULL' : (prefix + num));
+    return `<div style="background:${c.bg};border:1px solid ${c.border};padding:8px 4px;text-align:center;cursor:default;min-width:44px;transition:all 0.15s;" title="${label}: ${pct !== null ? pct+'%' : 'no data'}">
+      <div style="font-family:Bebas Neue,sans-serif;font-size:16px;color:${c.text};letter-spacing:1px;line-height:1">${label}</div>
+      <div style="font-family:DM Mono,monospace;font-size:11px;color:${c.text};margin-top:2px;">${pct !== null ? pct+'%' : '—'}</div>
+      ${d && d.attempts > 0 ? `<div style="font-family:DM Mono,monospace;font-size:9px;color:${hr < 0.35 ? 'rgba(255,77,77,0.7)' : 'rgba(0,0,0,0.5)'};margin-top:1px;">${d.hits}/${d.attempts}</div>` : ''}
+    </div>`;
+  }
 
-    // Base alternating segment colors (like real dartboard dark/light)
-    const baseLight = i % 2 === 0 ? '#1c1c1c' : '#161616';
-    const baseTriple = i % 2 === 0 ? '#1a0e0e' : '#0e1a0e';
-    const baseDouble = i % 2 === 0 ? '#1a0a0a' : '#0a1a0a';
+  // Layout: dartboard order in rows of 5 (top ring), then bull row
+  // Row 1: 20, 1, 18, 4, 13  (top numbers)
+  // Row 2: 6, 10, 15, 2, 17  (next)
+  // Row 3: 3, 19, BULL, 7, 16 (with bull in center)
+  // Row 4: 8, 11, 14, 9, 12
+  // Row 5: 5, (and singles wrap)
 
-    // Heat color with glow
-    const alpha = hasData ? (0.15 + hr * 0.85) : 0;
-    const heatColor = `rgba(${ac[0]},${ac[1]},${ac[2]},${alpha})`;
-    const tripleAlpha = hasData ? (0.2 + hr * 0.8) : 0;
-    const tripleHeat = `rgba(${ac[0]},${ac[1]},${ac[2]},${tripleAlpha})`;
-    const doubleAlpha = hasData ? (0.25 + hr * 0.75) : 0;
-    const doubleHeat = `rgba(${ac[0]},${ac[1]},${ac[2]},${doubleAlpha})`;
+  // Simpler: show a 4x5 grid in board order + bull row
+  const rows = [
+    [20, 1, 18, 4, 13],
+    [6, 10, 15, 2, 17],
+    [3, 19, 7, 16, 8],
+    [11, 14, 9, 12, 5],
+  ];
 
-    function segment(r1, r2, fillA, fillB) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, r2, sa, ea);
-      ctx.arc(cx, cy, r1, ea, sa, true);
-      ctx.closePath();
-      ctx.fillStyle = fillA; ctx.fill();
-      if (fillB) { ctx.fillStyle = fillB; ctx.fill(); }
-    }
+  // Bull data
+  const bullD = state.drillData[heatmapBedType]['Bull'];
+  const bullHr = (bullD && bullD.attempts > 0) ? bullD.hits / bullD.attempts : -1;
+  const bullPct = bullHr >= 0 ? Math.round(bullHr * 100) : null;
+  const bullC = cellColor(bullHr);
+  const bullLabel = heatmapBedType === 'double' ? 'D-BULL' : heatmapBedType === 'treble' ? 'T-BULL' : 'BULL';
 
-    // Outer single
-    segment(R.triple_out, R.double_in, baseLight, heatColor);
-    // Triple band
-    segment(R.triple_in, R.triple_out, baseTriple, tripleHeat);
-    // Inner single
-    segment(R.bull_outer, R.inner, baseLight, heatColor);
-    // Double band
-    segment(R.double_in, R.double_out, baseDouble, doubleHeat);
+  let html = `<div style="display:flex;flex-direction:column;gap:3px;">`;
 
-    // Number labels outside the double ring
-    const labelR = R.double_out + 11;
-    const lx = cx + Math.cos(midA) * labelR;
-    const ly = cy + Math.sin(midA) * labelR;
-    const labelAlpha = hasData ? (0.5 + hr * 0.5) : 0.25;
-    ctx.fillStyle = `rgba(${hasData ? ac[0] : 200},${hasData ? ac[1] : 200},${hasData ? ac[2] : 200},${labelAlpha})`;
-    ctx.font = `bold ${hasData ? '11' : '9'}px DM Mono, monospace`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(num), lx, ly);
+  // Section label
+  html += `<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">
+    ${heatmapBedType.toUpperCase()} HIT RATE — DRILL DATA
+  </div>`;
+
+  // Grid rows
+  rows.forEach(row => {
+    html += `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;">`;
+    row.forEach(num => { html += cellHtml(num, prefix); });
+    html += `</div>`;
   });
 
-  // Bull rings
-  const bd = state.drillData[heatmapBedType]['Bull'];
-  const br = (bd && bd.attempts > 0) ? bd.hits / bd.attempts : -1;
-  const bullAlpha = br >= 0 ? (0.2 + br * 0.8) : 0;
+  // Bull row (centered)
+  html += `<div style="display:flex;justify-content:center;margin-top:3px;">
+    <div style="background:${bullC.bg};border:1px solid ${bullC.border};padding:8px 16px;text-align:center;min-width:80px;" title="${bullLabel}: ${bullPct !== null ? bullPct+'%' : 'no data'}">
+      <div style="font-family:Bebas Neue,sans-serif;font-size:16px;color:${bullC.text};letter-spacing:1px">${bullLabel}</div>
+      <div style="font-family:DM Mono,monospace;font-size:11px;color:${bullC.text};margin-top:2px;">${bullPct !== null ? bullPct+'%' : '—'}</div>
+      ${bullD && bullD.attempts > 0 ? `<div style="font-family:DM Mono,monospace;font-size:9px;color:${bullHr < 0.35 ? 'rgba(255,77,77,0.7)' : 'rgba(0,0,0,0.5)'};margin-top:1px;">${bullD.hits}/${bullD.attempts}</div>` : ''}
+    </div>
+  </div>`;
 
-  ctx.beginPath(); ctx.arc(cx, cy, R.bull_outer, 0, TAU);
-  ctx.fillStyle = '#1a180a'; ctx.fill();
-  ctx.fillStyle = `rgba(${ac[0]},${ac[1]},${ac[2]},${bullAlpha * 0.6})`; ctx.fill();
-
-  ctx.beginPath(); ctx.arc(cx, cy, R.bull_inner, 0, TAU);
-  ctx.fillStyle = '#2a0808'; ctx.fill();
-  ctx.fillStyle = `rgba(${ac[0]},${ac[1]},${ac[2]},${bullAlpha})`; ctx.fill();
-
-  // Wire lines
-  ctx.strokeStyle = 'rgba(80,80,80,0.6)';
-  ctx.lineWidth = 0.8;
-  seq.forEach((_, i) => {
-    const a = OFFSET + i * SLICE;
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a) * R.bull_outer, cy + Math.sin(a) * R.bull_outer);
-    ctx.lineTo(cx + Math.cos(a) * R.double_out, cy + Math.sin(a) * R.double_out);
-    ctx.stroke();
-  });
-  [R.bull_outer, R.inner, R.triple_in, R.triple_out, R.double_in, R.double_out].forEach(rad => {
-    ctx.beginPath(); ctx.arc(cx, cy, rad, 0, TAU);
-    ctx.stroke();
-  });
-
-  // Legend bar (bottom of canvas)
-  const lgW = 160, lgH = 6, lgX = cx - lgW/2, lgY = H - 14;
-  const grad = ctx.createLinearGradient(lgX, 0, lgX + lgW, 0);
-  grad.addColorStop(0, `rgba(${ac[0]},${ac[1]},${ac[2]},0.1)`);
-  grad.addColorStop(1, `rgba(${ac[0]},${ac[1]},${ac[2]},1)`);
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.fillRect(lgX - 2, lgY - 2, lgW + 34, lgH + 6);
-  ctx.fillStyle = grad;
-  ctx.fillRect(lgX, lgY, lgW, lgH);
-  ctx.fillStyle = 'rgba(200,200,200,0.4)';
-  ctx.font = '8px DM Mono, monospace';
-  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.fillText('0%', lgX - 14, lgY + lgH/2);
-  ctx.textAlign = 'right';
-  ctx.fillText('100%', lgX + lgW + 28, lgY + lgH/2);
+  html += `</div>`;
+  container.innerHTML = html;
 }
 
 function renderWeakSpots() {
@@ -4721,6 +4788,7 @@ function initCricketVoice() {
         parsed = parseCricketVoice(results[i].transcript);
         if (parsed) break;
       }
+
       if (parsed) {
         setCricketTranscript('"' + results[0].transcript + '" → ' + parsed.label, 'heard');
         applyCricketVoiceThrow(parsed);
@@ -4731,7 +4799,26 @@ function initCricketVoice() {
           }, 400);
         }
       } else {
-        setCricketTranscript('Didn\'t catch that — say "Single 20" etc.', '');
+        // Try multi-dart voice input
+        var multiDarts = parseCricketVoiceMulti(results[0].transcript);
+        if (multiDarts && multiDarts.length > 0) {
+          var labels = [];
+          multiDarts.forEach(function(d) {
+            if (!cricketState.yourTurn || cricketState.dartsLeft <= 0) return;
+            if (d.mult === 0 || d.key === null) {
+              labels.push('Miss');
+              applyMiss('you', CRICKET_NUMS.map(String)[0]);
+            } else {
+              var mL = d.mult===3?'T':d.mult===2?'D':'S';
+              var nL = d.key==='B'?'Bull':d.key;
+              labels.push(mL+nL);
+              applyMarks('you', d.key, d.mult);
+            }
+          });
+          setCricketTranscript('"' + results[0].transcript + '" → ' + labels.join(' · '), 'heard');
+        } else {
+          setCricketTranscript('Didn\'t catch that — say "Single 20" etc.', '');
+        }
       }
     }
   };
@@ -4752,6 +4839,142 @@ function initCricketVoice() {
   };
 
   return true;
+}
+
+// ─── Cricket Quick Input (3-dart text entry) ──────────────────────────────
+function parseCricketDartToken(tok) {
+  // Returns {key, mult} or null
+  tok = tok.trim().toLowerCase().replace(/^triple$/, 'treble');
+  if (!tok) return null;
+
+  // miss/out
+  if (/^(miss|out|0|-)$/.test(tok)) return { key: null, mult: 0 };
+
+  // Bull/bullseye
+  if (/^(b|bull|bullseye|50)$/.test(tok)) return { key: 'B', mult: 2 };
+  if (/^(25|ob|sb)$/.test(tok)) return { key: 'B', mult: 1 };
+
+  // Short notation: T20, D18, S15
+  var shortM = tok.match(/^([tds])(\d+)$/);
+  if (shortM) {
+    var mult = shortM[1] === 't' ? 3 : shortM[1] === 'd' ? 2 : 1;
+    var num = parseInt(shortM[2]);
+    if (CRICKET_NUMS.includes(num) || CRICKET_NUMS.includes(String(num))) return { key: String(num), mult };
+    return null;
+  }
+
+  // Word: "treble 20", "double eighteen", "single 15"
+  var multMap = { single:1, s:1, double:2, d:2, treble:3, t:3, triple:3 };
+  var numWords = {'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,'twenty':20,'bull':null,'b':null};
+  var mW = tok.match(/^(single|double|treble|triple|s|d|t)\s*(fifteen|sixteen|seventeen|eighteen|nineteen|twenty|bull|b|\d+)$/);
+  if (mW) {
+    var mult = multMap[mW[1]] || 1;
+    var numStr = mW[2];
+    var num = /^\d+$/.test(numStr) ? parseInt(numStr) : (numWords[numStr] !== undefined ? numWords[numStr] : null);
+    if (num === null && (numStr === 'bull' || numStr === 'b')) return { key: 'B', mult };
+    if (num && (CRICKET_NUMS.includes(num) || CRICKET_NUMS.includes(String(num)))) return { key: String(num), mult };
+  }
+
+  // Bare number
+  var bare = /^\d+$/.test(tok) ? parseInt(tok) : null;
+  if (bare && (CRICKET_NUMS.includes(bare) || CRICKET_NUMS.includes(String(bare)))) return { key: String(bare), mult: 1 };
+
+  return null;
+}
+
+function parseCricketQuickInput(text) {
+  // Split on spaces/commas/semicolons
+  // First try to parse as voice-style ("treble twenty double eighteen")
+  var voiceParsed = parseCricketVoiceMulti(text);
+  if (voiceParsed && voiceParsed.length > 0) return voiceParsed;
+
+  var parts = text.trim().split(/[\s,;]+/);
+  var darts = [];
+  var i = 0;
+  while (i < parts.length && darts.length < 3) {
+    var tok = parts[i];
+    // Check if this is a multiplier word followed by a number
+    if (/^(single|double|treble|triple|s|d|t)$/.test(tok.toLowerCase()) && parts[i+1]) {
+      var combined = tok + ' ' + parts[i+1];
+      var res = parseCricketDartToken(combined);
+      if (res) { darts.push(res); i += 2; continue; }
+    }
+    var res = parseCricketDartToken(tok);
+    if (res) { darts.push(res); }
+    i++;
+  }
+  return darts;
+}
+
+function parseCricketVoiceMulti(text) {
+  // Parse full voice string into up to 3 dart tokens
+  text = text.toLowerCase().trim().replace(/\btriple\b/g, 'treble');
+  var wordMap = {'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19,'twenty':20};
+  Object.keys(wordMap).forEach(w => { text = text.replace(new RegExp('\\b'+w+'\\b','g'), String(wordMap[w])); });
+
+  var darts = [];
+  var remaining = text;
+  var multRe = /\b(single|double|treble|miss)\s+(bull(?:seye)?|\d+)/g;
+  var missRe = /\b(miss|missed|out)\b/g;
+  var bullRe = /\b(bull(?:seye)?|50)\b/g;
+
+  var tokens = text.split(/\s+/);
+  var j = 0;
+  while (j < tokens.length && darts.length < 3) {
+    var tok = tokens[j];
+    if (/^(and|a|the|then|with|plus)$/.test(tok)) { j++; continue; }
+    if (/^(miss|missed|out)$/.test(tok)) { darts.push({key:null,mult:0}); j++; continue; }
+    if (/^(bull|bullseye)$/.test(tok)) { darts.push({key:'B',mult:2}); j++; continue; }
+    if (/^(single|double|treble)$/.test(tok) && tokens[j+1]) {
+      var multMap2 = {single:1,double:2,treble:3};
+      var nextTok = tokens[j+1];
+      if (/^(bull|bullseye)$/.test(nextTok)) { darts.push({key:'B',mult:multMap2[tok]}); j+=2; continue; }
+      var num = /^\d+$/.test(nextTok) ? parseInt(nextTok) : null;
+      if (num && (CRICKET_NUMS.includes(num)||CRICKET_NUMS.includes(String(num)))) {
+        darts.push({key:String(num),mult:multMap2[tok]}); j+=2; continue;
+      }
+    }
+    // Bare cricket number
+    var bn = /^\d+$/.test(tok) ? parseInt(tok) : null;
+    if (bn && (CRICKET_NUMS.includes(bn)||CRICKET_NUMS.includes(String(bn)))) { darts.push({key:String(bn),mult:1}); j++; continue; }
+    j++;
+  }
+  return darts.length > 0 ? darts : null;
+}
+
+function submitCricketQuickInput() {
+  var input = document.getElementById('cricket-quick-input');
+  var transcript = document.getElementById('cricket-quick-transcript');
+  var text = input.value.trim();
+  if (!text) { transcript.textContent = 'Enter dart scores first'; transcript.style.color='var(--accent2)'; return; }
+  if (!cricketState.yourTurn) { transcript.textContent = 'Not your turn'; transcript.style.color='var(--accent2)'; return; }
+
+  var darts = parseCricketQuickInput(text);
+  if (!darts || darts.length === 0) {
+    transcript.textContent = 'Could not parse — try "T20 D18 S15" or "treble 20 double 18"';
+    transcript.style.color = 'var(--accent2)';
+    return;
+  }
+
+  // Apply each dart
+  var labels = [];
+  darts.forEach(function(d) {
+    if (!cricketState.yourTurn || cricketState.dartsLeft <= 0) return;
+    if (d.mult === 0 || d.key === null) {
+      labels.push('Miss');
+      applyMiss('you', CRICKET_NUMS.map(String)[0]); // counts as off-board miss
+    } else {
+      var multLabel = d.mult===3?'T':d.mult===2?'D':'S';
+      var numLabel = d.key==='B'?'Bull':d.key;
+      labels.push(multLabel+numLabel);
+      applyMarks('you', d.key, d.mult);
+    }
+  });
+
+  transcript.textContent = '→ ' + labels.join(' · ');
+  transcript.style.color = 'var(--accent3)';
+  input.value = '';
+  setTimeout(function() { transcript.textContent = ''; }, 3000);
 }
 
 function toggleCricketVoice() {
@@ -5649,6 +5872,20 @@ updateAttemptDots();
   });
 </script>
 
+
+<!-- ═══════════════════════ CHECKOUT DART MODAL ═══════════════════════ -->
+<div id="checkout-dart-modal" class="edit-confirm-overlay" style="display:none">
+  <div class="edit-confirm-box" style="max-width:340px">
+    <div class="edit-confirm-title">Checkout!</div>
+    <div class="edit-confirm-sub">🎯 Which dart did you close on?</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+      <button class="checkout-dart-pick" onclick="confirmCheckoutDart(1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:Bebas Neue,sans-serif;font-size:22px;padding:14px;cursor:pointer;transition:all 0.1s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">1st</button>
+      <button class="checkout-dart-pick" onclick="confirmCheckoutDart(2)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:Bebas Neue,sans-serif;font-size:22px;padding:14px;cursor:pointer;transition:all 0.1s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">2nd</button>
+      <button class="checkout-dart-pick" onclick="confirmCheckoutDart(3)" style="background:var(--surface2);border:1px solid var(--border);color:var(--accent);font-family:Bebas Neue,sans-serif;font-size:22px;padding:14px;cursor:pointer;transition:all 0.1s;border-color:rgba(232,255,58,0.4);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(232,255,58,0.4)'">3rd</button>
+    </div>
+    <div style="font-family:DM Mono,monospace;font-size:10px;color:var(--muted);text-align:center;margin-bottom:4px;">This helps track accurate checkout efficiency</div>
+  </div>
+</div>
 
 <!-- ═══════════════════════ EDIT THROW MODAL ═══════════════════════ -->
 <div id="edit-throw-modal" class="edit-confirm-overlay" style="display:none">
