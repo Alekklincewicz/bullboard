@@ -2084,101 +2084,7 @@ function parseSpokenScore(raw) {
   return null;
 }
 
-// Keep old names pointing to new function for compatibility
 function parseVoiceScore(raw) { return parseSpokenScore(raw); }
-function parseDartByDart(text) { return null; } // deprecated, replaced by parseSpokenScore
-function parseTotal(text) { return null; }       // deprecated
-
-function parseVoiceScore(raw) {
-  let text = raw.toLowerCase().trim();
-
-  // Explicit bust
-  if (/\bbust\b/.test(text)) return { action:'bust' };
-
-  // Normalise "triple" → "treble"
-  text = text.replace(/\btriple\b/g, 'treble');
-
-  // Try to parse dart-by-dart: "treble 20 single 5 double 16"
-  // Also handles "twenty treble" ordering (spoken naturally)
-  const dartByDart = parseDartByDart(text);
-  if (dartByDart !== null) return { action:'score', score: dartByDart };
-
-  // Fall back: try to read the whole thing as a number
-  const total = parseTotal(text);
-  if (total !== null && total >= 0 && total <= 180) return { action:'score', score: total };
-
-  return null;
-}
-
-function parseDartByDart(text) {
-  // Find multiplier+number pairs, e.g. "treble 20", "double 16", "single 5", "bull", "25"
-  // Pattern: optional (single|double|treble) + number-word-or-digit
-  // OR number + optional multiplier (e.g. "20 treble")
-  const multipliers = { single:1, double:2, treble:3 };
-
-  // Replace known number words with digits for easier parsing
-  let t = text;
-  // multi-word numbers first
-  Object.keys(wordNums).sort((a,b)=>b.length-a.length).forEach(w => {
-    t = t.replace(new RegExp('\\b'+w.replace(/ /g,'[ -]')+'\\b','g'), wordNums[w]);
-  });
-  t = t.replace(/\bone\b/g,'1').replace(/\btwo\b/g,'2').replace(/\bthree\b/g,'3');
-
-  // Patterns that suggest dart-by-dart input
-  const hasMult = /\b(single|double|treble)\b/.test(t);
-  if (!hasMult && (t.match(/\d+/g)||[]).length < 2) return null; // single number = total input
-
-  let total = 0;
-  let matched = 0;
-
-  // Match: (multiplier)? number | bull | bullseye | 25
-  const re = /\b(single|double|treble)?\s*(\d+|bull(?:seye)?)\b|\b(bull(?:seye)?)\b/g;
-  let m;
-  while ((m = re.exec(t)) !== null) {
-    let mult = m[1] ? multipliers[m[1]] : 1;
-    let numStr = m[2] || m[3];
-    let num;
-    if (/bull/.test(numStr)) {
-      num = mult === 2 ? 50 : 25;
-      mult = 1;
-    } else {
-      num = parseInt(numStr);
-    }
-    if (isNaN(num) || num < 0 || num > 20) continue;
-    total += num * mult;
-    matched++;
-  }
-
-  if (matched === 0) return null;
-  if (total < 0 || total > 180) return null;
-  return total;
-}
-
-function parseTotal(text) {
-  // Remove filler words
-  let t = text.replace(/\b(and|a|the|score|is|of|plus|uh|um|er)\b/g,' ').trim();
-
-  // Check compound number words first (longest match)
-  const sorted = Object.keys(wordNums).sort((a,b)=>b.length-a.length);
-  for (const w of sorted) {
-    if (t.replace(/\s+/g,' ').includes(w)) return wordNums[w];
-  }
-
-  // Check digit sequences
-  const digits = t.match(/\d+/g);
-  if (digits) {
-    // If single number
-    if (digits.length === 1) return parseInt(digits[0]);
-    // If two numbers like "1 4 0" = 140... concatenate if it forms a valid score
-    const joined = parseInt(digits.join(''));
-    if (joined <= 180) return joined;
-    // Sum them
-    const sum = digits.reduce((s,d)=>s+parseInt(d),0);
-    if (sum <= 180) return sum;
-  }
-
-  return null;
-}
 
 function initVoice() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -2213,13 +2119,14 @@ function initVoice() {
       }
 
       if (parsed) {
-        setTranscript(`"${results[0].transcript}" → ${parsed.action === 'bust' ? 'BUST' : parsed.score}`, 'parsed');
+        setTranscript('"' + results[0].transcript + '" → ' + (parsed.action === 'bust' ? 'BUST' : parsed.score), 'parsed');
         if (parsed.action === 'bust') {
           bustScore(true);
         } else {
+          // Show score in input display briefly, then submit directly
           inputVal = String(parsed.score);
           updateInputDisplay();
-          setTimeout(() => submitScore(true), 300);
+          processThrow(parsed.score, false, true);
         }
       } else {
         setTranscript(`Didn't catch that — try again`, 'heard');
