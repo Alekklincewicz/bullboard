@@ -1707,26 +1707,34 @@
 
 <!-- ── AUTH BAR: shown below nav on home page when logged out ── -->
 <div id="auth-bar">
-  <span class="auth-bar-label">Sign in</span>
-  <!-- Google -->
-  <button class="auth-bar-google" id="barGoogleSignInButton">
-    <svg width="14" height="14" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-    </svg>
-    Google
-  </button>
-  <div class="auth-bar-divider"></div>
-  <!-- Email/password -->
-  <input type="email" id="barEmailInput" placeholder="Email" />
-  <input type="password" id="barPasswordInput" placeholder="Password" />
-  <button id="barSignUpButton" style="background:var(--accent);color:#000;border:none;padding:7px 13px;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;white-space:nowrap;">SIGN UP</button>
-  <button id="barSignInButton" style="background:none;border:1px solid var(--accent);color:var(--accent);padding:7px 13px;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;white-space:nowrap;">SIGN IN</button>
-  <div class="auth-bar-divider"></div>
-  <!-- Guest -->
-  <button class="auth-bar-guest" onclick="playAsGuest()">👤 Play as Guest</button>
+  <!-- Shown when NOT signed in -->
+  <div id="auth-bar-signin" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;">
+    <span class="auth-bar-label">Sign in</span>
+    <!-- Google -->
+    <button class="auth-bar-google" id="barGoogleSignInButton">
+      <svg width="14" height="14" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      Google
+    </button>
+    <div class="auth-bar-divider"></div>
+    <!-- Email/password -->
+    <input type="email" id="barEmailInput" placeholder="Email" />
+    <input type="password" id="barPasswordInput" placeholder="Password" />
+    <button id="barSignUpButton" style="background:var(--accent);color:#000;border:none;padding:7px 13px;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;white-space:nowrap;">SIGN UP</button>
+    <button id="barSignInButton" style="background:none;border:1px solid var(--accent);color:var(--accent);padding:7px 13px;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;white-space:nowrap;">SIGN IN</button>
+    <div class="auth-bar-divider"></div>
+    <!-- Guest -->
+    <button class="auth-bar-guest" onclick="playAsGuest()">👤 Play as Guest</button>
+  </div>
+  <!-- Shown when signed in -->
+  <div id="auth-bar-user" style="display:none;align-items:center;gap:12px;width:100%;justify-content:center;flex-wrap:wrap;">
+    <span id="auth-bar-handle" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text);letter-spacing:1px;"></span>
+    <button onclick="doSignOut()" style="background:none;border:1px solid var(--dim);color:var(--muted);padding:6px 13px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;white-space:nowrap;">SIGN OUT</button>
+  </div>
 </div>
 
 <!-- ═══════════════════ PRACTICE PAGE ═══════════════════ -->
@@ -2273,8 +2281,11 @@
     <!-- RIGHT SIDEBAR: Leaderboard -->
     <div class="social-sidebar">
       <div class="panel">
-        <div class="panel-title">Leaderboard</div>
-        <div id="leaderboard-list" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);padding:8px;">No data yet.</div>
+        <div class="panel-title">Weekly Leaderboard</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">3-Dart Avg · This Week</div>
+        <div id="leaderboard-list" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">
+          <div style="font-size:11px;color:var(--muted);padding:8px 0;">Share sessions to appear here.</div>
+        </div>
       </div>
     </div>
 
@@ -2791,10 +2802,32 @@ function updateAuthBar(page) {
   if (!bar) return;
   const onHome = (page || getCurrentPage()) === 'home';
   const fullySignedIn = !!window._currentUser && !window._isGuest;
-  if (onHome && !fullySignedIn) {
-    bar.classList.add('visible');
-  } else {
+  const signinRow = document.getElementById('auth-bar-signin');
+  const userRow = document.getElementById('auth-bar-user');
+  const handleEl = document.getElementById('auth-bar-handle');
+
+  if (!onHome) {
     bar.classList.remove('visible');
+    return;
+  }
+  bar.classList.add('visible');
+
+  if (fullySignedIn) {
+    if (signinRow) signinRow.style.display = 'none';
+    if (userRow) userRow.style.display = 'flex';
+    if (handleEl) {
+      const h = window.socialState && window.socialState.myHandle
+        ? window.socialState.myHandle
+        : (window._currentUser.email || '').split('@')[0];
+      handleEl.textContent = '👤 ' + h;
+    }
+  } else if (window._isGuest) {
+    if (signinRow) signinRow.style.display = 'none';
+    if (userRow) userRow.style.display = 'flex';
+    if (handleEl) handleEl.textContent = '👤 ' + (window._guestHandle || 'Guest') + ' · Guest';
+  } else {
+    if (signinRow) signinRow.style.display = 'flex';
+    if (userRow) userRow.style.display = 'none';
   }
 }
 
@@ -4101,15 +4134,9 @@ restoreSocialSettingsUI();
 // Show auth bar on initial load (home page, not yet signed in)
 document.addEventListener('DOMContentLoaded', function() {
   if (typeof updateAuthBar === 'function') updateAuthBar();
-  // Load feed immediately for all visitors
-  if (typeof window.loadPostsFromFirebase === 'function') window.loadPostsFromFirebase();
 });
-// Fallback if DOMContentLoaded already fired
 if (document.readyState !== 'loading') {
-  setTimeout(function() {
-    if (typeof updateAuthBar === 'function') updateAuthBar();
-    if (typeof window.loadPostsFromFirebase === 'function') window.loadPostsFromFirebase();
-  }, 0);
+  setTimeout(function() { if (typeof updateAuthBar === 'function') updateAuthBar(); }, 0);
 }
 
 // ── Gate: show/hide based on auth state ──
@@ -4212,15 +4239,19 @@ function renderSocialPage() {
   }
 
   renderFeed();
-  renderLeaderboard();
   // Load all community posts from Firestore (everyone sees the feed)
   if (typeof window.loadPostsFromFirebase === 'function') window.loadPostsFromFirebase();
+  if (typeof window.loadLeaderboardFromFirebase === 'function') window.loadLeaderboardFromFirebase();
 }
 
 function toggleAutoPost(key, el) {
   socialState.autoPost[key] = !socialState.autoPost[key];
   if (socialState.autoPost[key]) el.classList.add('on'); else el.classList.remove('on');
   saveSocialState();
+  // Persist autoPost settings to Firestore for logged-in users
+  if (typeof window.saveUserProfileToFirebase === 'function' && window._currentUser) {
+    window.saveUserProfileToFirebase({ handle: socialState.myHandle, photoURL: socialState.photoURL });
+  }
   toast(socialState.autoPost[key] ? 'Auto-post enabled' : 'Auto-post disabled');
 }
 
@@ -4479,25 +4510,6 @@ function shareLastSession() {
   document.getElementById('post-text').value =
     'Session — avg ' + s.avg + ', ' + s.legs + ' leg' + (s.legs!==1?'s':'') + ', ' + s.checkoutPct + '% checkout ' + feel;
   toast('Session data added — edit and post!');
-}
-
-function renderLeaderboard() {
-  const el = document.getElementById('leaderboard-list');
-  const sessions = state.sessions;
-  if (!sessions.length) {
-    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted);padding:8px;">Complete sessions to appear here.</div>';
-    return;
-  }
-  const emailPrefix = window._currentUser && window._currentUser.email ? window._currentUser.email.split('@')[0] : 'You';
-  const handle = socialState.myHandle || emailPrefix;
-  const avg = (sessions.reduce(function(s,ses){return s+parseFloat(ses.avg);},0)/sessions.length).toFixed(1);
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-family:\'DM Mono\',monospace;">'
-    + '<span style="font-size:14px;width:22px">🥇</span>'
-    + '<div class="follow-avatar" style="background:var(--accent);width:28px;height:28px;font-size:11px;color:#000">' + handle.slice(0,2).toUpperCase() + '</div>'
-    + '<div style="flex:1;font-size:12px;color:var(--text)">' + handle + '</div>'
-    + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:var(--accent)">' + avg + '</div>'
-    + '</div>'
-    + '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--muted);padding-top:8px;border-top:1px solid var(--border);">Invite friends to compete!</div>';
 }
 
 // ── AUTO-POST TRIGGERS ──
@@ -5910,11 +5922,43 @@ window.toast = toast;
 updateMeta();
 updateAttemptDots();
 </script>
+<!--
+  ══════════════════════════════════════════════════════════
+  FIRESTORE SECURITY RULES — required for feed to work
+  Firebase Console → Firestore Database → Rules → Publish:
+
+  rules_version = '2';
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      // Public feed — anyone can read posts, signed-in users can write
+      match /posts/{postId} {
+        allow read: if true;
+        allow write: if request.auth != null || true; // allow guests too
+      }
+      // User profiles — public read, own write
+      match /users/{userId} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+      // Private session data — own only
+      match /sessions/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      }
+      match /drillData/{docId} {
+        allow read, write: if request.auth != null;
+      }
+      match /drillSessions/{docId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+  }
+  ══════════════════════════════════════════════════════════
+-->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
   import {
-    getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc, orderBy, limit
+    getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc, limit
   } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
   import {
     getAuth,
@@ -6039,31 +6083,33 @@ updateAttemptDots();
         post.id = docRef.id;
       }
     } catch (e) {
-      console.warn('Post save error:', e.message);
+      console.error('Post save error:', e.code, e.message);
+      if (e.code === 'permission-denied') {
+        if (typeof window.toast === 'function') window.toast('Post blocked by Firestore rules — check Firebase Console → Firestore → Rules', true);
+      }
     }
   };
 
   // ── Load all posts from Firestore — Firestore is the source of truth ──
   window.loadPostsFromFirebase = async () => {
     const feedEl = document.getElementById('social-feed');
-    if (feedEl && feedEl.dataset.loading) return; // prevent concurrent fetches
+    if (feedEl && feedEl.dataset.loading) return;
     if (feedEl) feedEl.dataset.loading = '1';
     try {
       const myUid = window._currentUser ? window._currentUser.uid : null;
-      const myHandle = window._isGuest ? window._guestHandle
+      const myHandle = window._isGuest
+        ? window._guestHandle
         : (window.socialState ? window.socialState.myHandle : null);
 
-      const snap = await getDocs(
-        query(collection(db, 'posts'), orderBy('savedAt', 'desc'), limit(200))
-      );
+      // No orderBy — avoids needing a Firestore composite index. Sort client-side.
+      const snap = await getDocs(query(collection(db, 'posts'), limit(200)));
 
       const cloudPosts = [];
       snap.forEach(d => {
         const data = d.data();
-        const docId = d.id;
         cloudPosts.push({
           ...data,
-          id: data.id || docId,       // prefer stored id, fall back to doc id
+          id: data.id || d.id,
           isOwn: !!(
             (myUid && data.userId === myUid) ||
             (myHandle && data.user && data.user.toLowerCase() === myHandle.toLowerCase())
@@ -6071,23 +6117,28 @@ updateAttemptDots();
         });
       });
 
-      // Replace feed entirely with cloud data (Firestore is source of truth)
-      // Keep local-only posts that haven't synced yet (no savedAt means still pending)
+      // Sort newest first client-side
+      cloudPosts.sort((a, b) => {
+        const ta = a.savedAt || '';
+        const tb = b.savedAt || '';
+        return tb.localeCompare(ta);
+      });
+
+      // Pending local posts not yet in Firestore (just published, upload in flight)
       const cloudIds = new Set(cloudPosts.map(p => p.id));
       const pendingLocal = (window.socialState.posts || []).filter(
         p => p.isOwn && !cloudIds.has(p.id)
       );
-      window.socialState.posts = [...pendingLocal, ...cloudPosts]
-        .sort((a, b) => {
-          // Sort by savedAt ISO string desc (most recent first)
-          const ta = a.savedAt || '';
-          const tb = b.savedAt || '';
-          return tb.localeCompare(ta);
-        });
+
+      window.socialState.posts = [...pendingLocal, ...cloudPosts];
 
       if (typeof renderFeed === 'function') renderFeed();
     } catch (e) {
-      console.warn('Feed load error:', e.message);
+      console.error('Feed load error:', e.code, e.message);
+      if (e.code === 'permission-denied' || e.message.includes('Missing or insufficient permissions')) {
+        const el = document.getElementById('social-feed');
+        if (el) el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--accent2);padding:16px;text-align:center;">⚠ Feed blocked by Firestore rules.<br>Set <code style="font-size:10px;">posts</code> collection to allow public reads.<br><span style="font-size:9px;color:var(--muted);">Firebase Console → Firestore → Rules</span></div>';
+      }
     } finally {
       if (feedEl) delete feedEl.dataset.loading;
     }
@@ -6314,6 +6365,7 @@ updateAttemptDots();
     if (user) {
       // Open social content gate immediately (uses locally cached handle)
       if (typeof updateSocialGate === 'function') updateSocialGate(true, user.email);
+      if (typeof updateAuthBar === 'function') updateAuthBar();
 
       // 1. Load profile doc first — fast, single doc, shows handle/photo immediately
       loadUserProfile(user.uid);
@@ -6322,8 +6374,89 @@ updateAttemptDots();
       loadUserData(user.uid);
     } else {
       if (typeof updateSocialGate === 'function') updateSocialGate(false, null);
+      if (typeof updateAuthBar === 'function') updateAuthBar();
     }
+
+    // Always refresh feed on any auth state change
+    loadPostsFromFirebase();
+    loadLeaderboardFromFirebase();
   });
+
+  // ── Load leaderboard from posts collection ──
+  async function loadLeaderboardFromFirebase() {
+    try {
+      // No orderBy — avoids Firestore index requirement. Fetch all recent and sort client-side.
+      const snap = await getDocs(query(collection(db, 'posts'), limit(500)));
+
+      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const userStats = {};
+
+      snap.forEach(d => {
+        const p = d.data();
+        if (!p.user) return;
+        if (!userStats[p.user]) {
+          userStats[p.user] = { handle: p.user, photoURL: p.photoURL || null, color: p.color || '#e8ff3a', avgs: [], highScores: [] };
+        }
+        const u = userStats[p.user];
+        const avgChip = (p.stats || []).find(s => s.l === 'Avg' || s.l === 'avg');
+        if (avgChip && (!p.savedAt || p.savedAt >= oneWeekAgo)) {
+          const v = parseFloat(avgChip.v);
+          if (!isNaN(v)) u.avgs.push(v);
+        }
+        const hiChip = (p.stats || []).find(s => s.l === 'Best' || s.l === 'High' || s.l === 'High Leg' || s.l === 'best');
+        if (hiChip && (!p.savedAt || p.savedAt >= oneWeekAgo)) {
+          const v = parseFloat(hiChip.v);
+          if (!isNaN(v)) u.highScores.push(v);
+        }
+      });
+
+      const entries = Object.values(userStats)
+        .filter(u => u.avgs.length > 0)
+        .map(u => ({
+          ...u,
+          weeklyAvg: (u.avgs.reduce((a, b) => a + b, 0) / u.avgs.length).toFixed(1),
+          weeklyHigh: u.highScores.length ? Math.max(...u.highScores) : null,
+          sessionCount: u.avgs.length,
+        }))
+        .sort((a, b) => parseFloat(b.weeklyAvg) - parseFloat(a.weeklyAvg))
+        .slice(0, 10);
+
+      const el = document.getElementById('leaderboard-list');
+      if (!el) return;
+
+      if (entries.length === 0) {
+        el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted);padding:8px 0;">Share a session to appear here!</div>';
+        return;
+      }
+
+      const medals = ['🥇','🥈','🥉'];
+      el.innerHTML = entries.map((u, i) => {
+        const init = u.handle.slice(0, 2).toUpperCase();
+        const avatarHtml = u.photoURL
+          ? '<img src="' + u.photoURL + '" style="width:100%;height:100%;object-fit:cover;" />'
+          : init;
+        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">'
+          + '<span style="font-size:13px;width:18px;flex-shrink:0">' + (medals[i] || (i + 1)) + '</span>'
+          + '<div class="follow-avatar" style="background:' + (u.photoURL ? 'transparent' : u.color) + ';width:26px;height:26px;font-size:10px;color:#000;overflow:hidden;flex-shrink:0">' + avatarHtml + '</div>'
+          + '<div style="flex:1;min-width:0;font-family:\'DM Mono\',monospace;">'
+          + '<div style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + u.handle + '</div>'
+          + '<div style="font-size:9px;color:var(--muted);">' + u.sessionCount + ' session' + (u.sessionCount !== 1 ? 's' : '') + '</div>'
+          + '</div>'
+          + '<div style="text-align:right;flex-shrink:0;">'
+          + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:var(--accent);line-height:1">' + u.weeklyAvg + '</div>'
+          + (u.weeklyHigh ? '<div style="font-size:9px;color:var(--muted);">best&nbsp;' + u.weeklyHigh + '</div>' : '')
+          + '</div>'
+          + '</div>';
+      }).join('');
+    } catch (e) {
+      console.error('Leaderboard load error:', e.code, e.message);
+    }
+  }
+  window.loadLeaderboardFromFirebase = loadLeaderboardFromFirebase;
+
+  // ── Kick off initial feed + leaderboard load (module runs after DOM is ready) ──
+  loadPostsFromFirebase();
+  loadLeaderboardFromFirebase();
 </script>
 
 
