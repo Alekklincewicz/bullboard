@@ -1184,7 +1184,7 @@
     <button onclick="showPage('stats',this);closeMenu()">Stats</button>
     <button onclick="showPage('analysis',this);closeMenu()">Analysis</button>
     <button onclick="showPage('history',this);closeMenu()">History</button>
-    <button onclick="showPage('social',this);closeMenu()">Social</button>
+    <button onclick="showPage('home',this);closeMenu()">Home</button>
   </nav>
 
   <div id="auth-container" style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
@@ -1562,7 +1562,7 @@
 </div>
 
 <!-- ═══════════════════ SOCIAL PAGE ═══════════════════ -->
-<div id="page-social" class="page">
+<div id="page-home" class="page">
 
   <!-- SIGN-IN GATE (shown when logged out) -->
   <div id="social-gate" class="social-gate hidden">
@@ -1996,7 +1996,7 @@ function showPage(name, btn) {
   if (name === 'history') renderHistoryPage();
   if (name === 'analysis') renderAnalysis();
   if (name === 'drill') renderDrillPage();
-  if (name === 'social') renderSocialPage();
+  if (name === 'home') renderSocialPage();
   // Update logo subtitle
   const subtitles = {
     practice: 'PRACTICE',
@@ -2004,7 +2004,7 @@ function showPage(name, btn) {
     stats: 'STATS',
     analysis: 'ANALYSIS',
     history: 'HISTORY',
-    social: 'SOCIAL',
+    home: 'HOME',
   };
   const sub = document.querySelector('.logo span');
   if (sub) sub.textContent = '// ' + (subtitles[name] || name.toUpperCase());
@@ -3303,7 +3303,7 @@ function publishPost(type, text, stats, extraColor) {
   socialState.posts.push(post);
   saveSocialState();
   // Only re-render if on social page
-  if (document.getElementById('page-social').classList.contains('active')) renderFeed();
+  if (document.getElementById('page-home').classList.contains('active')) renderFeed();
   return post;
 }
 
