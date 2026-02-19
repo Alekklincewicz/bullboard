@@ -4210,6 +4210,8 @@ function renderSocialPage() {
 
   renderFeed();
   renderLeaderboard();
+  // Load all community posts from Firestore (signed-in and guest alike)
+  if (typeof window.loadPostsFromFirebase === 'function') window.loadPostsFromFirebase();
 }
 
 function toggleAutoPost(key, el) {
@@ -4436,7 +4438,10 @@ function publishPost(type, text, stats, extraColor) {
   saveSocialState();
   // Save post to Firestore (both signed-in and guest users)
   if (typeof window.savePostToFirebase === 'function') {
-    window.savePostToFirebase(post);
+    window.savePostToFirebase(post).then(() => {
+      // Refresh from cloud after save so the full feed is up to date
+      if (typeof window.loadPostsFromFirebase === 'function') window.loadPostsFromFirebase();
+    });
   }
   // Only re-render if on social page
   if (document.getElementById('page-home').classList.contains('active')) renderFeed();
@@ -5895,7 +5900,7 @@ updateAttemptDots();
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
   import {
-    getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc
+    getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc, orderBy, limit
   } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
   import {
     getAuth,
@@ -5904,7 +5909,9 @@ updateAttemptDots();
     signOut,
     onAuthStateChanged,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult
   } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -5931,14 +5938,36 @@ updateAttemptDots();
   const googleSignInButton = document.getElementById('barGoogleSignInButton');
   const userStatus         = document.getElementById('userStatus');
 
-  // ── Auth: Google Sign-In ──
+  // ── Auth: Google Sign-In (popup → redirect fallback) ──
   const googleProvider = new GoogleAuthProvider();
+
+  // Handle redirect result on page load (fires after signInWithRedirect completes)
+  getRedirectResult(auth).then((result) => {
+    if (result && result.user) {
+      if (typeof window.toast === 'function') window.toast('Signed in as ' + result.user.email);
+    }
+  }).catch((e) => {
+    if (e.code !== 'auth/no-auth-event') console.warn('Redirect result error:', e.message);
+  });
+
   googleSignInButton.addEventListener('click', async () => {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (e) {
-      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
-        alert('Google sign-in error: ' + e.message);
+      if (e.code === 'auth/unauthorized-domain') {
+        // Domain not whitelisted — fall back to redirect, which may work on some setups
+        // Also surface a clear actionable message
+        const domain = window.location.hostname;
+        if (typeof window.toast === 'function') {
+          window.toast('⚠ Add "' + domain + '" to Firebase Console → Authentication → Settings → Authorized domains, then retry.', true);
+        } else {
+          alert('Google sign-in blocked: your domain (' + domain + ') is not authorized in Firebase.\n\nFix: Firebase Console → Authentication → Settings → Authorized domains → Add "' + domain + '"');
+        }
+        // Try redirect as fallback anyway
+        try { await signInWithRedirect(auth, googleProvider); } catch (_) {}
+      } else if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
+        if (typeof window.toast === 'function') window.toast('Google sign-in error: ' + e.message, true);
+        else alert('Google sign-in error: ' + e.message);
       }
     }
   });
@@ -5992,6 +6021,34 @@ updateAttemptDots();
       });
     } catch (e) {
       console.warn('Post save error:', e.message);
+    }
+  };
+
+  // ── Load all posts from Firestore into the feed (all users, no filter) ──
+  window.loadPostsFromFirebase = async () => {
+    try {
+      const myUid = window._currentUser ? window._currentUser.uid : null;
+      const myHandle = window._isGuest ? window._guestHandle : (window.socialState ? window.socialState.myHandle : null);
+      const snap = await getDocs(query(collection(db, 'posts'), orderBy('savedAt', 'desc'), limit(100)));
+      const cloudPosts = [];
+      snap.forEach(d => {
+        const data = d.data();
+        cloudPosts.push({
+          ...data,
+          id: data.id || d.id,
+          // Mark as own if it belongs to current user or current guest handle
+          isOwn: (myUid && data.userId === myUid) || (data.user && myHandle && data.user === myHandle),
+        });
+      });
+      // Merge: cloud posts replace any with matching id, local-only posts kept
+      const cloudIds = new Set(cloudPosts.map(p => p.id));
+      const localOnly = (window.socialState.posts || []).filter(p => !cloudIds.has(p.id));
+      window.socialState.posts = [...localOnly, ...cloudPosts]
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      window.saveSocialState();
+      if (typeof renderFeed === 'function') renderFeed();
+    } catch (e) {
+      console.warn('Feed load error:', e.message);
     }
   };
 
