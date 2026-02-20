@@ -1030,7 +1030,8 @@
     align-items: start;
   }
   .social-sidebar { display: flex; flex-direction: column; gap: 16px; }
-  .social-feed { display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto; padding-right: 4px; scroll-behavior: smooth; }
+  .social-feed { display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: scroll; padding-right: 0; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; }
+  .social-feed::-webkit-scrollbar { display: none; }
 
   /* Profile card */
   .profile-card {
@@ -1498,9 +1499,27 @@
     #userStatus { display: none !important; }
     .logo span { display: none; }
     .page { padding: 14px; }
+    /* Social layout: single column, show feed */
     .social-layout { grid-template-columns: 1fr; }
     .social-layout > *:nth-child(3) { display: none; }
     .social-sidebar:first-child > .panel:last-child { display: none; }
+    /* social-content grid fix: all items stack, feed is visible */
+    #social-content { display: flex !important; flex-direction: column; gap: 16px; }
+    #social-content > .social-sidebar { display: none; }
+    #social-content > div:not(.social-sidebar) { display: block !important; }
+    .social-feed { max-height: 60vh; }
+    /* Drill tracker: stack vertically on mobile */
+    .drill-controls-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .drill-controls-row .drill-section[style*="grid-column:span 3"],
+    .drill-controls-row .drill-section[style*="span 3"] {
+      grid-column: unset;
+    }
+    .drill-bottom-row { grid-template-columns: 1fr; }
+    .target-grid { grid-template-columns: repeat(7, 1fr) !important; }
   }
 
   @media (max-width: 640px) {
@@ -1668,7 +1687,7 @@
 <body>
 
 <header>
-  <div class="logo">Bullboard <span>// PRACTICE</span></div>
+  <div class="logo" onclick="showPage('home', document.querySelector('nav button:first-child')); closeMenu();" style="cursor:pointer;" title="Back to Home">Bullboard <span>// PRACTICE</span></div>
 
   <nav id="main-nav">
     <button class="active" onclick="showPage('home',this);closeMenu()">Home</button>
@@ -1943,18 +1962,19 @@
     <div class="modal-section-label">Notes</div>
     <textarea id="modal-session-notes" class="tag-input" style="min-height:72px;resize:vertical;" placeholder="How did it feel? e.g. 'elbow dropping on high numbers'"></textarea>
 
-    <div class="modal-section-label">Share to Social</div>
+    <div class="modal-section-label">Share to Social Feed</div>
     <div class="modal-share-row">
-      <div class="modal-share-toggle" id="modal-share-toggle" onclick="toggleModalShare()"></div>
+      <div class="modal-share-toggle on" id="modal-share-toggle" onclick="toggleModalShare()"></div>
       <div class="modal-share-label">Post session summary to feed
-        <span>Visible to people who follow you</span>
+        <span>Visible to people who follow you — toggle off to save privately</span>
       </div>
     </div>
-    <textarea id="modal-share-text" class="tag-input" style="min-height:56px;resize:vertical;display:none;" placeholder="Add a caption (optional)..."></textarea>
+    <div class="modal-section-label" id="modal-caption-label">Caption / Notes for Feed</div>
+    <textarea id="modal-share-text" class="tag-input" style="min-height:56px;resize:vertical;" placeholder="Add a caption or notes for the feed post..."></textarea>
 
     <div class="modal-btn-row">
       <button class="modal-btn-cancel" onclick="closeEndSessionModal()">Cancel</button>
-      <button class="modal-btn-save" onclick="confirmEndSession()">Save Session</button>
+      <button class="modal-btn-save" id="modal-save-btn" onclick="confirmEndSession()">Save &amp; Share</button>
     </div>
   </div>
 </div>
@@ -2321,10 +2341,7 @@ var PRO_DART_PLAYERS = [
   'PhilTaylor','JohnLowe','EricBristow','MartinAdams','TerryCameron',
   'RobCross','CallanRenton','ChrisDobey','JosepRodriguez','MickyMann',
   'GerwynPrice','LukeWright','JeffSmith','DerekPriestley','AndyCole',
-  'BernadetteWood','FalconSmith','LisaAshton','TrinaMead','DarrylFitton',
-  'CharlieManby', 'LukeLittler', 'GianVanVeen', 'JoshRock', 'DannyNoppert',
-  'GerwynPrice', 'RyanSearle', 'NathanAspinall', 'DamonHeta', 'CammyMenzies',
-  'RickyEvans', 'JoeCullen'
+  'BernadetteWood','FalconSmith','LisaAshton','TrinaMead','DarrylFitton'
 ];
 
 function generateGuestHandle() {
@@ -3070,10 +3087,16 @@ function openEndSessionModal() {
   // Pre-fill notes
   document.getElementById('modal-session-notes').value = document.getElementById('session-notes').value;
 
-  // Share toggle
-  modalShareEnabled = false;
-  document.getElementById('modal-share-toggle').classList.remove('on');
-  document.getElementById('modal-share-text').style.display = 'none';
+  // Share toggle — default ON
+  modalShareEnabled = true;
+  document.getElementById('modal-share-toggle').classList.add('on');
+  // Auto-populate caption
+  const autoAvg = sessionLegs.reduce((s,l)=>s+parseFloat(l.avg),0) / sessionLegs.length;
+  const autoCO = sessionLegs.reduce((s,l)=>s+l.checkouts,0);
+  const autoCOAtt = sessionLegs.reduce((s,l)=>s+l.checkoutAttempts,0);
+  const autoCoPct = autoCOAtt>0 ? ((autoCO/autoCOAtt)*100).toFixed(0) + '%' : '—';
+  const autoFeel = ['','😩','😕','😐','🙂','🔥'][modalSessionFeel] || '';
+  document.getElementById('modal-share-text').value = 'Session done — avg ' + autoAvg.toFixed(1) + ', ' + sessionLegs.length + ' leg' + (sessionLegs.length!==1?'s':'') + ', ' + autoCoPct + ' checkout ' + autoFeel;
 
   document.getElementById('session-end-modal').classList.remove('hidden');
 }
@@ -3091,28 +3114,58 @@ function setModalFeel(n, btn) {
 function toggleModalShare() {
   modalShareEnabled = !modalShareEnabled;
   const toggle = document.getElementById('modal-share-toggle');
-  const textArea = document.getElementById('modal-share-text');
+  const captionLabel = document.getElementById('modal-caption-label');
+  const saveBtn = document.getElementById('modal-save-btn');
   if (modalShareEnabled) {
     toggle.classList.add('on');
-    textArea.style.display = 'block';
-    // Auto-populate caption
-    const totalAvg = sessionLegs.reduce((s,l)=>s+parseFloat(l.avg),0) / sessionLegs.length;
-    const totalCO = sessionLegs.reduce((s,l)=>s+l.checkouts,0);
-    const totalCOAtt = sessionLegs.reduce((s,l)=>s+l.checkoutAttempts,0);
-    const coPct = totalCOAtt>0 ? ((totalCO/totalCOAtt)*100).toFixed(0) + '%' : '—';
-    const feel = ['','😩','😕','😐','🙂','🔥'][modalSessionFeel] || '';
-    textArea.value = 'Session done — avg ' + totalAvg.toFixed(1) + ', ' + sessionLegs.length + ' leg' + (sessionLegs.length!==1?'s':'') + ', ' + coPct + ' checkout ' + feel;
+    if (captionLabel) captionLabel.style.opacity = '1';
+    document.getElementById('modal-share-text').style.opacity = '1';
+    document.getElementById('modal-share-text').disabled = false;
+    if (saveBtn) saveBtn.textContent = 'Save & Share';
+    // Auto-populate if empty
+    const textArea = document.getElementById('modal-share-text');
+    if (!textArea.value.trim()) {
+      const totalAvg = sessionLegs.reduce((s,l)=>s+parseFloat(l.avg),0) / sessionLegs.length;
+      const totalCO = sessionLegs.reduce((s,l)=>s+l.checkouts,0);
+      const totalCOAtt = sessionLegs.reduce((s,l)=>s+l.checkoutAttempts,0);
+      const coPct = totalCOAtt>0 ? ((totalCO/totalCOAtt)*100).toFixed(0) + '%' : '—';
+      const feel = ['','😩','😕','😐','🙂','🔥'][modalSessionFeel] || '';
+      textArea.value = 'Session done — avg ' + totalAvg.toFixed(1) + ', ' + sessionLegs.length + ' leg' + (sessionLegs.length!==1?'s':'') + ', ' + coPct + ' checkout ' + feel;
+    }
   } else {
     toggle.classList.remove('on');
-    textArea.style.display = 'none';
+    if (captionLabel) captionLabel.style.opacity = '0.4';
+    document.getElementById('modal-share-text').style.opacity = '0.4';
+    document.getElementById('modal-share-text').disabled = true;
+    if (saveBtn) saveBtn.textContent = 'Save Only';
   }
 }
 
+let _sessionSaveInProgress = false;
+let _lastSavedSessionHash = null;
+let _lastSaveTime = 0;
+
 function confirmEndSession() {
+  // Prevent double-click duplicate saves
+  if (_sessionSaveInProgress) return;
+  _sessionSaveInProgress = true;
+  setTimeout(() => { _sessionSaveInProgress = false; }, 2000);
+
   const totalAvg = sessionLegs.reduce((s,l)=>s+parseFloat(l.avg),0) / sessionLegs.length;
   const totalCO = sessionLegs.reduce((s,l)=>s+l.checkouts,0);
   const totalCOAtt = sessionLegs.reduce((s,l)=>s+l.checkoutAttempts,0);
   const notes = document.getElementById('modal-session-notes').value;
+
+  // Deduplicate: check if an identical session was just saved (accidental double-click)
+  const sessionHash = totalAvg.toFixed(1) + ':' + sessionLegs.length + ':' + totalCO + ':' + totalCOAtt;
+  if (_lastSavedSessionHash === sessionHash && Date.now() - (_lastSaveTime || 0) < 5000) {
+    _sessionSaveInProgress = false;
+    toast('Session already saved!');
+    closeEndSessionModal();
+    return;
+  }
+  _lastSavedSessionHash = sessionHash;
+  _lastSaveTime = Date.now();
   const sessionData = {
     date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),
     timestamp: Date.now(),
@@ -3134,13 +3187,19 @@ function confirmEndSession() {
   if (modalShareEnabled && window._currentUser) {
     const caption = document.getElementById('modal-share-text').value.trim();
     const coPct = totalCOAtt>0 ? ((totalCO/totalCOAtt)*100).toFixed(0) + '%' : '—';
-    publishPost('session', caption, [
+    // Build post text: include caption (user commentary) prominently
+    const feel = ['','😩','😕','😐','🙂','🔥'][modalSessionFeel] || '';
+    const autoText = 'Session done — avg ' + totalAvg.toFixed(1) + ', ' + sessionLegs.length + ' leg' + (sessionLegs.length!==1?'s':'') + ', ' + coPct + ' checkout ' + feel;
+    const postText = caption || autoText;
+    publishPost('session', postText, [
       {l:'Avg', v:totalAvg.toFixed(1)},
       {l:'Legs', v:String(sessionLegs.length)},
       {l:'CO%',  v:coPct},
-      {l:'Feel', v:(['','😩','😕','😐','🙂','🔥'][modalSessionFeel]||'')},
+      {l:'Feel', v:(feel)},
     ]);
-    toast('✓ Session saved & shared!');
+    closeEndSessionModal();
+    // Visual confirmation of save + share
+    toast('✓ Session saved & posted to feed!');
   } else {
     // Check auto-post
     if (window._currentUser && socialState.autoPost.session) {
@@ -3150,11 +3209,12 @@ function confirmEndSession() {
         {l:'Avg',v:totalAvg.toFixed(1)},{l:'Legs',v:String(sessionLegs.length)},{l:'CO%',v:coPct}
       ]);
     }
+    closeEndSessionModal();
+    // Visual confirmation
     toast('✓ Session saved!');
   }
   sessionLegs = [];
   document.getElementById('session-notes').value = '';
-  closeEndSessionModal();
   newLeg();
 }
 
@@ -5895,12 +5955,14 @@ function renderHistoryPage() {
     return;
   }
 
-  el.innerHTML = cricketHtml + sessions.map(function(s) {
+  el.innerHTML = cricketHtml + sessions.map(function(s, idx) {
     const feel = ['','😩','😕','😐','🙂','🔥'][s.feel] || '';
     const co = parseInt(s.checkoutPct);
     const coColor = co>=50?'var(--accent3)':co>=30?'var(--accent)':'var(--accent2)';
     const avgColor = parseFloat(s.avg)>=55?'var(--accent3)':'var(--text)';
     const notesHtml = s.notes ? '<div class="history-notes">' + s.notes + '</div>' : '';
+    // Store session reference index into the sessions array for sharing
+    const sessionIdx = state.sessions.length - 1 - idx; // since we reversed
 
     return '<div class="history-session-card">'
       + '<div class="history-session-header">'
@@ -5915,13 +5977,35 @@ function renderHistoryPage() {
       + (s.checkouts !== undefined ? '<div class="history-chip"><label>Checkouts</label><span>' + s.checkouts + '/' + (s.checkoutAttempts||'?') + '</span></div>' : '')
       + '</div>'
       + notesHtml
+      + '<div style="margin-top:10px;display:flex;justify-content:flex-end;">'
+      + '<button onclick="shareHistorySession(' + sessionIdx + ')" style="background:none;border:1px solid var(--accent4);color:var(--accent4);padding:6px 14px;font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all 0.1s;text-transform:uppercase;" onmouseover="this.style.background=\'rgba(167,139,250,0.08)\'" onmouseout="this.style.background=\'none\'">↗ Share to Feed</button>'
+      + '</div>'
       + '</div>';
   }).join('');
 }
 
-// ═══════════════════════════════════════════════════
-//  TOAST
-// ═══════════════════════════════════════════════════
+// Share a past session from history to the social feed
+function shareHistorySession(sessionIdx) {
+  if (!window._currentUser && !window._isGuest) {
+    toast('Sign in to share to the social feed', true);
+    return;
+  }
+  const s = state.sessions[sessionIdx];
+  if (!s) { toast('Session not found', true); return; }
+  const feel = ['','😩','😕','😐','🙂','🔥'][s.feel] || '';
+  const co = s.checkoutPct + '%';
+  const notesPart = s.notes ? ' — "' + s.notes + '"' : '';
+  const text = s.date + ' — avg ' + s.avg + ', ' + s.legs + ' leg' + (s.legs!==1?'s':'') + ', ' + co + ' checkout ' + feel + notesPart;
+  publishPost('session', text, [
+    {l:'Avg', v:s.avg},
+    {l:'Legs', v:String(s.legs)},
+    {l:'CO%', v:co},
+    {l:'Feel', v:feel},
+  ]);
+  toast('✓ Session shared to feed!');
+}
+
+
 function toast(msg, isError) {
   document.querySelectorAll('.toast').forEach(t=>t.remove());
   const el=document.createElement('div');
