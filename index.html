@@ -1513,14 +1513,6 @@
     .social-layout { grid-template-columns: 1fr; }
     .social-layout > *:nth-child(3) { display: none; }
     .social-sidebar:first-child > .panel:last-child { display: none; }
-    /* Logged-out state: hide settings-only content */
-  body.logged-out .profile-card input,
-  body.logged-out .profile-card button:not(#profileSignOutButton),
-  body.logged-out #auto-post-settings,
-  body.logged-out .panel:has(#auto-post-settings) .panel-title { display: none !important; }
-  body.logged-out .profile-card { pointer-events: none; }
-  body.logged-out #social-avatar { pointer-events: none; }
-  body.logged-out .profile-card .avatar-edit-hint { display: none !important; }
     #social-content { display: flex !important; flex-direction: column; gap: 16px; }
     #social-content > .social-sidebar { display: none; }
     #social-content > div:not(.social-sidebar) { display: block !important; }
@@ -2048,9 +2040,9 @@
         </div>
 
     </div>
+    </div><!-- /panel -->
 
     <!-- BOTTOM: THIS SESSION + ALL-TIME -->
-    <div class="drill-bottom-row">
       <div class="panel">
         <div class="panel-title">This Session</div>
         <div id="drill-session-log" style="font-family:DM Mono,monospace;font-size:12px;color:var(--muted);">No throws logged yet.</div>
@@ -2358,8 +2350,7 @@
 window._currentUser = null;
 window._isGuest = false;
 window._guestHandle = null;
-// Show logged-out state by default until Firebase resolves
-document.body.classList.add('logged-out');
+// Show welcome banner by default until Firebase resolves
 var _initBanner = document.getElementById('logged-out-banner');
 if (_initBanner) _initBanner.style.display = 'block';
 
@@ -2422,7 +2413,7 @@ function exitGuestMode() {
   if (gate) gate.classList.remove('hidden');
   if (content) content.classList.remove('hidden');
   if (loggedOutBanner) loggedOutBanner.style.display = 'block';
-  document.body.classList.add('logged-out');
+  
   var banner = document.getElementById('guest-banner');
   if (banner) banner.style.display = 'none';
   if (typeof updateAuthBar === 'function') updateAuthBar();
@@ -4256,12 +4247,8 @@ function updateSocialGate(isSignedIn, email) {
   if (loggedOutBanner) {
     loggedOutBanner.style.display = (!isSignedIn && !isGuest) ? 'block' : 'none';
   }
-  // Toggle body class for CSS-driven logged-out state
-  if (!isSignedIn && !isGuest) {
-    document.body.classList.add('logged-out');
-  } else {
-    document.body.classList.remove('logged-out');
-  }
+  // Toggle body class for CSS-driven logged-out state - removed, using JS only
+  
 
   // Guest banner
   const banner = document.getElementById('guest-banner');
