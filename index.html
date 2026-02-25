@@ -313,13 +313,14 @@
   /* ── SCOREBOARD ── */
   .score-display {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 96px;
+    font-size: 120px;
     line-height: 1;
     color: var(--accent);
     text-align: center;
     padding: 20px 0;
-    text-shadow: 0 0 60px rgba(232,255,58,0.2);
+    text-shadow: 0 0 80px rgba(232,255,58,0.45), 0 0 30px rgba(232,255,58,0.3);
     transition: color 0.2s;
+    letter-spacing: 4px;
   }
 
   .score-meta {
@@ -339,7 +340,7 @@
     text-transform: uppercase;
     margin-bottom: 4px;
   }
-  .score-meta .val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--text); }
+  .score-meta .val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--accent); text-shadow: 0 0 20px rgba(232,255,58,0.2); }
 
   /* ── INPUT + NUMPAD ── */
   .input-row {
@@ -393,13 +394,13 @@
     border: 1px solid var(--border);
     color: var(--text);
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
-    padding: 18px;
+    font-size: 36px;
+    padding: 22px;
     cursor: pointer;
     transition: all 0.1s;
     letter-spacing: 1px;
   }
-  .numpad button:hover { background: var(--dim); border-color: var(--muted); }
+  .numpad button:hover { background: var(--dim); border-color: var(--accent); color: var(--accent); }
   .numpad button:active { transform: scale(0.96); }
   .numpad button.zero { grid-column: span 2; }
   .numpad button.del { color: var(--accent2); border-color: #2a1a1a; }
@@ -410,14 +411,15 @@
     color: #000;
     border: none;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 3px;
-    padding: 18px;
+    font-size: 28px;
+    letter-spacing: 4px;
+    padding: 22px;
     cursor: pointer;
     transition: all 0.15s;
     margin-bottom: 8px;
+    box-shadow: 0 0 30px rgba(232,255,58,0.25);
   }
-  .btn-submit:hover { background: #d4e82a; transform: translateY(-1px); }
+  .btn-submit:hover { background: #d4e82a; transform: translateY(-1px); box-shadow: 0 4px 40px rgba(232,255,58,0.4); }
 
   .btn-bust {
     width: 100%;
@@ -564,15 +566,20 @@
   .toggle-btn.sel-treble { border-color: var(--accent4); color: var(--accent4); background: rgba(167,139,250,0.06); }
   .toggle-btn.sel-darts { border-color: var(--accent); color: var(--accent); background: rgba(232,255,58,0.06); }
 
-  .target-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin-bottom: 4px; }
+  .target-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; margin-bottom: 4px; }
   .target-btn {
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--muted); padding: 8px 4px;
-    font-family: 'DM Mono', monospace; font-size: 11px;
+    background: var(--surface2); border: 2px solid rgba(255,255,255,0.12);
+    color: var(--text); padding: 10px 4px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px;
     cursor: pointer; transition: all 0.1s; text-align: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
   }
-  .target-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(232,255,58,0.08); }
-  .target-btn:hover { border-color: var(--muted); color: var(--text); }
+  .target-btn.selected {
+    border-color: var(--accent); color: #000; background: var(--accent);
+    box-shadow: 0 0 14px rgba(232,255,58,0.5), inset 0 0 0 1px rgba(255,255,255,0.2);
+    font-size: 20px;
+  }
+  .target-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(232,255,58,0.1); }
 
   .attempt-label {
     font-family: 'DM Mono', monospace; font-size: 10px;
@@ -603,17 +610,19 @@
 
   .drill-action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
   .drill-hit {
-    background: rgba(58,255,184,0.08); border: 1px solid var(--accent3); color: var(--accent3);
-    padding: 16px; font-family: 'Bebas Neue', sans-serif; font-size: 20px;
-    letter-spacing: 2px; cursor: pointer; transition: all 0.12s;
+    background: rgba(58,255,184,0.12); border: 2px solid var(--accent3); color: var(--accent3);
+    padding: 22px; font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+    letter-spacing: 3px; cursor: pointer; transition: all 0.12s;
+    box-shadow: 0 0 20px rgba(58,255,184,0.15);
   }
-  .drill-hit:hover { background: rgba(58,255,184,0.15); }
+  .drill-hit:hover { background: rgba(58,255,184,0.22); box-shadow: 0 0 30px rgba(58,255,184,0.3); }
   .drill-miss {
-    background: rgba(255,77,77,0.08); border: 1px solid var(--accent2); color: var(--accent2);
-    padding: 16px; font-family: 'Bebas Neue', sans-serif; font-size: 20px;
-    letter-spacing: 2px; cursor: pointer; transition: all 0.12s;
+    background: rgba(255,77,77,0.12); border: 2px solid var(--accent2); color: var(--accent2);
+    padding: 22px; font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+    letter-spacing: 3px; cursor: pointer; transition: all 0.12s;
+    box-shadow: 0 0 20px rgba(255,77,77,0.15);
   }
-  .drill-miss:hover { background: rgba(255,77,77,0.15); }
+  .drill-miss:hover { background: rgba(255,77,77,0.22); box-shadow: 0 0 30px rgba(255,77,77,0.3); }
 
   .drill-stats-panel {
     background: var(--surface2); border: 1px solid var(--border);
@@ -800,17 +809,18 @@
   .score-vs-side.bot .score-vs-label { color: var(--accent4); }
   .score-vs-num {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 88px;
+    font-size: 112px;
     line-height: 1;
     transition: color 0.3s, text-shadow 0.3s;
+    letter-spacing: 4px;
   }
   .score-vs-side.you .score-vs-num {
     color: var(--accent);
-    text-shadow: 0 0 50px rgba(232,255,58,0.25);
+    text-shadow: 0 0 70px rgba(232,255,58,0.5), 0 0 25px rgba(232,255,58,0.35);
   }
   .score-vs-side.bot .score-vs-num {
     color: var(--accent4);
-    text-shadow: 0 0 50px rgba(167,139,250,0.25);
+    text-shadow: 0 0 70px rgba(167,139,250,0.5), 0 0 25px rgba(167,139,250,0.35);
   }
   .score-vs-sub {
     font-family: 'DM Mono', monospace;
@@ -1503,7 +1513,14 @@
     .social-layout { grid-template-columns: 1fr; }
     .social-layout > *:nth-child(3) { display: none; }
     .social-sidebar:first-child > .panel:last-child { display: none; }
-    /* social-content grid fix: all items stack, feed is visible */
+    /* Logged-out state: hide settings-only content */
+  body.logged-out .profile-card input,
+  body.logged-out .profile-card button:not(#profileSignOutButton),
+  body.logged-out #auto-post-settings,
+  body.logged-out .panel:has(#auto-post-settings) .panel-title { display: none !important; }
+  body.logged-out .profile-card { pointer-events: none; }
+  body.logged-out #social-avatar { pointer-events: none; }
+  body.logged-out .profile-card .avatar-edit-hint { display: none !important; }
     #social-content { display: flex !important; flex-direction: column; gap: 16px; }
     #social-content > .social-sidebar { display: none; }
     #social-content > div:not(.social-sidebar) { display: block !important; }
@@ -1514,9 +1531,8 @@
       flex-direction: column;
       gap: 12px;
     }
-    .drill-controls-row .drill-section[style*="grid-column:span 3"],
-    .drill-controls-row .drill-section[style*="span 3"] {
-      grid-column: unset;
+    .drill-controls-row .drill-section {
+      grid-column: unset !important;
     }
     .drill-bottom-row { grid-template-columns: 1fr; }
     .target-grid { grid-template-columns: repeat(7, 1fr) !important; }
@@ -1875,7 +1891,7 @@
         <div class="cricket-num-btns" id="cricket-num-btns">
           <!-- rendered dynamically -->
         </div>
-        <button class="cricket-miss-btn" style="margin-top:8px" onclick="cricketMiss()">Off-board (no target)</button>
+        <button class="cricket-miss-btn" style="margin-top:8px" onclick="cricketOffBoard()">Miss / Off-Board (no target)</button>
 
         <!-- Cricket Quick Input (3 darts at once) -->
         <div style="margin-top:12px;">
@@ -1988,6 +2004,20 @@
       <div class="panel-title">Drill Tracker</div>
       <div class="drill-controls-row">
 
+        <!-- TARGET row (full width, top) -->
+        <div class="drill-section" style="grid-column:span 3">
+          <div class="dsec" style="margin-top:0">Target</div>
+          <div class="target-grid" id="target-grid" style="grid-template-columns:repeat(14,1fr)"></div>
+          <div class="attempt-label" id="attempt-label" style="text-align:left;margin-top:8px">Select a target to begin</div>
+          <div class="attempt-progress" id="attempt-progress"></div>
+          <div class="drill-action-btns" style="margin-top:12px">
+            <button class="drill-hit" onclick="logDrill('hit')">HIT ✓</button>
+            <button class="drill-miss" onclick="logDrillMiss()">MISS ✗</button>
+          </div>
+          <div class="drill-stats-panel" id="drill-stats-display" style="margin-top:10px">Select a target and start throwing.</div>
+        </div>
+
+        <!-- BOTTOM ROW: Bed Type + Miss Direction side by side -->
         <div class="drill-section">
           <div class="dsec" style="margin-top:0">Bed Type</div>
           <div class="toggle-group g3" id="bed-toggle">
@@ -2003,7 +2033,7 @@
         </div>
 
         <div class="drill-section">
-          <div class="dsec" style="margin-top:0">Miss Direction</div>
+          <div class="dsec" style="margin-top:0">Miss Direction <span style="font-size:10px;color:var(--dim);letter-spacing:0;font-family:'DM Mono',monospace;">(optional)</span></div>
           <div class="miss-grid">
             <button class="miss-btn" onclick="selectMiss('left',this)">← Left</button>
             <button class="miss-btn" onclick="selectMiss('high',this)">↑ High</button>
@@ -2017,19 +2047,6 @@
           </div>
         </div>
 
-        <div class="drill-section" style="grid-column:span 3">
-          <div class="dsec" style="margin-top:0">Target</div>
-          <div class="target-grid" id="target-grid" style="grid-template-columns:repeat(14,1fr)"></div>
-          <div class="attempt-label" id="attempt-label" style="text-align:left;margin-top:8px">Select a target to begin</div>
-          <div class="attempt-progress" id="attempt-progress"></div>
-          <div class="drill-action-btns" style="margin-top:12px">
-            <button class="drill-hit" onclick="logDrill('hit')">HIT ✓</button>
-            <button class="drill-miss" onclick="logDrill('miss')">MISS ✗</button>
-          </div>
-          <div class="drill-stats-panel" id="drill-stats-display" style="margin-top:10px">Select a target and start throwing.</div>
-        </div>
-
-      </div>
     </div>
 
     <!-- BOTTOM: THIS SESSION + ALL-TIME -->
@@ -2184,6 +2201,16 @@
   <!-- Auth gate placeholder — actual sign-in is in #auth-bar above page -->
   <div id="social-gate" class="hidden"></div>
 
+  <!-- Logged-out welcome banner (hidden once signed in) -->
+  <div id="logged-out-banner" style="display:none;background:linear-gradient(135deg,rgba(232,255,58,0.08),rgba(58,255,184,0.05));border:1px solid rgba(232,255,58,0.2);padding:24px 28px;margin-bottom:0;font-family:'DM Mono',monospace;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--accent);margin-bottom:6px;">Welcome to Bullboard</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:16px;">Track your practice, post sessions, and compete on the leaderboard. Sign in or play as a guest to get started.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button onclick="document.getElementById('auth-email') && document.getElementById('auth-email').focus(); document.getElementById('auth-bar') && document.getElementById('auth-bar').scrollIntoView({behavior:'smooth'})" style="background:var(--accent);color:#000;border:none;padding:10px 20px;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;">SIGN IN / REGISTER</button>
+      <button onclick="enterGuestMode()" style="background:none;border:1px solid var(--dim);color:var(--muted);padding:10px 20px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;letter-spacing:1px;">PLAY AS GUEST</button>
+    </div>
+  </div>
+
   <!-- MAIN SOCIAL CONTENT (shown when logged in or guest) -->
   <div id="social-content" class="social-layout">
 
@@ -2331,6 +2358,10 @@
 window._currentUser = null;
 window._isGuest = false;
 window._guestHandle = null;
+// Show logged-out state by default until Firebase resolves
+document.body.classList.add('logged-out');
+var _initBanner = document.getElementById('logged-out-banner');
+if (_initBanner) _initBanner.style.display = 'block';
 
 // ── Pro player handle pool for guest assignments ──
 var PRO_DART_PLAYERS = [
@@ -2387,8 +2418,11 @@ function exitGuestMode() {
   if (window.socialState) window.socialState.myHandle = '';
   var gate = document.getElementById('social-gate');
   var content = document.getElementById('social-content');
+  var loggedOutBanner = document.getElementById('logged-out-banner');
   if (gate) gate.classList.remove('hidden');
-  if (content) content.classList.add('hidden');
+  if (content) content.classList.remove('hidden');
+  if (loggedOutBanner) loggedOutBanner.style.display = 'block';
+  document.body.classList.add('logged-out');
   var banner = document.getElementById('guest-banner');
   if (banner) banner.style.display = 'none';
   if (typeof updateAuthBar === 'function') updateAuthBar();
@@ -3345,6 +3379,13 @@ function logDrill(result) {
   }
 }
 
+function logDrillMiss() {
+  if (!selectedTarget) { toast('Select a target first', true); return; }
+  // If a miss direction is already selected, log immediately
+  // Otherwise, log miss and let user optionally select direction
+  logDrill('miss');
+}
+
 function advanceTarget() {
   const idx = targets.indexOf(selectedTarget);
   if (idx === -1 || idx >= targets.length-1) { resetAttemptRound(); return; }
@@ -4206,10 +4247,22 @@ if (document.readyState !== 'loading') {
 function updateSocialGate(isSignedIn, email) {
   const gate = document.getElementById('social-gate');
   const socialContent = document.getElementById('social-content');
+  const loggedOutBanner = document.getElementById('logged-out-banner');
   if (gate) gate.classList.add('hidden');
   if (socialContent) socialContent.classList.remove('hidden');
 
+  // Show welcome banner for logged-out, non-guest users
   const isGuest = window._isGuest;
+  if (loggedOutBanner) {
+    loggedOutBanner.style.display = (!isSignedIn && !isGuest) ? 'block' : 'none';
+  }
+  // Toggle body class for CSS-driven logged-out state
+  if (!isSignedIn && !isGuest) {
+    document.body.classList.add('logged-out');
+  } else {
+    document.body.classList.remove('logged-out');
+  }
+
   // Guest banner
   const banner = document.getElementById('guest-banner');
   const handleDisplay = document.getElementById('guest-handle-display');
@@ -4494,7 +4547,7 @@ function renderFeed() {
       + '<div class="post-actions">'
       + '<button class="post-action-btn ' + (isLiked?'liked':'') + '" onclick="toggleLike(\'' + p.id + '\',this)">'
       + (isLiked?'♥':'♡') + ' <span class="like-count">' + likeCount + '</span></button>'
-      + '<button class="post-action-btn" onclick="toast(\'Comments coming soon!\')">💬 ' + (p.comments||0) + '</button>'
+      + '<button class="post-action-btn" onclick="openComments(\'' + p.id + '\')">💬 <span class="comment-count-' + p.id + '">' + (p.comments||0) + '</span></button>'
       + (p.isOwn ? '<button class="post-action-btn" style="color:var(--accent2);border-color:rgba(255,77,77,0.4)" onclick="deletePost(\'' + p.id + '\')">✕</button>' : '')
       + '</div>'
       + '</div>';
@@ -4554,6 +4607,103 @@ function publishPost(type, text, stats, extraColor) {
   // Only re-render if on social page
   if (document.getElementById('page-home').classList.contains('active')) renderFeed();
   return post;
+}
+
+// ── COMMENTS ──
+var _activeCommentPostId = null;
+
+function openComments(postId) {
+  _activeCommentPostId = postId;
+  const modal = document.getElementById('comments-modal');
+  if (!modal) return;
+  const list = document.getElementById('comments-list');
+  const inputArea = document.getElementById('comment-input-area');
+  const loginNotice = document.getElementById('comment-login-notice');
+  const textarea = document.getElementById('comment-text-input');
+  list.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted);text-align:center;padding:20px;">Loading comments…</div>';
+  modal.classList.remove('hidden');
+  // Show/hide input based on auth
+  const isLoggedIn = !!window._currentUser;
+  if (textarea) textarea.parentElement.style.display = isLoggedIn ? 'flex' : 'none';
+  if (loginNotice) loginNotice.style.display = isLoggedIn ? 'none' : 'block';
+  // Load comments
+  if (typeof window.loadCommentsFromFirebase === 'function') {
+    window.loadCommentsFromFirebase(postId).then(function(comments) {
+      renderCommentsList(comments);
+    });
+  } else {
+    list.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted);text-align:center;padding:20px;">No comments yet.</div>';
+  }
+}
+
+function renderCommentsList(comments) {
+  const list = document.getElementById('comments-list');
+  if (!list) return;
+  if (!comments || comments.length === 0) {
+    list.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted);text-align:center;padding:20px;">No comments yet. Be the first!</div>';
+    return;
+  }
+  list.innerHTML = comments.map(function(c) {
+    const init = (c.user || '?').slice(0,2).toUpperCase();
+    const time = c.savedAt ? new Date(c.savedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ' · ' + new Date(c.savedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '';
+    const avatarHtml = c.photoURL
+      ? '<img src="' + c.photoURL + '" style="width:100%;height:100%;object-fit:cover;" />'
+      : init;
+    const avatarBg = c.photoURL ? 'transparent' : 'var(--accent)';
+    return '<div style="display:flex;gap:10px;align-items:flex-start;">'
+      + '<div class="follow-avatar" style="background:' + avatarBg + ';color:#000;font-size:10px;flex-shrink:0;width:30px;height:30px;overflow:hidden;">' + avatarHtml + '</div>'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--accent);letter-spacing:1px;">' + (c.user || 'Anonymous') + ' <span style="color:var(--muted);font-size:9px;font-weight:normal;">' + time + '</span></div>'
+      + '<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--text);margin-top:3px;line-height:1.5;">' + (c.text || '').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function submitComment() {
+  if (!window._currentUser) { toast('Sign in to comment', true); return; }
+  const textarea = document.getElementById('comment-text-input');
+  const text = textarea ? textarea.value.trim() : '';
+  if (!text) { toast('Write something first', true); return; }
+  if (!_activeCommentPostId) return;
+  if (typeof window.saveCommentToFirebase === 'function') {
+    window.saveCommentToFirebase(_activeCommentPostId, text).then(function(id) {
+      if (id) {
+        if (textarea) textarea.value = '';
+        toast('Comment posted!');
+        // Reload comments
+        if (typeof window.loadCommentsFromFirebase === 'function') {
+          window.loadCommentsFromFirebase(_activeCommentPostId).then(renderCommentsList);
+        }
+        // Update comment count in feed
+        const post = socialState.posts.find(function(p){return p.id===_activeCommentPostId;});
+        if (post) { post.comments = (post.comments || 0) + 1; renderFeed(); }
+      }
+    });
+  }
+}
+
+function closeCommentsModal() {
+  const modal = document.getElementById('comments-modal');
+  if (modal) modal.classList.add('hidden');
+  _activeCommentPostId = null;
+}
+
+function confirmCricketPost() {
+  var caption = document.getElementById('cricket-post-caption').value.trim();
+  var yScore = cricketState.you.score;
+  var bScore = cricketState.bot.score;
+  var botName = cricketState.botLevel > 0 && BOT_PROFILES[cricketState.botLevel]
+    ? BOT_PROFILES[cricketState.botLevel].name : 'opponent';
+  var defaultText = caption || ('Cricket match — ' + yScore + ' pts vs ' + bScore + ' pts vs ' + botName + ' in ' + cricketState.round + ' rounds.');
+  publishPost('session', defaultText, [
+    {l:'You', v: String(yScore)},
+    {l: botName.split(' ')[0], v: String(bScore)},
+    {l:'Rounds', v: String(cricketState.round)}
+  ], '#a78bfa');
+  document.getElementById('cricket-post-modal').classList.add('hidden');
+  toast('Cricket match posted to feed!');
+  newCricketLeg();
 }
 
 function submitPost() {
@@ -4762,6 +4912,20 @@ function onGameModeChange() {
     outModeSelect && (outModeSelect.style.display = 'inline-block');
     scoreHero && (scoreHero.style.display = 'flex');
     scoreMeta && (scoreMeta.style.display = 'grid');
+    // Update score display immediately when switching between 501/301
+    var startScore = mode === '501' ? 501 : 301;
+    updateScoreDisplays(startScore);
+    // Also reset currentLeg score to match new mode
+    currentLeg.score = startScore;
+    currentLeg.startScore = startScore;
+    currentLeg.mode = mode;
+    currentLeg.throws = [];
+    currentLeg.round = 1;
+    currentLeg.totalDarts = 0;
+    currentLeg.checkoutAttempts = 0;
+    currentLeg.checkouts = 0;
+    document.getElementById('throw-history').innerHTML = '';
+    inputVal = ''; updateInputDisplay(); updateMeta();
   }
 }
 
@@ -5019,6 +5183,14 @@ function cricketMiss() {
   if (cricketState.dartsLeft <= 0) endCricketPlayerTurn();
 }
 
+function cricketOffBoard() {
+  // Miss with no specific target — burns a dart, no dots shown
+  if (!cricketState.yourTurn) return;
+  cricketState.dartsLeft--;
+  updateCricketTurnInfo();
+  if (cricketState.dartsLeft <= 0) endCricketPlayerTurn();
+}
+
 function endCricketPlayerTurn() {
   cricketState.dartsLeft = 3;
   if (cricketState.yourTurn) {
@@ -5193,6 +5365,7 @@ function checkCricketWin() {
     setTimeout(function() {
       toast('🏆 YOU WIN! ' + yScore + ' pts vs ' + bScore + ' pts');
       saveCricketLeg(true);
+      promptCricketFeedPost(true, yScore, bScore);
     }, 300);
   } else if (botDone && bScore >= yScore) {
     setTimeout(function() {
@@ -5200,6 +5373,7 @@ function checkCricketWin() {
         ? BOT_PROFILES[cricketState.botLevel].name : 'Bot';
       toast(botName + ' wins! ' + bScore + ' vs ' + yScore);
       saveCricketLeg(false);
+      promptCricketFeedPost(false, yScore, bScore);
     }, 300);
   } else if (youDone && yScore < bScore) {
     // Must keep scoring to catch up
@@ -5207,6 +5381,22 @@ function checkCricketWin() {
   } else if (botDone && bScore < yScore) {
     toast('Bot closed all — but you\'re ahead! Keep closing.', true);
   }
+}
+
+function promptCricketFeedPost(youWon, yScore, bScore) {
+  if (!window._currentUser) return; // only logged-in users
+  var modal = document.getElementById('cricket-post-modal');
+  if (!modal) return;
+  var botName = cricketState.botLevel > 0 && BOT_PROFILES[cricketState.botLevel]
+    ? BOT_PROFILES[cricketState.botLevel].name : 'a friend';
+  var resultText = youWon
+    ? '🏆 Won a cricket match ' + yScore + ' pts vs ' + bScore + ' pts (vs ' + botName + ') in ' + cricketState.round + ' rounds.'
+    : '🎯 Played cricket — ' + yScore + ' pts vs ' + bScore + ' pts (vs ' + botName + ') in ' + cricketState.round + ' rounds.';
+  document.getElementById('cricket-post-caption').value = resultText;
+  document.getElementById('cricket-post-result-text').textContent = youWon ? '🏆 You Won!' : '🎯 Match Over';
+  document.getElementById('cricket-post-result-text').style.color = youWon ? 'var(--accent3)' : 'var(--accent4)';
+  document.getElementById('cricket-post-score').textContent = yScore + ' — ' + bScore;
+  modal.classList.remove('hidden');
 }
 
 function saveCricketLeg(youWon) {
@@ -6038,6 +6228,12 @@ document.addEventListener('keydown', e=>{
 // Expose render functions for post-load refresh
 window.renderStats = renderStats;
 window.toast = toast;
+window.openComments = openComments;
+window.closeCommentsModal = closeCommentsModal;
+window.renderSocialPage = renderSocialPage;
+window.renderHistoryPage = renderHistoryPage;
+window.restoreSocialSettingsUI = restoreSocialSettingsUI;
+window.openOnboardModal = openOnboardModal;
 
 // init
 updateMeta();
@@ -6055,6 +6251,12 @@ updateAttemptDots();
       match /posts/{postId} {
         allow read: if true;
         allow write: if request.auth != null || true; // allow guests too
+        // Comments: anyone can read, only signed-in users can post
+        match /comments/{commentId} {
+          allow read: if true;
+          allow create: if request.auth != null;
+          allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+        }
       }
       // User profiles — public read, own write
       match /users/{userId} {
@@ -6079,7 +6281,7 @@ updateAttemptDots();
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
   import {
-    getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc, limit
+    getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc, limit, orderBy, updateDoc, increment
   } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
   import {
     getAuth,
@@ -6477,6 +6679,49 @@ updateAttemptDots();
     }
   };
 
+  // ── Save comment to Firestore ──
+  window.saveCommentToFirebase = async (postId, text) => {
+    const user = auth.currentUser;
+    if (!user) {
+      if (typeof window.toast === 'function') window.toast('Sign in to comment', true);
+      return null;
+    }
+    const handle = window.socialState ? (window.socialState.myHandle || user.email.split('@')[0]) : user.email.split('@')[0];
+    try {
+      const commentRef = await addDoc(collection(db, 'posts', postId, 'comments'), {
+        userId: user.uid,
+        user: handle,
+        photoURL: window.socialState ? (window.socialState.photoURL || null) : null,
+        text: text,
+        timestamp: Date.now(),
+        savedAt: new Date().toISOString(),
+      });
+      // Increment comment count on parent post
+      try {
+        await updateDoc(doc(db, 'posts', postId), { comments: increment(1) });
+      } catch(e) { /* non-critical */ }
+      return commentRef.id;
+    } catch (e) {
+      console.error('Comment save error:', e);
+      if (typeof window.toast === 'function') window.toast('Failed to post comment', true);
+      return null;
+    }
+  };
+
+  // ── Load comments for a post from Firestore ──
+  window.loadCommentsFromFirebase = async (postId) => {
+    try {
+      const snap = await getDocs(collection(db, 'posts', postId, 'comments'));
+      const comments = [];
+      snap.forEach(d => comments.push({ id: d.id, ...d.data() }));
+      comments.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      return comments;
+    } catch (e) {
+      console.error('Comments load error:', e);
+      return [];
+    }
+  };
+
   // ── Auth state observer ──
   onAuthStateChanged(auth, (user) => {
     window._currentUser = user || null;
@@ -6580,6 +6825,40 @@ updateAttemptDots();
   loadLeaderboardFromFirebase();
 </script>
 
+
+<!-- ═══════════════════════ COMMENTS MODAL ═══════════════════════ -->
+<div id="comments-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-title">Comments</div>
+    <div id="comments-list" style="max-height:320px;overflow-y:auto;margin-bottom:16px;display:flex;flex-direction:column;gap:10px;"></div>
+    <div id="comment-input-area">
+      <div style="display:flex;gap:8px;align-items:stretch;">
+        <textarea id="comment-text-input" class="tag-input" style="flex:1;min-height:52px;margin:0;resize:none;" placeholder="Add a comment..."></textarea>
+        <button onclick="submitComment()" style="background:var(--accent);color:#000;border:none;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;padding:0 18px;cursor:pointer;white-space:nowrap;align-self:stretch;">POST</button>
+      </div>
+      <div id="comment-login-notice" style="display:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:8px;text-align:center;">Sign in to leave a comment.</div>
+    </div>
+    <div class="modal-btn-row" style="margin-top:12px;">
+      <button class="modal-btn-cancel" onclick="closeCommentsModal()" style="grid-column:span 2">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ CRICKET FEED POST MODAL ═══════════════════════ -->
+<div id="cricket-post-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-title" id="cricket-post-result-text">Match Over</div>
+    <div style="text-align:center;margin-bottom:16px;">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--accent);letter-spacing:4px;" id="cricket-post-score">0 — 0</span>
+    </div>
+    <div class="modal-section-label">Post to Feed?</div>
+    <textarea id="cricket-post-caption" class="tag-input" style="min-height:72px;resize:vertical;" placeholder="Add commentary..."></textarea>
+    <div class="modal-btn-row">
+      <button class="modal-btn-cancel" onclick="document.getElementById('cricket-post-modal').classList.add('hidden');newCricketLeg()">Skip</button>
+      <button class="modal-btn-save" onclick="confirmCricketPost()" style="background:var(--accent4);color:#fff;">Post & New Leg</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════ CHECKOUT DART MODAL ═══════════════════════ -->
 <div id="checkout-dart-modal" class="edit-confirm-overlay" style="display:none">
