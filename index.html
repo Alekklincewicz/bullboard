@@ -461,7 +461,7 @@
   }
   .drill-controls-row {
     display: grid;
-    grid-template-columns: 220px 220px 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 16px;
     align-items: start;
   }
@@ -1454,12 +1454,10 @@
     .social-feed { max-height: 60vh; }
     /* Drill tracker: stack vertically on mobile */
     .drill-controls-row {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      grid-template-columns: 1fr;
     }
-    .drill-controls-row .drill-section {
-      grid-column: unset !important;
+    .drill-controls-row .drill-section[style*="grid-column"] {
+      grid-column: 1 !important;
     }
     .drill-bottom-row { grid-template-columns: 1fr; }
     .target-grid { grid-template-columns: repeat(7, 1fr) !important; }
@@ -1929,8 +1927,8 @@
       <div class="panel-title">Drill Tracker</div>
       <div class="drill-controls-row">
 
-        <!-- TARGET row (full width, top) -->
-        <div class="drill-section" style="grid-column:span 3">
+        <!-- TARGET: full width -->
+        <div class="drill-section" style="grid-column:1/-1">
           <div class="dsec" style="margin-top:0">Target</div>
           <div class="target-grid" id="target-grid" style="grid-template-columns:repeat(14,1fr)"></div>
           <div class="attempt-label" id="attempt-label" style="text-align:left;margin-top:8px">Select a target to begin</div>
@@ -1942,7 +1940,7 @@
           <div class="drill-stats-panel" id="drill-stats-display" style="margin-top:10px">Select a target and start throwing.</div>
         </div>
 
-        <!-- BOTTOM ROW: Bed Type + Miss Direction side by side -->
+        <!-- BED TYPE + DARTS PER ATTEMPT -->
         <div class="drill-section">
           <div class="dsec" style="margin-top:0">Bed Type</div>
           <div class="toggle-group g3" id="bed-toggle">
@@ -1957,6 +1955,7 @@
           </div>
         </div>
 
+        <!-- MISS DIRECTION -->
         <div class="drill-section">
           <div class="dsec" style="margin-top:0">Miss Direction <span style="font-size:10px;color:var(--dim);letter-spacing:0;font-family:'DM Mono',monospace;">(optional)</span></div>
           <div class="miss-grid">
@@ -1965,7 +1964,11 @@
             <button class="miss-btn" onclick="selectMiss('low',this)">↓ Low</button>
             <button class="miss-btn" onclick="selectMiss('right',this)">→ Right</button>
           </div>
-          <div class="dsec">Voice</div>
+        </div>
+
+        <!-- VOICE -->
+        <div class="drill-section">
+          <div class="dsec" style="margin-top:0">Voice</div>
           <div class="drill-voice-bar">
             <button class="drill-voice-btn" id="drill-voice-btn" onclick="toggleDrillVoice()">🎙 <span id="drill-voice-btn-label">Tap to speak</span></button>
             <div class="drill-transcript" id="drill-transcript">Say "Hit" or "Miss left"</div>
