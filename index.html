@@ -2134,8 +2134,8 @@
     <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--accent);margin-bottom:6px;">Welcome to Bullboard</div>
     <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:16px;">Track your practice, post sessions, and compete on the leaderboard. Sign in or play as a guest to get started.</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button onclick="document.getElementById('auth-email') && document.getElementById('auth-email').focus(); document.getElementById('auth-bar') && document.getElementById('auth-bar').scrollIntoView({behavior:'smooth'})" style="background:var(--accent);color:#000;border:none;padding:10px 20px;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;">SIGN IN / REGISTER</button>
-      <button onclick="enterGuestMode()" style="background:none;border:1px solid var(--dim);color:var(--muted);padding:10px 20px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;letter-spacing:1px;">PLAY AS GUEST</button>
+      <button onclick="toggleAccountMenu()" style="background:var(--accent);color:#000;border:none;padding:10px 20px;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;">SIGN IN / REGISTER</button>
+      <button onclick="playAsGuest()" style="background:none;border:1px solid var(--dim);color:var(--muted);padding:10px 20px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;letter-spacing:1px;">PLAY AS GUEST</button>
     </div>
   </div>
 
@@ -2309,33 +2309,43 @@ function generateGuestHandle() {
 }
 
 function playAsGuest() {
+  // Close account dropdown if open
+  var drop = document.getElementById('account-dropdown');
+  if (drop) drop.style.display = 'none';
+
   var handle = generateGuestHandle();
   window._isGuest = true;
   window._guestHandle = handle;
-  window._currentUser = null;
+  // Don't override _currentUser — Firebase manages that independently
+
   // Set socialState handle for guest
   if (window.socialState) {
     window.socialState.myHandle = handle;
   }
-  // Show social content, hide sign-in gate
-  var gate = document.getElementById('social-gate');
-  var content = document.getElementById('social-content');
-  if (gate) gate.classList.add('hidden');
-  if (content) content.classList.remove('hidden');
+
+  // Update logged-out banner
+  var loggedOutBanner = document.getElementById('logged-out-banner');
+  if (loggedOutBanner) loggedOutBanner.style.display = 'none';
+
   // Show guest banner
   var banner = document.getElementById('guest-banner');
   var handleDisplay = document.getElementById('guest-handle-display');
   if (banner) banner.style.display = 'flex';
   if (handleDisplay) handleDisplay.textContent = handle;
-  // Show sign-out button (as "exit guest")
-  var signOutBtn = document.getElementById('profileSignOutButton');
-  if (signOutBtn) {
-    signOutBtn.style.display = 'block';
-    signOutBtn.textContent = 'EXIT GUEST MODE';
-  }
-  // Render social page as guest
-  if (typeof window.renderSocialPage === 'function') window.renderSocialPage();
+
+  // Update auth bar button
   if (typeof updateAuthBar === 'function') updateAuthBar();
+
+  // Render social page
+  if (typeof window.renderSocialPage === 'function') {
+    window.renderSocialPage();
+  } else {
+    // renderSocialPage in Firebase module may not be loaded yet — call after delay
+    setTimeout(function() {
+      if (typeof window.renderSocialPage === 'function') window.renderSocialPage();
+    }, 300);
+  }
+
   if (typeof window.toast === 'function') window.toast('Playing as guest: ' + handle);
 }
 
@@ -2812,6 +2822,7 @@ function updateAuthBar(page) {
   const signedInPanel = document.getElementById('acct-signed-in');
   const acctHandle = document.getElementById('acct-handle');
   const acctEmail = document.getElementById('acct-email');
+  const drop = document.getElementById('account-dropdown');
 
   const fullySignedIn = !!window._currentUser && !window._isGuest;
 
@@ -2826,6 +2837,10 @@ function updateAuthBar(page) {
     if (signedInPanel) signedInPanel.style.display = 'block';
     if (acctHandle) acctHandle.textContent = h.toUpperCase();
     if (acctEmail) acctEmail.textContent = window._currentUser.email || '';
+    // Auto-close dropdown after sign-in
+    if (drop && drop.style.display !== 'none') {
+      setTimeout(() => { drop.style.display = 'none'; }, 600);
+    }
   } else if (window._isGuest) {
     if (label) label.textContent = (window._guestHandle || 'GUEST').toUpperCase();
     if (icon) icon.textContent = '👤';
@@ -4149,6 +4164,7 @@ function toggleDrillVoice() {
 //  SOCIAL TAB
 // ═══════════════════════════════════════════════════
 const SOCIAL_KEY = 'bullboard_social_v2';
+const FEED_CACHE_KEY = 'bullboard_feed_cache_v1';
 
 let socialState = {
   myHandle: '',
@@ -4169,6 +4185,13 @@ function loadSocialState() {
         posts: s.posts || [],
         autoPost: { ...socialState.autoPost, ...(s.autoPost || {}) }
       };
+    }
+    // Restore cached community feed so it shows immediately before Firebase loads
+    const cachedFeed = JSON.parse(localStorage.getItem(FEED_CACHE_KEY));
+    if (cachedFeed && Array.isArray(cachedFeed)) {
+      const ownIds = new Set((socialState.posts || []).map(p => p.id));
+      const communityPosts = cachedFeed.filter(p => !ownIds.has(p.id));
+      socialState.posts = [...(socialState.posts || []), ...communityPosts];
     }
   } catch(e) {}
 }
@@ -4196,10 +4219,20 @@ function saveSocialState() {
     photoURL: socialState.photoURL,
     following: socialState.following,
     likes: socialState.likes,
-    // Only persist own posts locally as a write-back cache
+    // Only persist own posts in main key
     posts: socialState.posts.filter(p => p.isOwn),
     autoPost: socialState.autoPost,
   }));
+  // Cache last 15 community posts separately for instant feed on reload
+  try {
+    const feedCache = socialState.posts.slice(0, 15).map(p => ({
+      id: p.id, user: p.user, photoURL: p.photoURL || null,
+      type: p.type, caption: p.caption, stats: p.stats || null,
+      color: p.color || null, savedAt: p.savedAt, timestamp: p.timestamp,
+      likes: p.likes || 0, comments: p.comments || 0, isOwn: p.isOwn || false,
+    }));
+    localStorage.setItem(FEED_CACHE_KEY, JSON.stringify(feedCache));
+  } catch(e) {}
 }
 loadSocialState();
 restoreSocialSettingsUI();
@@ -4219,13 +4252,10 @@ function updateSocialGate(isSignedIn, email) {
   if (gate) gate.classList.add('hidden');
   if (socialContent) socialContent.classList.remove('hidden');
 
-  // Show welcome banner for logged-out, non-guest users
+  // Always hide welcome banner if signed in or guest
   const isGuest = window._isGuest;
-  if (loggedOutBanner) {
-    loggedOutBanner.style.display = (!isSignedIn && !isGuest) ? 'block' : 'none';
-  }
-  // Toggle body class for CSS-driven logged-out state - removed, using JS only
-  
+  const showBanner = !isSignedIn && !isGuest;
+  if (loggedOutBanner) loggedOutBanner.style.display = showBanner ? 'block' : 'none';
 
   // Guest banner
   const banner = document.getElementById('guest-banner');
@@ -4255,7 +4285,7 @@ function updateSocialGate(isSignedIn, email) {
     if (nameInput && socialState.myHandle) nameInput.value = socialState.myHandle;
   }
 
-  // Keep auth bar in sync
+  // Keep auth bar dropdown in sync
   if (typeof updateAuthBar === 'function') updateAuthBar();
 }
 
@@ -6437,6 +6467,7 @@ updateAttemptDots();
 
       window.socialState.posts = [...pendingLocal, ...cloudPosts];
 
+      if (typeof saveSocialState === 'function') saveSocialState(); // refresh feed cache
       if (typeof renderFeed === 'function') renderFeed();
     } catch (e) {
       console.error('Feed load error:', e.code, e.message);
